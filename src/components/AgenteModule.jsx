@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { handleUpdate } from '../utils/api'
 import { Save, Bot, History, Clock, RefreshCw, Eye, Zap } from 'lucide-react'
 import { useAssistant } from '../context/AssistantContext'
+import AgentAdminPanel from './AgentAdminPanel'
 
 const AgenteModule = () => {
   const [agentId, setAgentId] = useState('AGENTE_001')
@@ -85,6 +86,8 @@ const AgenteModule = () => {
 
   return (
     <div className="space-y-6">
+      <AgentAdminPanel moduleId="agente" />
+
       {/* Active Prompt Banner */}
       <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 rounded-xl shadow-sm text-white">
         <div className="flex items-center justify-between mb-3">

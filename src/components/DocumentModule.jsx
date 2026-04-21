@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { handleUpdate } from '../utils/api'
 import { FilePlus, Send, Folder, Mail, Building, ChevronDown } from 'lucide-react'
+import AgentAdminPanel from './AgentAdminPanel'
 
 const DocumentModule = () => {
   const [formData, setFormData] = useState({
@@ -20,7 +21,9 @@ const DocumentModule = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto space-y-6">
+      <AgentAdminPanel moduleId="documentos" />
+
       <div className="bg-white p-8 rounded-xl border border-slate-200">
         <div className="flex items-center space-x-3 mb-8">
           <div className="p-2.5 bg-violet-50 rounded-lg">

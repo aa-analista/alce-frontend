@@ -7,9 +7,11 @@ import {
   MessageCircle, Send, Bot, User
 } from 'lucide-react'
 import { useAssistant } from '../context/AssistantContext'
+import AgentAdminPanel from './AgentAdminPanel'
 
 const KnowledgeBaseModule = () => {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
   const [rows, setRows] = useState([])
   const [existingFaqs, setExistingFaqs] = useState([])
   const [fileName, setFileName] = useState('')
@@ -207,32 +209,40 @@ const KnowledgeBaseModule = () => {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200">
-        {tabs.map((t) => {
-          const Icon = t.icon
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
-                tab === t.id
-                  ? 'border-emerald-600 text-emerald-700'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {t.label}
-              {t.badge > 0 && (
-                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
-                  tab === t.id ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
-                }`}>{t.badge}</span>
-              )}
-            </button>
-          )
-        })}
-      </div>
+      {/* Fallback tab bar for non-admin users (admins get it from AgentAdminPanel) */}
+      {!isAdmin && (
+        <div className="flex border-b border-slate-200">
+          {tabs.map((t) => {
+            const Icon = t.icon
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
+                  tab === t.id
+                    ? 'border-emerald-600 text-emerald-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {t.label}
+                {t.badge > 0 && (
+                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
+                    tab === t.id ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                  }`}>{t.badge}</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
+      <AgentAdminPanel
+        moduleId="conocimiento"
+        extraTabs={tabs}
+        activeTab={tab}
+        onTabChange={setTab}
+      >
       {/* TAB: Current FAQs */}
       {tab === 'current' && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -502,6 +512,7 @@ const KnowledgeBaseModule = () => {
           )}
         </>
       )}
+      </AgentAdminPanel>
     </div>
   )
 }

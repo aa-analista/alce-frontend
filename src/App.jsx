@@ -7,12 +7,14 @@ import DocumentModule from './components/DocumentModule'
 import AccountabilityModule from './components/AccountabilityModule'
 import MarketplaceModule from './components/MarketplaceModule'
 import UsersModule from './components/UsersModule'
+import GastosModule from './components/GastosModule'
 import SettingsModule from './components/SettingsModule'
 import KnowledgeBaseModule from './components/KnowledgeBaseModule'
 import ConnectorPage from './components/ConnectorPage'
 import GoogleCalendarPage from './components/GoogleCalendarPage'
 import GmailPage from './components/GmailPage'
 import CoachAIPage from './components/CoachAIPage'
+import OperacionPage from './components/OperacionPage'
 import AssistantWidget from './components/AssistantWidget'
 import LoginPage from './components/LoginPage'
 import RegisterPage from './components/RegisterPage'
@@ -108,11 +110,12 @@ function App() {
             <Route index element={<Navigate to="/home" replace />} />
             <Route path="home" element={<HomeDashboard />} />
             <Route path="coach-ai" element={<CoachAIPage />} />
-            <Route path="operacion" element={<PlaceholderPage title="Operacion" />} />
+            <Route path="operacion" element={<OperacionPage />} />
             <Route path="actividad" element={<PlaceholderPage title="Actividad" />} />
             {/* Renamed in sidebar but same routes */}
             <Route path="marketplace" element={<MarketplaceModule />} />
             <Route path="usuarios" element={<UsersModule />} />
+            <Route path="gastos" element={<GastosModule />} />
             <Route path="ajustes" element={<SettingsModule />} />
             {/* Module routes (accessible via URL, not in sidebar) */}
             <Route path="agente" element={<AgenteModule />} />

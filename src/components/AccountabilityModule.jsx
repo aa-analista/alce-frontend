@@ -4,6 +4,7 @@ import { Bell, Clock, RefreshCw, CheckCircle2, Circle, Repeat, Plus, Send, Calen
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
 import { useAssistant } from '../context/AssistantContext'
+import AgentAdminPanel from './AgentAdminPanel'
 
 const AccountabilityModule = () => {
   const sessionId = 'whatsapp:+5219991735903'
@@ -99,6 +100,8 @@ const AccountabilityModule = () => {
 
   return (
     <div className="space-y-5">
+      <AgentAdminPanel moduleId="accountability" />
+
       {/* Header */}
       <div className="bg-white p-5 rounded-xl border border-slate-200">
         <div className="flex flex-col md:flex-row md:items-center gap-4">

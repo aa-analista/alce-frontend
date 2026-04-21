@@ -13,53 +13,82 @@ body {
 
 /* Custom React Calendar Overrides */
 .alce-calendar-wrapper .react-calendar {
-  width: 100%;
+  width: 280px;
   border: none;
   font-family: inherit;
+  background: transparent;
+}
+.alce-calendar-wrapper .react-calendar__navigation {
+  margin-bottom: 0.5rem;
+  height: 36px;
 }
 .alce-calendar-wrapper .react-calendar__navigation button {
-  min-width: 44px;
-  background: white;
+  min-width: 32px;
+  background: transparent;
   border-radius: 8px;
   font-weight: 600;
   color: #0f172a;
+  font-size: 0.875rem;
 }
 .alce-calendar-wrapper .react-calendar__navigation button:enabled:hover,
 .alce-calendar-wrapper .react-calendar__navigation button:enabled:focus {
   background-color: #f1f5f9;
 }
+.alce-calendar-wrapper .react-calendar__navigation__label {
+  text-transform: capitalize;
+}
 .alce-calendar-wrapper .react-calendar__month-view__weekdays {
   text-transform: uppercase;
   font-weight: 600;
-  font-size: 0.7em;
+  font-size: 0.65rem;
   color: #94a3b8;
   text-decoration: none;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.08em;
+}
+.alce-calendar-wrapper .react-calendar__month-view__weekdays__weekday {
+  padding: 0.35rem 0;
 }
 .alce-calendar-wrapper .react-calendar__month-view__weekdays__weekday abbr {
   text-decoration: none;
 }
 .alce-calendar-wrapper .react-calendar__tile {
-  padding: 0.75em 0.5em;
+  padding: 0.55em 0.4em;
   background: none;
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #334155;
+  transition: background-color 0.15s;
 }
 .alce-calendar-wrapper .react-calendar__tile:enabled:hover,
 .alce-calendar-wrapper .react-calendar__tile:enabled:focus {
-  background-color: #f1f5f9;
+  background-color: #e8f0f0;
+  color: #1a3a3a;
 }
-.alce-calendar-wrapper .react-calendar__tile--active {
-  background: #1e40af !important;
-  color: white;
+.alce-calendar-wrapper .react-calendar__tile--active,
+.alce-calendar-wrapper .react-calendar__tile--active:enabled:hover,
+.alce-calendar-wrapper .react-calendar__tile--active:enabled:focus {
+  background: #1a3a3a !important;
+  color: white !important;
   font-weight: 600;
 }
 .alce-calendar-wrapper .react-calendar__tile--now {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #e8f0f0;
+  color: #1a3a3a;
   font-weight: 600;
+}
+.alce-calendar-wrapper .react-calendar__tile--now.react-calendar__tile--active {
+  background: #1a3a3a !important;
+  color: white !important;
+}
+.alce-calendar-wrapper .react-calendar__month-view__days__day--neighboringMonth {
+  color: #cbd5e1;
+}
+.alce-calendar-wrapper .react-calendar__month-view__days__day--weekend {
+  color: #64748b;
+}
+.alce-calendar-wrapper .react-calendar__month-view__days__day--weekend.react-calendar__month-view__days__day--neighboringMonth {
+  color: #e2e8f0;
 }
 
 /* Driver.js Tour Overrides */

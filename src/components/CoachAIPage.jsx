@@ -5,8 +5,17 @@ import {
   Sparkles, Paperclip, AtSign, Mic, SlidersHorizontal, ArrowRight, ArrowLeft,
   BarChart3, Users, Blocks, Activity, FileText, Lightbulb, MessageSquare, Clock, Database,
   HelpCircle, Zap, BookOpen, ChevronRight, User, X, Loader2,
-  Volume2, VolumeX
+  Volume2, VolumeX, AudioLines, Check
 } from 'lucide-react'
+import VoiceChatModal from './VoiceChatModal'
+
+const AI_MODELS = [
+  { id: 'auto', name: 'Auto' },
+  { id: 'gpt-4o', name: 'GPT-4o', badge: 'Latest' },
+  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', badge: 'Fast' },
+  { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+]
 
 // Icon map matching sidebar
 const MODULE_ICONS = {
@@ -46,6 +55,10 @@ const CoachAIPage = () => {
   const [isListening, setIsListening] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false)
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false)
+  const [openingVoice, setOpeningVoice] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('auto')
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false)
 
   const textareaRef = useRef(null)
   const messagesRef = useRef(null)
@@ -127,7 +140,7 @@ const CoachAIPage = () => {
       const res = await fetch('/api/ai/assistant/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: msg.trim(), conversationId, route: activeContext ? `/${activeContext.id}` : '/coach-ai', model: 'auto', image: img || undefined }),
+        body: JSON.stringify({ message: msg.trim(), conversationId, route: activeContext ? `/${activeContext.id}` : '/coach-ai', model: selectedModel, image: img || undefined }),
       })
       if (res.ok) {
         const payload = await res.json()
@@ -163,6 +176,49 @@ const CoachAIPage = () => {
   const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }
   const resetChat = () => { setMessages([]); setInput(''); setActiveContext(null); setConversationId(null); setSelectedImage(null); fetchConversations(1) }
 
+  // Voice chat modal — ensures a conversation exists, then opens modal with that id
+  const openVoiceChat = async () => {
+    if (openingVoice || voiceModalOpen) return
+    setOpeningVoice(true)
+    try {
+      let convId = conversationId
+      if (!convId) {
+        const res = await fetch('/api/ai/assistant/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ title: 'Conversacion por voz' }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          convId = data.conversation.id
+          setConversationId(convId)
+        } else {
+          throw new Error('No se pudo crear la conversacion')
+        }
+      }
+      setVoiceModalOpen(true)
+    } catch (err) {
+      console.error(err)
+      alert('No se pudo iniciar el modo voz')
+    }
+    setOpeningVoice(false)
+  }
+
+  const handleVoiceSaved = (savedMessages) => {
+    // Append persisted voice messages into the current chat so the user sees them inline.
+    if (Array.isArray(savedMessages) && savedMessages.length > 0) {
+      setMessages((prev) => [
+        ...prev,
+        ...savedMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+          voice: true,
+        })),
+      ])
+    }
+    fetchConversations(convPage)
+  }
+
   // Dynamic context chips from user modules (only type=module)
   const contextChips = (flows || []).filter(m => m.type === 'module' || !m.type).map(m => ({
     id: m.id,
@@ -180,8 +236,33 @@ const CoachAIPage = () => {
   // ── Inline input bar (NOT a sub-component to avoid remount) ──
   const renderInputBar = (large) => {
     const CtxIcon = activeContext ? (MODULE_ICONS[activeContext.id] || Blocks) : null
+    const currentModel = AI_MODELS.find(m => m.id === selectedModel)
     return (
-      <div className={`bg-white border border-slate-200 rounded-xl focus-within:border-[#1a3a3a]/30 transition-all ${large ? '' : 'mx-auto max-w-3xl'}`}>
+      <div className={`relative bg-white border border-slate-200 rounded-xl focus-within:border-[#1a3a3a]/30 transition-all ${large ? '' : 'mx-auto max-w-3xl'}`}>
+        {isModelDropdownOpen && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setIsModelDropdownOpen(false)} />
+            <div className="absolute bottom-full right-3 mb-2 w-[220px] bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden py-1 z-40">
+              {AI_MODELS.map(model => (
+                <button
+                  key={model.id}
+                  type="button"
+                  onClick={() => { setSelectedModel(model.id); setIsModelDropdownOpen(false) }}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:bg-[#e8f0f0] hover:text-[#1a3a3a] transition-colors group"
+                >
+                  <div className="flex items-center gap-2">
+                    {model.id === 'auto' ? <Sparkles className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#1a3a3a]" /> : <div className="w-3.5 h-3.5" />}
+                    <span className={selectedModel === model.id ? 'font-medium text-slate-900' : ''}>{model.name}</span>
+                    {model.badge && (
+                      <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded leading-none">{model.badge}</span>
+                    )}
+                  </div>
+                  {selectedModel === model.id && <Check className="w-4 h-4 text-[#1a3a3a]" />}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
 
         {/* Selected context chip + image preview */}
@@ -218,16 +299,39 @@ const CoachAIPage = () => {
         />
         <div className="flex items-center justify-between px-3 pb-2.5">
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="text-slate-400 hover:text-slate-600 transition-colors"><Paperclip className="w-4 h-4" /></button>
-            <button type="button" onClick={toggleListen} className={`transition-colors ${isListening ? 'text-red-500' : 'text-slate-400 hover:text-slate-600'}`}><Mic className="w-4 h-4" /></button>
-            <button type="button" onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} className={`transition-colors ${isVoiceEnabled ? 'text-[#1a3a3a]' : 'text-slate-400 hover:text-slate-600'}`}>
+            <button type="button" onClick={() => fileInputRef.current?.click()} title="Adjuntar imagen" className="text-slate-400 hover:text-slate-600 transition-colors"><Paperclip className="w-4 h-4" /></button>
+            <button type="button" onClick={toggleListen} title="Dictar mensaje" className={`transition-colors ${isListening ? 'text-red-500' : 'text-slate-400 hover:text-slate-600'}`}><Mic className="w-4 h-4" /></button>
+            <button type="button" onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} title={isVoiceEnabled ? 'Silenciar respuestas' : 'Leer respuestas en voz'} className={`transition-colors ${isVoiceEnabled ? 'text-[#1a3a3a]' : 'text-slate-400 hover:text-slate-600'}`}>
               {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
+            <button
+              type="button"
+              onClick={openVoiceChat}
+              disabled={openingVoice}
+              title="Agente de voz (conversacion en tiempo real)"
+              className={`p-1 rounded-md transition-colors ${openingVoice ? 'opacity-60' : 'bg-[#e8f0f0] text-[#1a3a3a] hover:bg-[#d4e4e4]'}`}
+            >
+              {openingVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <AudioLines className="w-4 h-4" />}
+            </button>
           </div>
-          <button type="button" onClick={() => sendMessage()} disabled={(!input.trim() && !selectedImage) || loading}
-            className={`flex items-center gap-1.5 bg-[#1a3a3a] text-white rounded-lg font-semibold hover:bg-[#224a4a] transition-all disabled:opacity-40 ${large ? 'px-5 py-2 text-sm gap-2' : 'px-4 py-1.5 text-xs'}`}>
-            Consultar <ArrowRight className={large ? 'w-4 h-4' : 'w-3 h-3'} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+              title="Seleccionar modelo"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+            >
+              <Sparkles className="w-3 h-3 text-slate-400" />
+              {currentModel?.name}
+              {currentModel?.badge && (
+                <span className="text-[9px] bg-white text-slate-500 px-1 py-0.5 rounded leading-none">{currentModel.badge}</span>
+              )}
+            </button>
+            <button type="button" onClick={() => sendMessage()} disabled={(!input.trim() && !selectedImage) || loading}
+              className={`flex items-center gap-1.5 bg-[#1a3a3a] text-white rounded-lg font-semibold hover:bg-[#224a4a] transition-all disabled:opacity-40 ${large ? 'px-5 py-2 text-sm gap-2' : 'px-4 py-1.5 text-xs'}`}>
+              Consultar <ArrowRight className={large ? 'w-4 h-4' : 'w-3 h-3'} />
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -261,6 +365,13 @@ const CoachAIPage = () => {
           )}
         </div>
         <div className="border-t border-slate-200 bg-white p-4">{renderInputBar(false)}</div>
+        {voiceModalOpen && (
+          <VoiceChatModal
+            conversationId={conversationId}
+            onClose={() => setVoiceModalOpen(false)}
+            onSaved={handleVoiceSaved}
+          />
+        )}
       </div>
     )
   }
@@ -351,6 +462,13 @@ const CoachAIPage = () => {
           <><div /><p className="text-xs text-slate-400 py-4 text-center">No hay conversaciones aun.</p></>
         )}
       </div>
+      {voiceModalOpen && (
+        <VoiceChatModal
+          conversationId={conversationId}
+          onClose={() => setVoiceModalOpen(false)}
+          onSaved={handleVoiceSaved}
+        />
+      )}
     </div>
   )
 }
