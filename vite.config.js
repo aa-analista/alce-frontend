@@ -58,6 +58,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '/api/potential-clients': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
       // N8N webhooks (remote)
       '/api/n8n': {
         target: 'https://n8n.alcealce.com',

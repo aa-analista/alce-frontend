@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import {
   Home, Sparkles, BarChart3, Users, Bot, Activity, Settings, LogOut,
-  MessageSquare, FileText, Clock, Database, ChevronDown, Blocks, DollarSign
+  MessageSquare, FileText, Clock, Database, ChevronDown, Blocks, DollarSign,
+  UserPlus
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -26,6 +27,7 @@ const MODULE_ICONS = {
 // Fixed nav items (always or admin-only)
 const FIXED_ITEMS = [
   { id: 'home', path: '/home', label: 'Inicio', icon: Home, alwaysShow: true },
+  { id: 'clientes', path: '/clientes', label: 'Clientes', icon: UserPlus, adminOnly: true },
   { id: 'usuarios', path: '/usuarios', label: 'Equipo', icon: Users, adminOnly: true },
   { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true },
 ]
