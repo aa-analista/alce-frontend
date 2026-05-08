@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   UserPlus, Mail, Phone, Building2, Calendar, Clock, MessageSquare,
   Search, RefreshCw, Filter, X, ChevronRight, Globe, FileText, Save,
-  CheckCircle2, AlertCircle
+  CheckCircle2, AlertCircle, Briefcase, Users, Shield, MapPin
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -43,6 +43,16 @@ function formatDate(iso) {
   }
 }
 
+function formatDateShort(iso) {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+  } catch {
+    return iso
+  }
+}
+
 function formatPreferredDate(iso) {
   if (!iso) return null
   const d = new Date(`${iso.slice(0, 10)}T00:00:00`)
@@ -62,6 +72,60 @@ function StatusBadge({ status }) {
 }
 
 const ClientesModule = () => {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'super_admin'
+  const [tab, setTab] = useState('potential')
+  const activeTab = !isSuperAdmin && tab === 'current' ? 'potential' : tab
+
+  return (
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <UserPlus className="w-6 h-6 text-[#1a3a3a]" />
+          Clientes
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          {activeTab === 'potential'
+            ? 'Solicitudes recibidas desde el formulario de contacto del sitio web.'
+            : 'Organizaciones registradas en la plataforma con sus dueños y equipos.'}
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200 mb-6">
+        <button
+          onClick={() => setTab('potential')}
+          className={cn(TAB_CLASS, activeTab === 'potential' ? TAB_ACTIVE : TAB_IDLE)}
+        >
+          <UserPlus className="w-4 h-4" />
+          Clientes potenciales
+        </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setTab('current')}
+            className={cn(TAB_CLASS, activeTab === 'current' ? TAB_ACTIVE : TAB_IDLE)}
+          >
+            <Briefcase className="w-4 h-4" />
+            Clientes actuales
+          </button>
+        )}
+      </div>
+
+      {activeTab === 'potential' && <PotentialClientsTab />}
+      {activeTab === 'current' && isSuperAdmin && <CurrentClientsTab />}
+    </div>
+  )
+}
+
+const TAB_CLASS = 'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors'
+const TAB_ACTIVE = 'border-[#1a3a3a] text-[#1a3a3a]'
+const TAB_IDLE = 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+
+// ─────────────────────────────────────────────────────────────────────
+// Tab 1 — Clientes potenciales (existing logic, untouched)
+// ─────────────────────────────────────────────────────────────────────
+const PotentialClientsTab = () => {
   const { token } = useAuth()
   const [clients, setClients] = useState([])
   const [stats, setStats] = useState([])
@@ -96,8 +160,6 @@ const ClientesModule = () => {
   }, [token, statusFilter, search])
 
   useEffect(() => { load() }, [load])
-
-  // Sync notes draft when a different client is opened.
   useEffect(() => { setNotesDraft(selected?.notes || '') }, [selected?.id])
 
   const total = clients.length
@@ -115,7 +177,7 @@ const ClientesModule = () => {
       const { client } = await res.json()
       setClients((prev) => prev.map((c) => (c.id === id ? client : c)))
       if (selected?.id === id) setSelected(client)
-      load() // refresh stats
+      load()
     } catch (e) {
       alert(e.message)
     } finally {
@@ -144,18 +206,9 @@ const ClientesModule = () => {
   }
 
   return (
-    <div className="p-6 sm:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <UserPlus className="w-6 h-6 text-[#1a3a3a]" />
-            Clientes potenciales
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Solicitudes recibidas desde el formulario de contacto del sitio web.
-          </p>
-        </div>
+    <>
+      {/* Toolbar */}
+      <div className="flex justify-end mb-4">
         <button
           onClick={load}
           className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"
@@ -228,7 +281,6 @@ const ClientesModule = () => {
         )}
       </div>
 
-      {/* Error */}
       {error && (
         <div className="mb-4 flex items-start gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -306,7 +358,6 @@ const ClientesModule = () => {
             className="flex-1 bg-slate-900/40 backdrop-blur-sm"
           />
           <div className="w-full max-w-md bg-white shadow-2xl flex flex-col h-full overflow-hidden">
-            {/* Header */}
             <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-lg font-bold text-slate-900 truncate">{selected.name}</h2>
@@ -321,7 +372,6 @@ const ClientesModule = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
-              {/* Status selector */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Estado</label>
                 <div className="flex flex-wrap gap-1.5">
@@ -345,7 +395,6 @@ const ClientesModule = () => {
                 </div>
               </div>
 
-              {/* Contact info */}
               <div className="space-y-2.5">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Contacto</h3>
                 <a
@@ -372,7 +421,6 @@ const ClientesModule = () => {
                 )}
               </div>
 
-              {/* Service */}
               {selected.service && (
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Servicio de interes</h3>
@@ -382,7 +430,6 @@ const ClientesModule = () => {
                 </div>
               )}
 
-              {/* Preferred date */}
               {selected.preferred_date && (
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Fecha tentativa</h3>
@@ -400,7 +447,6 @@ const ClientesModule = () => {
                 </div>
               )}
 
-              {/* Message */}
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
                   <MessageSquare className="w-3.5 h-3.5" />
@@ -411,7 +457,6 @@ const ClientesModule = () => {
                 </div>
               </div>
 
-              {/* Internal notes */}
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5" />
@@ -438,7 +483,6 @@ const ClientesModule = () => {
                 </button>
               </div>
 
-              {/* Provenance */}
               <div className="pt-4 mt-4 border-t border-slate-100 space-y-1.5 text-xs text-slate-400">
                 <div className="flex items-center gap-2">
                   <Globe className="w-3 h-3" />
@@ -458,8 +502,284 @@ const ClientesModule = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Tab 2 — Clientes actuales (organizaciones registradas)
+// ─────────────────────────────────────────────────────────────────────
+const CurrentClientsTab = () => {
+  const { token } = useAuth()
+  const [customers, setCustomers] = useState([])
+  const [totals, setTotals] = useState({ organizations: 0, owners: 0, employees: 0, members: 0 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (search.trim()) params.set('q', search.trim())
+      const res = await fetch(`/api/customers?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Error al cargar clientes actuales')
+      const data = await res.json()
+      setCustomers(data.customers || [])
+      setTotals(data.totals || { organizations: 0, owners: 0, employees: 0, members: 0 })
+    } catch (e) {
+      setError(e.message || 'Error desconocido')
+    } finally {
+      setLoading(false)
+    }
+  }, [token, search])
+
+  useEffect(() => { load() }, [load])
+
+  return (
+    <>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={load}
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"
+        >
+          <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+          Actualizar
+        </button>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+        <StatCard label="Organizaciones" value={totals.organizations} accent />
+        <StatCard label="Dueños"        value={totals.owners} />
+        <StatCard label="Empleados"     value={totals.employees} />
+        <StatCard label="Total miembros" value={totals.members} />
+      </div>
+
+      {/* Search */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar organización por nombre, slug o país..."
+            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a3a3a] focus:ring-1 focus:ring-[#1a3a3a]/20"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-4 flex items-start gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* List */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 border-2 border-[#1a3a3a]/20 border-t-[#1a3a3a] rounded-full animate-spin" />
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="text-center py-16 text-slate-500">
+            <Briefcase className="w-10 h-10 mx-auto text-slate-300 mb-3" />
+            <p className="text-sm">No hay organizaciones registradas todavía.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {customers.map((org) => {
+              const owner = org.owners?.[0]
+              return (
+                <li key={org.id}>
+                  <button
+                    onClick={() => setSelected(org)}
+                    className="w-full px-5 py-4 flex items-start gap-4 hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#1a3a3a]/10 text-[#1a3a3a] font-bold flex items-center justify-center flex-shrink-0 uppercase">
+                      {org.name?.[0] || '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-slate-900 truncate">{org.name}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-slate-50 text-slate-600 border-slate-200 uppercase tracking-wider">
+                          {org.plan || 'free'}
+                        </span>
+                        {org.team_size_label && (
+                          <span className="text-xs text-slate-500">• {org.team_size_label}</span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500">
+                        {owner ? (
+                          <span className="inline-flex items-center gap-1">
+                            <Shield className="w-3 h-3" />{owner.name}
+                            <span className="text-slate-400">({owner.email})</span>
+                          </span>
+                        ) : (
+                          <span className="italic text-slate-400">Sin dueño asignado</span>
+                        )}
+                        {org.country && (
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />{org.country}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="w-3 h-3" />{org.members_count} {org.members_count === 1 ? 'miembro' : 'miembros'}
+                        </span>
+                        {org.owners_count > 1 && (
+                          <span className="text-slate-400">+{org.owners_count - 1} dueños</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
+                      <span className="text-xs text-slate-400">{formatDateShort(org.created_at)}</span>
+                      <ChevronRight className="w-4 h-4 text-slate-300" />
+                    </div>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      {/* Detail Drawer */}
+      {selected && (
+        <div className="fixed inset-0 z-50 flex">
+          <button
+            type="button"
+            aria-label="Cerrar"
+            onClick={() => setSelected(null)}
+            className="flex-1 bg-slate-900/40 backdrop-blur-sm"
+          />
+          <div className="w-full max-w-md bg-white shadow-2xl flex flex-col h-full overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between gap-3">
+              <div className="min-w-0 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#1a3a3a]/10 text-[#1a3a3a] font-bold flex items-center justify-center flex-shrink-0 uppercase">
+                  {selected.name?.[0] || '?'}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-slate-900 truncate">{selected.name}</h2>
+                  <p className="text-xs text-slate-500 font-mono truncate">{selected.slug}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelected(null)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              {/* Meta */}
+              <div className="grid grid-cols-2 gap-2">
+                <MetaCell label="Plan" value={selected.plan || 'free'} />
+                <MetaCell label="Tamaño equipo" value={selected.team_size_label || '—'} />
+                <MetaCell label="País" value={selected.country || '—'} />
+                <MetaCell label="Registrada" value={formatDateShort(selected.created_at)} />
+              </div>
+
+              {/* Owners */}
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5" />
+                  {selected.owners?.length === 1 ? 'Dueño' : 'Dueños'} ({selected.owners?.length || 0})
+                </h3>
+                {selected.owners?.length > 0 ? (
+                  <div className="space-y-2">
+                    {selected.owners.map((o) => (
+                      <MemberCard key={o.id} m={o} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-400 italic">Sin dueño asignado.</div>
+                )}
+              </div>
+
+              {/* Employees */}
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  Empleados ({selected.employees?.length || 0})
+                </h3>
+                {selected.employees?.length > 0 ? (
+                  <div className="space-y-2">
+                    {selected.employees.map((e) => (
+                      <MemberCard key={e.id} m={e} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-400 italic">Sin empleados todavía.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+const StatCard = ({ label, value, accent }) => (
+  <div className={cn(
+    'rounded-xl border p-3',
+    accent ? 'border-[#1a3a3a] bg-[#1a3a3a] text-white' : 'border-slate-200 bg-white'
+  )}>
+    <div className={cn('text-xs font-medium uppercase tracking-wider', accent ? 'text-white/70' : 'text-slate-500')}>
+      {label}
+    </div>
+    <div className="text-2xl font-bold mt-1">{value}</div>
+  </div>
+)
+
+const MetaCell = ({ label, value }) => (
+  <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
+    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</div>
+    <div className="text-sm text-slate-900 mt-0.5 capitalize truncate">{value}</div>
+  </div>
+)
+
+const MemberCard = ({ m }) => (
+  <div className={cn(
+    'flex items-start gap-3 p-3 rounded-lg border transition-colors',
+    m.is_active ? 'bg-slate-50 border-slate-100' : 'bg-slate-50/50 border-slate-100 opacity-60'
+  )}>
+    <div className="w-9 h-9 rounded-full bg-[#1a3a3a]/10 text-[#1a3a3a] font-bold flex items-center justify-center flex-shrink-0 uppercase text-sm">
+      {m.name?.[0] || '?'}
+    </div>
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-semibold text-sm text-slate-900 truncate">{m.name}</span>
+        {!m.is_active && (
+          <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Inactivo</span>
+        )}
+      </div>
+      <div className="text-xs text-slate-500 truncate">{m.email}</div>
+      {m.phone && (
+        <div className="text-xs text-slate-500 inline-flex items-center gap-1 mt-0.5">
+          <Phone className="w-3 h-3" />{m.phone}
+        </div>
+      )}
+    </div>
+    <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider flex-shrink-0">
+      {formatDateShort(m.created_at)}
+    </span>
+  </div>
+)
 
 export default ClientesModule

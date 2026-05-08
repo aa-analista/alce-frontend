@@ -10,6 +10,36 @@ const COUNTRIES = [
   'Estados Unidos', 'Brasil', 'Otro',
 ]
 
+// Códigos de marcación (ladas) ordenados con LATAM + España + USA primero
+const DIAL_CODES = [
+  { code: '+52',  flag: '🇲🇽', name: 'Mexico' },
+  { code: '+57',  flag: '🇨🇴', name: 'Colombia' },
+  { code: '+54',  flag: '🇦🇷', name: 'Argentina' },
+  { code: '+56',  flag: '🇨🇱', name: 'Chile' },
+  { code: '+51',  flag: '🇵🇪', name: 'Peru' },
+  { code: '+593', flag: '🇪🇨', name: 'Ecuador' },
+  { code: '+58',  flag: '🇻🇪', name: 'Venezuela' },
+  { code: '+502', flag: '🇬🇹', name: 'Guatemala' },
+  { code: '+53',  flag: '🇨🇺', name: 'Cuba' },
+  { code: '+591', flag: '🇧🇴', name: 'Bolivia' },
+  { code: '+1',   flag: '🇩🇴', name: 'Republica Dominicana' },
+  { code: '+504', flag: '🇭🇳', name: 'Honduras' },
+  { code: '+595', flag: '🇵🇾', name: 'Paraguay' },
+  { code: '+503', flag: '🇸🇻', name: 'El Salvador' },
+  { code: '+505', flag: '🇳🇮', name: 'Nicaragua' },
+  { code: '+506', flag: '🇨🇷', name: 'Costa Rica' },
+  { code: '+507', flag: '🇵🇦', name: 'Panama' },
+  { code: '+598', flag: '🇺🇾', name: 'Uruguay' },
+  { code: '+34',  flag: '🇪🇸', name: 'Espana' },
+  { code: '+1',   flag: '🇺🇸', name: 'Estados Unidos' },
+  { code: '+55',  flag: '🇧🇷', name: 'Brasil' },
+]
+// Mapa nombre país → código por defecto (para auto-sync con el select de país)
+const COUNTRY_TO_DIAL = DIAL_CODES.reduce((acc, c) => {
+  if (!acc[c.name]) acc[c.name] = c.code
+  return acc
+}, {})
+
 const RegisterPage = () => {
   const [form, setForm] = useState({
     name: '',
@@ -23,6 +53,8 @@ const RegisterPage = () => {
     teamSizeId: '',
   })
   const [teamSizes, setTeamSizes] = useState([])
+  const [whatsappDial, setWhatsappDial] = useState('+52')
+  const [whatsappDialTouched, setWhatsappDialTouched] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -39,7 +71,14 @@ const RegisterPage = () => {
       .catch(() => {})
   }, [])
 
-  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value })
+  const update = (field) => (e) => {
+    const value = e.target.value
+    setForm((prev) => ({ ...prev, [field]: value }))
+    if (field === 'country' && !whatsappDialTouched) {
+      const dial = COUNTRY_TO_DIAL[value]
+      if (dial) setWhatsappDial(dial)
+    }
+  }
 
   const passwordsMatch = form.password && form.confirmPassword && form.password === form.confirmPassword
   const passwordsMismatch = form.password && form.confirmPassword && form.password !== form.confirmPassword
@@ -51,13 +90,15 @@ const RegisterPage = () => {
     setError('')
     setLoading(true)
     try {
+      const whatsappDigits = form.whatsapp.replace(/\D/g, '')
+      const fullWhatsapp = whatsappDigits ? `${whatsappDial} ${whatsappDigits}` : ''
       await register({
         name: form.name,
         email: form.email,
         password: form.password,
         orgName: form.orgName,
         phone: form.phone,
-        whatsapp: form.whatsapp,
+        whatsapp: fullWhatsapp,
         country: form.country,
         teamSizeId: form.teamSizeId ? parseInt(form.teamSizeId) : null,
       })
@@ -192,12 +233,23 @@ const RegisterPage = () => {
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Numero principal de WhatsApp</label>
                   <div className="flex">
-                    <span className="inline-flex items-center px-3 py-2.5 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg text-sm text-slate-500">+</span>
+                    <select
+                      value={whatsappDial}
+                      onChange={(e) => { setWhatsappDial(e.target.value); setWhatsappDialTouched(true) }}
+                      aria-label="Codigo de pais"
+                      className="px-2.5 py-2.5 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all cursor-pointer appearance-none"
+                    >
+                      {DIAL_CODES.map((c, i) => (
+                        <option key={`${c.code}-${c.name}-${i}`} value={c.code}>
+                          {c.flag} {c.code}
+                        </option>
+                      ))}
+                    </select>
                     <input
                       type="tel"
                       value={form.whatsapp}
                       onChange={update('whatsapp')}
-                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-r-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                      className="flex-1 min-w-0 px-4 py-2.5 bg-white border border-slate-200 rounded-r-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
                       placeholder="55 1234 5678"
                     />
                   </div>

@@ -28,17 +28,36 @@ const HomeDashboard = () => {
   const [members, setMembers] = useState(1)
   const [completedSteps, setCompletedSteps] = useState([])
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
+  const isSuperAdmin = user?.role === 'super_admin'
+  const isAdmin = user?.role === 'admin' || isSuperAdmin
   const activeModules = (flows || []).filter(f => f.active).length
 
   // Fetch team member count
   useEffect(() => {
-    if (!isAdmin) return
+    if (!isAdmin || isSuperAdmin) return
     fetch('/api/users', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => setMembers(data.users?.length || 1))
       .catch(() => {})
-  }, [token, isAdmin])
+  }, [token, isAdmin, isSuperAdmin])
+
+  if (isSuperAdmin) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-14 h-14 mx-auto bg-[#1a3a3a] rounded-2xl flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h1 className="text-xl font-bold text-slate-900">Hola, {user?.name?.split(' ')[0] || 'Super Admin'}</h1>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+            Gestiona los clientes y el equipo de ALCE desde el menú lateral.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   const toggleStep = (id) => {
     setCompletedSteps(prev =>

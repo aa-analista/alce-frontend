@@ -29,7 +29,7 @@ const FIXED_ITEMS = [
   { id: 'home', path: '/home', label: 'Inicio', icon: Home, alwaysShow: true },
   { id: 'clientes', path: '/clientes', label: 'Clientes', icon: UserPlus, adminOnly: true },
   { id: 'usuarios', path: '/usuarios', label: 'Equipo', icon: Users, adminOnly: true },
-  { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true },
+  { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true, hideForSuperAdmin: true },
 ]
 
 const CORE_IDS = ['coach-ai', 'operacion', 'actividad']
@@ -46,23 +46,25 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
 
   const handleLogout = () => { logout(); navigate('/login') }
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
+  const isSuperAdmin = user?.role === 'super_admin'
+  const isAdmin = user?.role === 'admin' || isSuperAdmin
 
   const fixedVisible = FIXED_ITEMS.filter(item => {
+    if (isSuperAdmin && item.hideForSuperAdmin) return false
     if (item.alwaysShow) return true
     if (item.adminOnly) return isAdmin
     return false
   })
 
   const visibleModules = userModules.filter(m => m.type === 'module' || !m.type)
-  const coreModuleItems = visibleModules
+  const coreModuleItems = isSuperAdmin ? [] : visibleModules
     .filter(m => CORE_IDS.includes(m.id))
     .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
-  const agentModuleItems = visibleModules
+  const agentModuleItems = isSuperAdmin ? [] : visibleModules
     .filter(m => !CORE_IDS.includes(m.id))
     .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
 
-  const showAgentsGroup = isAdmin || agentModuleItems.length > 0
+  const showAgentsGroup = !isSuperAdmin && (isAdmin || agentModuleItems.length > 0)
   const isMarketplaceActive = currentPath === '/marketplace'
 
   const toggleAgents = () => {
