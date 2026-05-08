@@ -19,6 +19,7 @@ import OperacionPage from './components/OperacionPage'
 import AssistantWidget from './components/AssistantWidget'
 import LoginPage from './components/LoginPage'
 import RegisterPage from './components/RegisterPage'
+import ActivatePage from './components/ActivatePage'
 import HomeDashboard from './components/HomeDashboard'
 import { AssistantProvider } from './context/AssistantContext'
 
@@ -107,6 +108,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+          <Route path="/activar" element={<ActivatePage />} />
           <Route path="/" element={<ProtectedRoute><AssistantProvider><Dashboard /></AssistantProvider></ProtectedRoute>}>
             <Route index element={<Navigate to="/home" replace />} />
             <Route path="home" element={<HomeDashboard />} />

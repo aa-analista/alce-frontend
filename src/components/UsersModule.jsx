@@ -4,8 +4,9 @@ import {
   Users, UserPlus, ChevronDown, ChevronUp, Mail, Lock, User,
   Blocks, ToggleLeft, ToggleRight, CheckCircle2, XCircle, RefreshCw, Phone,
   MessageSquare, FileText, Clock, Bell, Send, Sparkles, BarChart3, Activity,
-  Pencil, Trash2, X, Save
+  Pencil, Trash2, X, Save, Copy, AlertTriangle
 } from 'lucide-react'
+import { DIAL_CODES } from '../utils/phoneCodes'
 
 const MODULE_ICONS = {
   'coach-ai': Sparkles, operacion: BarChart3, actividad: Activity,
@@ -22,7 +23,8 @@ const UsersModule = () => {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '' })
+  const [phoneDial, setPhoneDial] = useState('+52')
   const [notifForm, setNotifForm] = useState({ userId: null, title: '', message: '', category: 'general' })
   const [sendingNotif, setSendingNotif] = useState(false)
   const [notifSuccess, setNotifSuccess] = useState('')
@@ -31,6 +33,9 @@ const UsersModule = () => {
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' })
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState('')
+  // Activation actions
+  const [resendingId, setResendingId] = useState(null)
+  const [copiedId, setCopiedId] = useState(null)
 
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
@@ -45,10 +50,20 @@ const UsersModule = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault(); setFormError(''); setFormSuccess(''); setSaving(true)
     try {
-      const res = await fetch('/api/users', { method: 'POST', headers, body: JSON.stringify(form) })
+      const phoneDigits = (form.phone || '').replace(/\D/g, '')
+      const fullPhone = phoneDigits ? `${phoneDial} ${phoneDigits}` : ''
+      const payload = { name: form.name, email: form.email, phone: fullPhone }
+      const res = await fetch('/api/users', { method: 'POST', headers, body: JSON.stringify(payload) })
       const data = await res.json(); if (!res.ok) throw new Error(data.error)
-      setFormSuccess(`Usuario "${data.user.name}" creado`); setForm({ name: '', email: '', password: '', phone: '' }); fetchUsers()
-      setTimeout(() => { setFormSuccess(''); setShowForm(false) }, 2000)
+      const sent = data?.activation?.sent
+      setFormSuccess(
+        sent
+          ? `Usuario "${data.user.name}" creado. Se le envió un mensaje por WhatsApp para activar su cuenta.`
+          : `Usuario "${data.user.name}" creado. Falta número de teléfono — comparte el enlace de activación manualmente.`
+      )
+      setForm({ name: '', email: '', phone: '' })
+      fetchUsers()
+      setTimeout(() => { setFormSuccess(''); setShowForm(false) }, 3500)
     } catch (err) { setFormError(err.message) }
     setSaving(false)
   }
@@ -66,6 +81,33 @@ const UsersModule = () => {
       if (res.ok) { setNotifSuccess('Notificacion enviada'); setNotifForm({ userId: null, title: '', message: '', category: 'general' }); setTimeout(() => setNotifSuccess(''), 3000) }
     } catch (err) { console.error(err) }
     setSendingNotif(false)
+  }
+
+  const copyActivationLink = async (user) => {
+    const link = user?.activation?.link
+    if (!link) return
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopiedId(user.id)
+      setTimeout(() => setCopiedId((cur) => (cur === user.id ? null : cur)), 1800)
+    } catch (err) {
+      console.error('Clipboard error:', err)
+      alert('No se pudo copiar el enlace.')
+    }
+  }
+
+  const resendActivation = async (userId) => {
+    setResendingId(userId)
+    try {
+      const res = await fetch(`/api/users/${userId}/resend-activation`, { method: 'POST', headers })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al reenviar')
+      await fetchUsers()
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setResendingId(null)
+    }
   }
 
   const openEditModal = (u) => {
@@ -155,9 +197,28 @@ const UsersModule = () => {
               <div className="space-y-1.5"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</label><input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} placeholder="Nombre del empleado" /></div>
               <div className="space-y-1.5"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</label><input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} placeholder="empleado@email.com" /></div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Contrasena</label><input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputCls} placeholder="Min. 6 caracteres" /></div>
-              <div className="space-y-1.5"><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Telefono</label><input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls} placeholder="+52 1..." /></div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Telefono / WhatsApp</label>
+              <div className="flex">
+                <select
+                  value={phoneDial}
+                  onChange={(e) => setPhoneDial(e.target.value)}
+                  aria-label="Codigo de pais"
+                  className="px-2.5 py-2.5 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all cursor-pointer appearance-none"
+                >
+                  {DIAL_CODES.map((c, i) => (
+                    <option key={`${c.code}-${c.name}-${i}`} value={c.code}>{c.flag} {c.code}</option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className="flex-1 min-w-0 px-4 py-2.5 bg-white border border-slate-200 rounded-r-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                  placeholder="55 1234 5678"
+                />
+              </div>
+              <p className="text-[11px] text-slate-400">Recibirá un mensaje de WhatsApp con el enlace para activar su cuenta y definir su contraseña.</p>
             </div>
             <div className="flex justify-end pt-1">
               <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a3a] text-white rounded-lg font-semibold text-sm hover:bg-[#224a4a] transition-all active:scale-[0.98] shadow-sm disabled:opacity-50">
@@ -195,9 +256,52 @@ const UsersModule = () => {
                       {(user.modules || []).map(modId => { const Icon = MODULE_ICONS[modId] || Blocks; return <Icon key={modId} className="w-4 h-4 text-slate-400" /> })}
                       {(!user.modules || user.modules.length === 0) && <span className="text-xs text-slate-300">Sin modulos</span>}
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${user.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                      {user.is_active ? <><CheckCircle2 className="w-3 h-3" /> Activo</> : <><XCircle className="w-3 h-3" /> Inactivo</>}
-                    </span>
+                    {user.is_active ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700">
+                        <CheckCircle2 className="w-3 h-3" /> Activo
+                      </span>
+                    ) : user.activation?.status === 'active' ? (
+                      <>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                          <Clock className="w-3 h-3" /> Pendiente · Activo
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); copyActivationLink(user) }}
+                          title="Copiar enlace de activación"
+                          className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all"
+                        >
+                          {copiedId === user.id ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </>
+                    ) : user.activation?.status === 'expired' ? (
+                      <>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-red-50 text-red-600 border border-red-100">
+                          <AlertTriangle className="w-3 h-3" /> Vencido
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); resendActivation(user.id) }}
+                          disabled={resendingId === user.id}
+                          title="Generar nuevo enlace y reenviar por WhatsApp"
+                          className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all disabled:opacity-50"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${resendingId === user.id ? 'animate-spin' : ''}`} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
+                          <XCircle className="w-3 h-3" /> Inactivo
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); resendActivation(user.id) }}
+                          disabled={resendingId === user.id}
+                          title="Generar enlace y enviar por WhatsApp"
+                          className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all disabled:opacity-50"
+                        >
+                          <Send className={`w-3.5 h-3.5 ${resendingId === user.id ? 'animate-spin' : ''}`} />
+                        </button>
+                      </>
+                    )}
                     {/* Edit button */}
                     <button onClick={(e) => { e.stopPropagation(); openEditModal(user) }} className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all">
                       <Pencil className="w-3.5 h-3.5" />
