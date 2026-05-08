@@ -77,6 +77,18 @@ const ClientesModule = () => {
   const [tab, setTab] = useState('potential')
   const activeTab = !isSuperAdmin && tab === 'current' ? 'potential' : tab
 
+  if (!isSuperAdmin) {
+    return (
+      <div className="p-6 sm:p-8 max-w-2xl mx-auto">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 text-center">
+          <UserPlus className="w-10 h-10 mx-auto text-slate-300 mb-3" />
+          <p className="text-sm font-semibold text-slate-900">Acceso restringido</p>
+          <p className="text-xs text-slate-500 mt-1">Esta seccion sólo está disponible para super administradores.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 sm:p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -162,7 +174,7 @@ const PotentialClientsTab = () => {
   useEffect(() => { load() }, [load])
   useEffect(() => { setNotesDraft(selected?.notes || '') }, [selected?.id])
 
-  const total = clients.length
+  const total = stats.reduce((acc, s) => acc + (s.count || 0), 0)
   const countFor = (status) => stats.find((s) => s.status === status)?.count || 0
 
   async function changeStatus(id, status) {

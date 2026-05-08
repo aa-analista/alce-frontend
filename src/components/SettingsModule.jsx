@@ -99,10 +99,11 @@ const SettingsModule = () => {
   const initials = user?.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'
   const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
 
+  const isSuperAdmin = user?.role === 'super_admin'
   const tabs = [
     { id: 'profile', label: 'Datos Personales', icon: User },
     { id: 'password', label: 'Contrasena', icon: KeyRound },
-    { id: 'connectors', label: 'Conectores', icon: Plug },
+    ...(isSuperAdmin ? [] : [{ id: 'connectors', label: 'Conectores', icon: Plug }]),
   ]
 
   return (
@@ -212,7 +213,7 @@ const SettingsModule = () => {
       )}
 
       {/* Connectors Tab */}
-      {activeSection === 'connectors' && (
+      {activeSection === 'connectors' && !isSuperAdmin && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>

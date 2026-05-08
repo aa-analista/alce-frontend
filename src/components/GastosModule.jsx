@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import {
   DollarSign, TrendingUp, Users as UsersIcon, Zap, Calendar,
   MessageSquare, AudioLines, Mic, Volume2, Database, Image as ImageIcon, Bot,
-  ArrowUpDown, Loader2
+  ArrowUpDown, Loader2, Building2
 } from 'lucide-react'
 
 const FEATURE_META = {
@@ -30,6 +30,7 @@ const fmtDateTime = (d) => new Date(d).toLocaleString('es-MX', { day: '2-digit',
 
 const GastosModule = () => {
   const { token, user } = useAuth()
+  const isSuperAdmin = user?.role === 'super_admin'
   const [range, setRange] = useState('30d')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -72,7 +73,11 @@ const GastosModule = () => {
             <DollarSign className="w-6 h-6 text-[#1a3a3a]" />
             Gastos
           </h1>
-          <p className="text-sm text-slate-500 mt-1">Consumo de tokens, audio y costo estimado de OpenAI por tu organizacion.</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {isSuperAdmin
+              ? 'Consumo de tokens, audio y costo estimado de OpenAI agregando todas las organizaciones.'
+              : 'Consumo de tokens, audio y costo estimado de OpenAI por tu organizacion.'}
+          </p>
         </div>
         <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
           {RANGES.map(r => (
@@ -135,6 +140,48 @@ const GastosModule = () => {
             )}
           </div>
 
+          {/* Por organización (solo super_admin) */}
+          {isSuperAdmin && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
+                <Building2 className="w-4 h-4 text-[#1a3a3a]" /> Gasto por organizacion
+              </h3>
+              {(!data.byOrg || data.byOrg.length === 0) ? (
+                <p className="text-xs text-slate-400 py-6 text-center">Sin consumo de ninguna organizacion en el rango.</p>
+              ) : (
+                <div className="space-y-3">
+                  {data.byOrg.map((o) => {
+                    const pct = data.summary.total_cost > 0 ? (o.cost_usd / data.summary.total_cost) * 100 : 0
+                    return (
+                      <div key={o.id}>
+                        <div className="flex items-center justify-between text-sm mb-1 gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-7 h-7 rounded-md bg-[#e8f0f0] text-[#1a3a3a] flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
+                              {o.org_name?.[0] || '?'}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-slate-900 truncate">{o.org_name}</p>
+                              <p className="text-[10px] text-slate-400 font-mono truncate">{o.slug}</p>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-slate-900 font-semibold tabular-nums">{fmtUsd(o.cost_usd)}</p>
+                            <p className="text-[10px] text-slate-400">
+                              {fmtNum(o.tokens)} tokens · {o.calls} llamadas · {o.active_users} usuarios
+                            </p>
+                          </div>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#1a3a3a]" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Breakdown grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* By feature */}
@@ -188,7 +235,10 @@ const GastosModule = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-slate-900 truncate">{u.name}</p>
-                        <p className="text-[11px] text-slate-400">{fmtNum(u.tokens)} tokens · {u.calls} llamadas</p>
+                        <p className="text-[11px] text-slate-400 truncate">
+                          {isSuperAdmin && u.org_name && <span className="text-slate-500">{u.org_name} · </span>}
+                          {fmtNum(u.tokens)} tokens · {u.calls} llamadas
+                        </p>
                       </div>
                       <span className="text-sm font-semibold text-slate-900 tabular-nums">{fmtUsd(u.cost_usd)}</span>
                     </div>
@@ -213,6 +263,7 @@ const GastosModule = () => {
                   <thead className="bg-slate-50/50 border-b border-slate-100">
                     <tr className="text-[10px] text-slate-400 uppercase tracking-wider">
                       <th className="px-4 py-2.5 text-left font-medium">Fecha</th>
+                      {isSuperAdmin && <th className="px-4 py-2.5 text-left font-medium">Organizacion</th>}
                       <th className="px-4 py-2.5 text-left font-medium">Usuario</th>
                       <th className="px-4 py-2.5 text-left font-medium">Feature</th>
                       <th className="px-4 py-2.5 text-left font-medium">Modelo</th>
@@ -226,6 +277,7 @@ const GastosModule = () => {
                       return (
                         <tr key={r.id} className="hover:bg-slate-50/50">
                           <td className="px-4 py-2 text-slate-500 whitespace-nowrap">{fmtDateTime(r.created_at)}</td>
+                          {isSuperAdmin && <td className="px-4 py-2 text-slate-700">{r.org_name || '—'}</td>}
                           <td className="px-4 py-2 text-slate-700">{r.user_name || '—'}</td>
                           <td className="px-4 py-2 text-slate-700">{meta.label}</td>
                           <td className="px-4 py-2 text-slate-500 font-mono text-[10px]">{r.model || '—'}</td>

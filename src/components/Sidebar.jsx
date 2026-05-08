@@ -27,9 +27,9 @@ const MODULE_ICONS = {
 // Fixed nav items (always or admin-only)
 const FIXED_ITEMS = [
   { id: 'home', path: '/home', label: 'Inicio', icon: Home, alwaysShow: true },
-  { id: 'clientes', path: '/clientes', label: 'Clientes', icon: UserPlus, adminOnly: true },
+  { id: 'clientes', path: '/clientes', label: 'Clientes', icon: UserPlus, superAdminOnly: true },
   { id: 'usuarios', path: '/usuarios', label: 'Equipo', icon: Users, adminOnly: true },
-  { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true, hideForSuperAdmin: true },
+  { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true },
 ]
 
 const CORE_IDS = ['coach-ai', 'operacion', 'actividad']
@@ -50,8 +50,8 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
   const isAdmin = user?.role === 'admin' || isSuperAdmin
 
   const fixedVisible = FIXED_ITEMS.filter(item => {
-    if (isSuperAdmin && item.hideForSuperAdmin) return false
     if (item.alwaysShow) return true
+    if (item.superAdminOnly) return isSuperAdmin
     if (item.adminOnly) return isAdmin
     return false
   })
@@ -182,8 +182,8 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
           </div>
         )}
 
-        {/* Admin items (Equipo) */}
-        {fixedVisible.filter(i => i.adminOnly).map(item => (
+        {/* Admin items (Clientes, Equipo, Gastos) */}
+        {fixedVisible.filter(i => i.id !== 'home').map(item => (
           <SidebarLink key={item.id} item={item} isActive={currentPath === item.path} collapsed={collapsed} />
         ))}
       </nav>
