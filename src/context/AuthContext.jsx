@@ -31,7 +31,13 @@ export const AuthProvider = ({ children }) => {
         const data = await res.json()
         setUser(data.user)
       } else {
-        // Invalid / expired token
+        // Invalid / expired token (o suspensión por org)
+        try {
+          const data = await res.json()
+          if (data?.suspended) {
+            localStorage.setItem('alce_login_notice', data.error || 'Tu acceso ha sido suspendido.')
+          }
+        } catch { /* noop */ }
         localStorage.removeItem('alce_token')
         setToken(null)
         setUser(null)

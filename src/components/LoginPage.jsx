@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const LoginPage = () => {
@@ -9,8 +9,18 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  // Mensaje persistido si la sesión se cerró por suspensión de org
+  useEffect(() => {
+    const stored = localStorage.getItem('alce_login_notice')
+    if (stored) {
+      setNotice(stored)
+      localStorage.removeItem('alce_login_notice')
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -85,6 +95,13 @@ const LoginPage = () => {
 
           <h2 className="text-2xl font-bold text-slate-900">Bienvenido a Alce AI</h2>
           <p className="text-slate-500 text-sm mt-1.5">Inicie sesion para acceder a su espacio de trabajo.</p>
+
+          {notice && !error && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>{notice}</span>
+            </div>
+          )}
 
           {error && (
             <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm text-center">
