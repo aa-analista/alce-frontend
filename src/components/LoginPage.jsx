@@ -39,7 +39,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Panel — Hero */}
-      <div className="hidden lg:flex lg:w-[45%] bg-[#1a3a3a] relative overflow-hidden flex-col justify-between p-10">
+      <div className="hidden lg:flex lg:w-[45%] bg-[var(--brand-primary)] relative overflow-hidden flex-col justify-between p-10">
         {/* Logo */}
         <div className="flex items-center gap-2.5 relative z-10">
           <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
@@ -78,8 +78,8 @@ const LoginPage = () => {
         <p className="text-xs text-white/30 relative z-10">2025 Alce AI. Todos los derechos reservados.</p>
 
         {/* Background gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a3a] via-[#1d4040] to-[#163333]" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#224a4a] rounded-full blur-[120px] opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)] via-[#1d4040] to-[#163333]" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[var(--brand-secondary)] rounded-full blur-[120px] opacity-50" />
       </div>
 
       {/* Right Panel — Form */}
@@ -87,10 +87,10 @@ const LoginPage = () => {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="w-8 h-8 bg-[#1a3a3a] rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-[var(--brand-primary)] rounded-lg flex items-center justify-center">
               <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
-            <span className="text-[#1a3a3a] font-semibold text-lg">Alce AI</span>
+            <span className="text-[var(--brand-primary)] font-semibold text-lg">Alce AI</span>
           </div>
 
           <h2 className="text-2xl font-bold text-slate-900">Bienvenido a Alce AI</h2>
@@ -117,7 +117,7 @@ const LoginPage = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
                 placeholder="ejemplo@empresa.com"
                 required
               />
@@ -127,7 +127,7 @@ const LoginPage = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-slate-700">Contrasena</label>
-                <a href="#" className="text-xs font-medium text-[#1a3a3a] hover:text-[#2a5a5a] transition-colors">
+                <a href="#" className="text-xs font-medium text-[var(--brand-primary)] hover:text-[#2a5a5a] transition-colors">
                   Olvidaste tu contrasena?
                 </a>
               </div>
@@ -136,7 +136,7 @@ const LoginPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all pr-11"
+                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all pr-11"
                   placeholder="Tu contrasena"
                   required
                 />
@@ -154,7 +154,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-[#1a3a3a] hover:bg-[#224a4a] text-white font-semibold rounded-lg transition-all text-sm disabled:opacity-60"
+              className="w-full py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white font-semibold rounded-lg transition-all text-sm disabled:opacity-60"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -191,7 +191,7 @@ const LoginPage = () => {
           {/* Register link */}
           <p className="text-center mt-6 text-sm text-slate-500">
             No tienes una cuenta?{' '}
-            <Link to="/register" className="font-semibold text-slate-900 hover:text-[#1a3a3a] transition-colors">
+            <Link to="/register" className="font-semibold text-slate-900 hover:text-[var(--brand-primary)] transition-colors">
               Crear cuenta
             </Link>
           </p>

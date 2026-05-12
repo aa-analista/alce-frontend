@@ -117,14 +117,14 @@ export default function ContratosModule() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-            <FileSignature className="w-5 h-5 text-[#1a3a3a]" />
+            <FileSignature className="w-5 h-5 text-[var(--brand-primary)]" />
             Generación de Contratos
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">Genera propuestas profesionales en PDF para tus clientes</p>
         </div>
         <button
           onClick={handleNueva}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a3a3a] text-white text-sm font-medium rounded-lg hover:bg-[#0f2828] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--brand-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--brand-primary)] transition-colors"
         >
           <Plus className="w-4 h-4" />
           Nueva propuesta
@@ -165,7 +165,7 @@ export default function ContratosModule() {
       {metrics.ranking.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Award className="w-4 h-4 text-[#1a3a3a]" />
+            <Award className="w-4 h-4 text-[var(--brand-primary)]" />
             <h3 className="font-semibold text-slate-800 text-sm">Ranking por vendedor</h3>
           </div>
           <div className="space-y-2">
@@ -174,17 +174,17 @@ export default function ContratosModule() {
               const pct = max > 0 ? (v.monto / max) * 100 : 0
               return (
                 <div key={v.nombre} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#1a3a3a] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-[var(--brand-primary)] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-sm font-medium text-slate-700 truncate">{v.nombre}</p>
-                      <p className="text-sm font-bold text-[#1a3a3a]">{fmtMoney(v.monto)}</p>
+                      <p className="text-sm font-bold text-[var(--brand-primary)]">{fmtMoney(v.monto)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#1a3a3a] rounded-full" style={{ width: `${pct}%` }} />
+                        <div className="h-full bg-[var(--brand-primary)] rounded-full" style={{ width: `${pct}%` }} />
                       </div>
                       <p className="text-[10px] text-slate-400 whitespace-nowrap">{v.firmadas}/{v.count} firmadas</p>
                     </div>
@@ -205,13 +205,13 @@ export default function ContratosModule() {
             placeholder="Buscar por cliente, folio o trámite..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/10 focus:border-[#1a3a3a]/30"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/10 focus:border-[var(--brand-primary)]/30"
           />
         </div>
         <select
           value={filterEstado}
           onChange={e => setFilterEstado(e.target.value)}
-          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/10 focus:border-[#1a3a3a]/30"
+          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/10 focus:border-[var(--brand-primary)]/30"
         >
           <option value="">Todos los estados</option>
           {Object.entries(ESTADOS).map(([k, v]) => (
@@ -232,7 +232,7 @@ export default function ContratosModule() {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         {loading && propuestas.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#1a3a3a] border-t-transparent mx-auto mb-3" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent mx-auto mb-3" />
             <p className="text-sm">Cargando propuestas…</p>
           </div>
         ) : filtered.length === 0 ? (
@@ -243,7 +243,7 @@ export default function ContratosModule() {
             {propuestas.length === 0 && (
               <button
                 onClick={handleNueva}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1a3a3a] text-white text-sm font-medium rounded-lg hover:bg-[#0f2828]"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--brand-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--brand-primary)]"
               >
                 <Plus className="w-4 h-4" /> Nueva propuesta
               </button>
@@ -270,7 +270,7 @@ export default function ContratosModule() {
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-4 py-3">
-                        <span className="text-xs font-mono font-semibold text-[#1a3a3a]">{p.folio}</span>
+                        <span className="text-xs font-mono font-semibold text-[var(--brand-primary)]">{p.folio}</span>
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-sm font-medium text-slate-800">{p.cliente_nombre}</p>
@@ -301,7 +301,7 @@ export default function ContratosModule() {
                         <div className="inline-flex items-center gap-1">
                           <button
                             onClick={() => handlePreview(p)}
-                            className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-slate-100 rounded transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-slate-100 rounded transition-colors"
                             title="Ver propuesta"
                           >
                             <Eye className="w-4 h-4" />

@@ -140,7 +140,7 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-4 py-1.5 bg-[#1a3a3a] text-white text-sm font-medium rounded-lg hover:bg-[#0f2828] transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--brand-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--brand-primary)] transition-colors"
             >
               <Printer className="w-4 h-4" /> Imprimir / Guardar PDF
             </button>
@@ -156,7 +156,7 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
           <button
             onClick={() => setTab('propuesta')}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === 'propuesta' ? 'border-[#1a3a3a] text-[#1a3a3a]' : 'border-transparent text-slate-500 hover:text-slate-700'
+              tab === 'propuesta' ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
             <FileText className="w-4 h-4" /> Propuesta
@@ -164,7 +164,7 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
           <button
             onClick={() => setTab('expediente')}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === 'expediente' ? 'border-[#1a3a3a] text-[#1a3a3a]' : 'border-transparent text-slate-500 hover:text-slate-700'
+              tab === 'expediente' ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
             <FolderOpen className="w-4 h-4" /> Expediente
@@ -172,8 +172,8 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
         </div>
 
         {publicLink && tab === 'propuesta' && (
-          <div className="bg-[#1a3a3a]/5 border border-[#1a3a3a]/20 rounded-lg px-4 py-3 flex items-center gap-3">
-            <Link2 className="w-4 h-4 text-[#1a3a3a] flex-shrink-0" />
+          <div className="bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/20 rounded-lg px-4 py-3 flex items-center gap-3">
+            <Link2 className="w-4 h-4 text-[var(--brand-primary)] flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-0.5">Link público para el cliente</p>
               <p className="text-xs font-mono text-slate-700 truncate">{publicLink}</p>
@@ -197,23 +197,23 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
       {tab === 'propuesta' && (
       <div className="print-area mt-4 bg-white shadow-lg max-w-[850px] mx-auto" style={{ minHeight: '1100px' }}>
         {/* MEMBRETE */}
-        <div className="px-12 py-8 border-b-4" style={{ borderColor: '#1a3a3a' }}>
+        <div className="px-12 py-8 border-b-4" style={{ borderColor: 'var(--brand-primary)' }}>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               {/* Logo */}
-              <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: '#1a3a3a' }}>
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: 'var(--brand-primary)' }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-8 h-8">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#1a3a3a' }}>Extranjería México</h1>
+                <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--brand-primary)' }}>Extranjería México</h1>
                 <p className="text-xs text-slate-500 uppercase tracking-widest">Asesoría migratoria profesional</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-[10px] text-slate-400 uppercase tracking-widest">Folio</p>
-              <p className="text-lg font-mono font-bold" style={{ color: '#1a3a3a' }}>{propuesta.folio}</p>
+              <p className="text-lg font-mono font-bold" style={{ color: 'var(--brand-primary)' }}>{propuesta.folio}</p>
               <p className="text-xs text-slate-500 mt-1">{fmtFecha(fechaEmision)}</p>
             </div>
           </div>
@@ -261,8 +261,8 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
           </div>
 
           {/* Honorarios */}
-          <div className="border-2 rounded-lg overflow-hidden" style={{ borderColor: '#1a3a3a' }}>
-            <div className="px-5 py-2.5 text-white text-xs font-semibold uppercase tracking-widest" style={{ background: '#1a3a3a' }}>
+          <div className="border-2 rounded-lg overflow-hidden" style={{ borderColor: 'var(--brand-primary)' }}>
+            <div className="px-5 py-2.5 text-white text-xs font-semibold uppercase tracking-widest" style={{ background: 'var(--brand-primary)' }}>
               Honorarios profesionales
             </div>
             <div className="px-5 py-5 flex items-center justify-between">
@@ -271,7 +271,7 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
                 <p className="text-[11px] text-slate-400 mt-0.5">Incluye gestión completa del trámite</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold" style={{ color: '#1a3a3a' }}>
+                <p className="text-3xl font-bold" style={{ color: 'var(--brand-primary)' }}>
                   {fmtMoney(propuesta.precio, propuesta.moneda)}
                 </p>
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest">{propuesta.moneda}</p>
@@ -326,7 +326,7 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
               {propuesta.vendedor_puesto && (
                 <p className="text-xs text-slate-500">{propuesta.vendedor_puesto}</p>
               )}
-              <p className="text-xs font-semibold mt-1" style={{ color: '#1a3a3a' }}>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'var(--brand-primary)' }}>
                 Extranjería México
               </p>
             </div>
@@ -334,7 +334,7 @@ export default function ContratoPreview({ propuesta, onBack, onEdit }) {
         </div>
 
         {/* FOOTER */}
-        <div className="px-12 py-4 border-t-2 mt-8 text-center" style={{ borderColor: '#1a3a3a' }}>
+        <div className="px-12 py-4 border-t-2 mt-8 text-center" style={{ borderColor: 'var(--brand-primary)' }}>
           <p className="text-[10px] text-slate-400 uppercase tracking-widest">
             Documento generado el {fmtFecha(fechaEmision)} · Folio {propuesta.folio}
           </p>

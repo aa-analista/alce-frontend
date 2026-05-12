@@ -238,7 +238,7 @@ const CoachAIPage = () => {
     const CtxIcon = activeContext ? (MODULE_ICONS[activeContext.id] || Blocks) : null
     const currentModel = AI_MODELS.find(m => m.id === selectedModel)
     return (
-      <div className={`relative bg-white border border-slate-200 rounded-xl focus-within:border-[#1a3a3a]/30 transition-all ${large ? '' : 'mx-auto max-w-3xl'}`}>
+      <div className={`relative bg-white border border-slate-200 rounded-xl focus-within:border-[var(--brand-primary)]/30 transition-all ${large ? '' : 'mx-auto max-w-3xl'}`}>
         {isModelDropdownOpen && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setIsModelDropdownOpen(false)} />
@@ -248,16 +248,16 @@ const CoachAIPage = () => {
                   key={model.id}
                   type="button"
                   onClick={() => { setSelectedModel(model.id); setIsModelDropdownOpen(false) }}
-                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:bg-[#e8f0f0] hover:text-[#1a3a3a] transition-colors group"
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:bg-[#e8f0f0] hover:text-[var(--brand-primary)] transition-colors group"
                 >
                   <div className="flex items-center gap-2">
-                    {model.id === 'auto' ? <Sparkles className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#1a3a3a]" /> : <div className="w-3.5 h-3.5" />}
+                    {model.id === 'auto' ? <Sparkles className="w-3.5 h-3.5 text-slate-400 group-hover:text-[var(--brand-primary)]" /> : <div className="w-3.5 h-3.5" />}
                     <span className={selectedModel === model.id ? 'font-medium text-slate-900' : ''}>{model.name}</span>
                     {model.badge && (
                       <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded leading-none">{model.badge}</span>
                     )}
                   </div>
-                  {selectedModel === model.id && <Check className="w-4 h-4 text-[#1a3a3a]" />}
+                  {selectedModel === model.id && <Check className="w-4 h-4 text-[var(--brand-primary)]" />}
                 </button>
               ))}
             </div>
@@ -269,7 +269,7 @@ const CoachAIPage = () => {
         {(activeContext || selectedImage) && (
           <div className="px-4 pt-3 flex items-center gap-2 flex-wrap">
             {activeContext && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#1a3a3a] text-white text-xs font-medium rounded-lg">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[var(--brand-primary)] text-white text-xs font-medium rounded-lg">
                 <CtxIcon className="w-3 h-3" />
                 {activeContext.label}
                 <button type="button" onClick={() => setActiveContext(null)} className="ml-0.5 hover:text-white/70 transition-colors">
@@ -301,7 +301,7 @@ const CoachAIPage = () => {
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => fileInputRef.current?.click()} title="Adjuntar imagen" className="text-slate-400 hover:text-slate-600 transition-colors"><Paperclip className="w-4 h-4" /></button>
             <button type="button" onClick={toggleListen} title="Dictar mensaje" className={`transition-colors ${isListening ? 'text-red-500' : 'text-slate-400 hover:text-slate-600'}`}><Mic className="w-4 h-4" /></button>
-            <button type="button" onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} title={isVoiceEnabled ? 'Silenciar respuestas' : 'Leer respuestas en voz'} className={`transition-colors ${isVoiceEnabled ? 'text-[#1a3a3a]' : 'text-slate-400 hover:text-slate-600'}`}>
+            <button type="button" onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} title={isVoiceEnabled ? 'Silenciar respuestas' : 'Leer respuestas en voz'} className={`transition-colors ${isVoiceEnabled ? 'text-[var(--brand-primary)]' : 'text-slate-400 hover:text-slate-600'}`}>
               {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
             <button
@@ -309,7 +309,7 @@ const CoachAIPage = () => {
               onClick={openVoiceChat}
               disabled={openingVoice}
               title="Agente de voz (conversacion en tiempo real)"
-              className={`p-1 rounded-md transition-colors ${openingVoice ? 'opacity-60' : 'bg-[#e8f0f0] text-[#1a3a3a] hover:bg-[#d4e4e4]'}`}
+              className={`p-1 rounded-md transition-colors ${openingVoice ? 'opacity-60' : 'bg-[#e8f0f0] text-[var(--brand-primary)] hover:bg-[#d4e4e4]'}`}
             >
               {openingVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <AudioLines className="w-4 h-4" />}
             </button>
@@ -328,7 +328,7 @@ const CoachAIPage = () => {
               )}
             </button>
             <button type="button" onClick={() => sendMessage()} disabled={(!input.trim() && !selectedImage) || loading}
-              className={`flex items-center gap-1.5 bg-[#1a3a3a] text-white rounded-lg font-semibold hover:bg-[#224a4a] transition-all disabled:opacity-40 ${large ? 'px-5 py-2 text-sm gap-2' : 'px-4 py-1.5 text-xs'}`}>
+              className={`flex items-center gap-1.5 bg-[var(--brand-primary)] text-white rounded-lg font-semibold hover:bg-[var(--brand-secondary)] transition-all disabled:opacity-40 ${large ? 'px-5 py-2 text-sm gap-2' : 'px-4 py-1.5 text-xs'}`}>
               Consultar <ArrowRight className={large ? 'w-4 h-4' : 'w-3 h-3'} />
             </button>
           </div>
@@ -341,14 +341,14 @@ const CoachAIPage = () => {
   if (isInChat) {
     return (
       <div className="flex flex-col h-[calc(100vh-3.5rem-3rem)] relative">
-        <button onClick={resetChat} className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#1a3a3a] bg-white hover:bg-[#e8f0f0] rounded-lg border border-slate-200 shadow-sm transition-all">
+        <button onClick={resetChat} className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--brand-primary)] bg-white hover:bg-[#e8f0f0] rounded-lg border border-slate-200 shadow-sm transition-all">
           <ArrowLeft className="w-3 h-3" /> Regresar
         </button>
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5" ref={messagesRef}>
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-3 max-w-3xl mx-auto ${msg.role === 'user' ? 'justify-end' : ''}`}>
-              {msg.role === 'assistant' && <div className="w-7 h-7 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0 mt-0.5"><Sparkles className="w-3.5 h-3.5 text-[#1a3a3a]" /></div>}
-              <div className={`px-4 py-3 rounded-xl text-sm leading-relaxed max-w-[80%] ${msg.role === 'user' ? 'bg-[#1a3a3a] text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'}`}>
+              {msg.role === 'assistant' && <div className="w-7 h-7 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0 mt-0.5"><Sparkles className="w-3.5 h-3.5 text-[var(--brand-primary)]" /></div>}
+              <div className={`px-4 py-3 rounded-xl text-sm leading-relaxed max-w-[80%] ${msg.role === 'user' ? 'bg-[var(--brand-primary)] text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'}`}>
                 {msg.image && <img src={msg.image} alt="" className="max-w-full rounded-lg mb-2" />}
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               </div>
@@ -357,7 +357,7 @@ const CoachAIPage = () => {
           ))}
           {(loading || isListening) && (
             <div className="flex gap-3 max-w-3xl mx-auto">
-              <div className="w-7 h-7 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0"><Sparkles className="w-3.5 h-3.5 text-[#1a3a3a]" /></div>
+              <div className="w-7 h-7 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0"><Sparkles className="w-3.5 h-3.5 text-[var(--brand-primary)]" /></div>
               <div className="px-4 py-3 rounded-xl bg-white border border-slate-200 rounded-tl-sm flex items-center gap-2 text-sm text-slate-500">
                 {isListening ? <><span className="flex gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-bounce"/><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-bounce" style={{animationDelay:'0.15s'}}/><span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-bounce" style={{animationDelay:'0.3s'}}/></span><span className="text-red-500 font-medium ml-1">Escuchando...</span></> : <><div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce"/><div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{animationDelay:'0.15s'}}/><div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{animationDelay:'0.3s'}}/></>}
               </div>
@@ -380,7 +380,7 @@ const CoachAIPage = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-4">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-[#e8f0f0] rounded-xl mb-3"><Sparkles className="w-6 h-6 text-[#1a3a3a]" /></div>
+        <div className="inline-flex items-center justify-center w-12 h-12 bg-[#e8f0f0] rounded-xl mb-3"><Sparkles className="w-6 h-6 text-[var(--brand-primary)]" /></div>
         <h1 className="text-2xl font-bold text-slate-900">Coach AI</h1>
         <p className="text-sm text-slate-500 mt-1.5">Su asistente estrategico para la gestion y consulta de su espacio de trabajo</p>
       </div>
@@ -395,7 +395,7 @@ const CoachAIPage = () => {
             const isActive = activeContext?.id === chip.id
             return (
               <button key={chip.id} onClick={() => setActiveContext(isActive ? null : chip)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${isActive ? 'bg-[#1a3a3a] text-white border-[#1a3a3a]' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${isActive ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)]' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
                 <Icon className="w-3 h-3" /> {chip.label}
               </button>
             )
@@ -409,7 +409,7 @@ const CoachAIPage = () => {
           {SUGGESTIONS.map((s, i) => { const Icon = s.icon; return (
             <button key={i} onClick={() => sendMessage(s.title)} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl text-left hover:shadow-sm hover:border-slate-300 transition-all group">
               <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${s.color}`} />
-              <div><p className="text-sm font-medium text-slate-900 group-hover:text-[#1a3a3a] transition-colors">{s.title}</p><p className="text-xs text-slate-400 mt-0.5">{s.desc}</p></div>
+              <div><p className="text-sm font-medium text-slate-900 group-hover:text-[var(--brand-primary)] transition-colors">{s.title}</p><p className="text-xs text-slate-400 mt-0.5">{s.desc}</p></div>
             </button>
           )})}
         </div>
@@ -450,7 +450,7 @@ const CoachAIPage = () => {
               <div key={`conv-${conv.id}`} onClick={() => loadConversation(conv.id)}
                 className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl text-left hover:shadow-sm transition-all cursor-pointer group min-h-[68px]">
                 <Sparkles className="w-4 h-4 text-slate-300 flex-shrink-0" />
-                <div className="flex-1 min-w-0"><p className="text-sm font-medium text-slate-700 group-hover:text-[#1a3a3a] transition-colors truncate">{conv.title}</p><p className="text-xs text-slate-400">{formatTime(conv.updated_at)}</p></div>
+                <div className="flex-1 min-w-0"><p className="text-sm font-medium text-slate-700 group-hover:text-[var(--brand-primary)] transition-colors truncate">{conv.title}</p><p className="text-xs text-slate-400">{formatTime(conv.updated_at)}</p></div>
                 <button onClick={(e) => deleteConversation(conv.id, e)} className="p-1 text-slate-300 hover:text-red-500 rounded transition-all opacity-0 group-hover:opacity-100 flex-shrink-0" title="Eliminar">
                   <X className="w-3.5 h-3.5" />
                 </button>

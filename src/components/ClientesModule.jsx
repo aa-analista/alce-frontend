@@ -94,7 +94,7 @@ const ClientesModule = () => {
       {/* Header */}
       <div className="mb-5">
         <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <UserPlus className="w-6 h-6 text-[#1a3a3a]" />
+          <UserPlus className="w-6 h-6 text-[var(--brand-primary)]" />
           Clientes
         </h1>
         <p className="text-sm text-slate-500 mt-1">
@@ -131,7 +131,7 @@ const ClientesModule = () => {
 }
 
 const TAB_CLASS = 'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors'
-const TAB_ACTIVE = 'border-[#1a3a3a] text-[#1a3a3a]'
+const TAB_ACTIVE = 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
 const TAB_IDLE = 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
 
 // ─────────────────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ const PotentialClientsTab = () => {
           onClick={() => setStatusFilter('')}
           className={cn(
             'rounded-xl border p-3 text-left transition-all',
-            !statusFilter ? 'border-[#1a3a3a] bg-[#1a3a3a] text-white shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'
+            !statusFilter ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'
           )}
         >
           <div className={cn('text-xs font-medium uppercase tracking-wider', !statusFilter ? 'text-white/70' : 'text-slate-500')}>
@@ -250,7 +250,7 @@ const PotentialClientsTab = () => {
             onClick={() => setStatusFilter(opt.value)}
             className={cn(
               'rounded-xl border p-3 text-left transition-all',
-              statusFilter === opt.value ? 'border-[#1a3a3a] bg-[#1a3a3a] text-white shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'
+              statusFilter === opt.value ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'
             )}
           >
             <div className={cn('text-xs font-medium uppercase tracking-wider', statusFilter === opt.value ? 'text-white/70' : 'text-slate-500')}>
@@ -270,7 +270,7 @@ const PotentialClientsTab = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email, empresa o mensaje..."
-            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a3a3a] focus:ring-1 focus:ring-[#1a3a3a]/20"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]/20"
           />
           {search && (
             <button
@@ -304,7 +304,7 @@ const PotentialClientsTab = () => {
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-[#1a3a3a]/20 border-t-[#1a3a3a] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[var(--brand-primary)]/20 border-t-[var(--brand-primary)] rounded-full animate-spin" />
           </div>
         ) : clients.length === 0 ? (
           <div className="text-center py-16 text-slate-500">
@@ -319,7 +319,7 @@ const PotentialClientsTab = () => {
                   onClick={() => setSelected(c)}
                   className="w-full px-5 py-4 flex items-start gap-4 hover:bg-slate-50 transition-colors text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#1a3a3a]/10 text-[#1a3a3a] font-bold flex items-center justify-center flex-shrink-0 uppercase">
+                  <div className="w-10 h-10 rounded-full bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-bold flex items-center justify-center flex-shrink-0 uppercase">
                     {c.name?.[0] || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -479,12 +479,12 @@ const PotentialClientsTab = () => {
                   onChange={(e) => setNotesDraft(e.target.value)}
                   rows={4}
                   placeholder="Notas privadas del equipo (no visibles para el cliente)..."
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a3a3a] focus:ring-1 focus:ring-[#1a3a3a]/20"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]/20"
                 />
                 <button
                   onClick={saveNotes}
                   disabled={savingNotes || notesDraft === (selected.notes || '')}
-                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1a3a3a] text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0f2a2a] transition-colors"
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--brand-primary)] text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--brand-primary)] transition-colors"
                 >
                   {savingNotes ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -624,7 +624,7 @@ const CurrentClientsTab = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar organización por nombre, slug o país..."
-            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a3a3a] focus:ring-1 focus:ring-[#1a3a3a]/20"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]/20"
           />
           {search && (
             <button
@@ -648,7 +648,7 @@ const CurrentClientsTab = () => {
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-[#1a3a3a]/20 border-t-[#1a3a3a] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[var(--brand-primary)]/20 border-t-[var(--brand-primary)] rounded-full animate-spin" />
           </div>
         ) : customers.length === 0 ? (
           <div className="text-center py-16 text-slate-500">
@@ -665,7 +665,7 @@ const CurrentClientsTab = () => {
                     onClick={() => setSelected(org)}
                     className="w-full px-5 py-4 flex items-start gap-4 hover:bg-slate-50 transition-colors text-left"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-[#1a3a3a]/10 text-[#1a3a3a] font-bold flex items-center justify-center flex-shrink-0 uppercase">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-bold flex items-center justify-center flex-shrink-0 uppercase">
                       {org.name?.[0] || '?'}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -729,7 +729,7 @@ const CurrentClientsTab = () => {
           <div className="w-full max-w-md bg-white shadow-2xl flex flex-col h-full overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between gap-3">
               <div className="min-w-0 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#1a3a3a]/10 text-[#1a3a3a] font-bold flex items-center justify-center flex-shrink-0 uppercase">
+                <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-bold flex items-center justify-center flex-shrink-0 uppercase">
                   {selected.name?.[0] || '?'}
                 </div>
                 <div className="min-w-0">
@@ -775,7 +775,7 @@ const CurrentClientsTab = () => {
                 <select
                   value={statusDraft.status}
                   onChange={(e) => setStatusDraft((d) => ({ ...d, status: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a3a3a] focus:ring-1 focus:ring-[#1a3a3a]/20"
+                  className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]/20"
                 >
                   <option value="active">Activa — pueden iniciar sesión</option>
                   <option value="suspended">Suspendida — se les bloquea el login</option>
@@ -790,7 +790,7 @@ const CurrentClientsTab = () => {
                       onChange={(e) => setStatusDraft((d) => ({ ...d, reason: e.target.value }))}
                       rows={2}
                       placeholder="Ej. No has pagado el plan correspondiente al mes actual."
-                      className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a3a3a] focus:ring-1 focus:ring-[#1a3a3a]/20"
+                      className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]/20"
                     />
                     <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
                       Los empleados verán un mensaje genérico que les pide contactar a su administrador.
@@ -810,7 +810,7 @@ const CurrentClientsTab = () => {
                     (statusDraft.status === (selected.status || 'active') &&
                       (statusDraft.reason || '') === (selected.suspended_reason || ''))
                   }
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1a3a3a] text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0f2a2a] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--brand-primary)] text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--brand-primary)] transition-colors"
                 >
                   {savingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   Guardar estado
@@ -861,7 +861,7 @@ const CurrentClientsTab = () => {
 const StatCard = ({ label, value, accent }) => (
   <div className={cn(
     'rounded-xl border p-3',
-    accent ? 'border-[#1a3a3a] bg-[#1a3a3a] text-white' : 'border-slate-200 bg-white'
+    accent ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white' : 'border-slate-200 bg-white'
   )}>
     <div className={cn('text-xs font-medium uppercase tracking-wider', accent ? 'text-white/70' : 'text-slate-500')}>
       {label}
@@ -882,7 +882,7 @@ const MemberCard = ({ m }) => (
     'flex items-start gap-3 p-3 rounded-lg border transition-colors',
     m.is_active ? 'bg-slate-50 border-slate-100' : 'bg-slate-50/50 border-slate-100 opacity-60'
   )}>
-    <div className="w-9 h-9 rounded-full bg-[#1a3a3a]/10 text-[#1a3a3a] font-bold flex items-center justify-center flex-shrink-0 uppercase text-sm">
+    <div className="w-9 h-9 rounded-full bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-bold flex items-center justify-center flex-shrink-0 uppercase text-sm">
       {m.name?.[0] || '?'}
     </div>
     <div className="flex-1 min-w-0">

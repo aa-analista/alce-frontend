@@ -216,7 +216,7 @@ const SettingsModule = () => {
 
   const roleLabel = { super_admin: 'Super Admin', admin: 'Administrador', user: 'Usuario' }
   const initials = user?.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'
-  const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+  const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
 
   const isSuperAdmin = user?.role === 'super_admin'
   const isAdmin = user?.role === 'admin' || isSuperAdmin
@@ -233,7 +233,7 @@ const SettingsModule = () => {
   return (
     <div className={wrapperCls}>
       {/* Profile Header */}
-      <div className="bg-[#1a3a3a] p-6 rounded-xl text-white">
+      <div className="bg-[var(--brand-primary)] p-6 rounded-xl text-white">
         <div className="flex items-center space-x-4">
           <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-xl font-bold">
             {initials}
@@ -261,7 +261,7 @@ const SettingsModule = () => {
               onClick={() => { setActiveSection(tab.id); setError(''); setSuccess('') }}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
                 activeSection === tab.id
-                  ? 'border-[#1a3a3a] text-slate-900'
+                  ? 'border-[var(--brand-primary)] text-slate-900'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
@@ -292,7 +292,7 @@ const SettingsModule = () => {
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
             </div>
             <div className="flex justify-end pt-2">
-              <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a3a] text-white rounded-lg font-semibold text-sm hover:bg-[#224a4a] transition-all active:scale-[0.98] shadow-sm disabled:opacity-50">
+              <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all active:scale-[0.98] shadow-sm disabled:opacity-50">
                 {saving ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <><Save className="w-4 h-4" /><span>Guardar Cambios</span></>}
               </button>
             </div>
@@ -328,7 +328,7 @@ const SettingsModule = () => {
               {confirmPassword && newPassword !== confirmPassword && <p className="text-xs text-red-500">Las contrasenas no coinciden</p>}
             </div>
             <div className="flex justify-end pt-2">
-              <button type="submit" disabled={saving || (confirmPassword && newPassword !== confirmPassword)} className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a3a] text-white rounded-lg font-semibold text-sm hover:bg-[#224a4a] transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm">
+              <button type="submit" disabled={saving || (confirmPassword && newPassword !== confirmPassword)} className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm">
                 {saving ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <><KeyRound className="w-4 h-4" /><span>Cambiar Contrasena</span></>}
               </button>
             </div>
@@ -342,7 +342,7 @@ const SettingsModule = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
-                <Plug className="w-4 h-4 text-[#1a3a3a]" /> Conectores de Google
+                <Plug className="w-4 h-4 text-[var(--brand-primary)]" /> Conectores de Google
               </h3>
               <p className="text-xs text-slate-500 mt-1">Conecta y administra tus servicios de Google individualmente.</p>
             </div>
@@ -355,7 +355,7 @@ const SettingsModule = () => {
               const isOAuth = !!connector.scope
 
               return (
-                <div key={connector.id} className={`bg-white border rounded-xl p-4 flex items-center gap-4 transition-all ${isConnected ? 'border-[#1a3a3a]/20' : 'border-slate-200'}`}>
+                <div key={connector.id} className={`bg-white border rounded-xl p-4 flex items-center gap-4 transition-all ${isConnected ? 'border-[var(--brand-primary)]/20' : 'border-slate-200'}`}>
                   <span className="text-2xl flex-shrink-0">{connector.icon}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900">{connector.name}</p>
@@ -381,7 +381,7 @@ const SettingsModule = () => {
                         </span>
                         {isOAuth && (
                           <button onClick={() => handleConnectOAuth(connector)} disabled={isBusy}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-[#1a3a3a] text-white hover:bg-[#224a4a] rounded-lg transition-all disabled:opacity-50">
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)] rounded-lg transition-all disabled:opacity-50">
                             <Link2 className="w-3 h-3" /> {isBusy ? 'Conectando...' : 'Conectar'}
                           </button>
                         )}
@@ -415,7 +415,7 @@ const SettingsModule = () => {
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="inline-flex items-center gap-2 px-3 py-2 bg-[#1a3a3a] text-white text-xs font-semibold rounded-lg cursor-pointer hover:bg-[#224a4a] transition-all">
+                  <label className="inline-flex items-center gap-2 px-3 py-2 bg-[var(--brand-primary)] text-white text-xs font-semibold rounded-lg cursor-pointer hover:bg-[var(--brand-secondary)] transition-all">
                     <Upload className="w-3.5 h-3.5" />
                     {uploadingLogo ? 'Subiendo…' : (brandingDraft.logoUrl ? 'Reemplazar logo' : 'Subir logo')}
                     <input
@@ -493,7 +493,7 @@ const SettingsModule = () => {
                 type="button"
                 onClick={handleSaveBranding}
                 disabled={!brandingDirty || savingBranding}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a3a] text-white rounded-lg font-semibold text-sm hover:bg-[#224a4a] transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm"
               >
                 {savingBranding ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <><Save className="w-4 h-4" /><span>Guardar diseño</span></>}
               </button>
@@ -534,7 +534,7 @@ function ColorRow({ label, hint, value, onChange }) {
             type="text"
             value={value}
             onChange={(e) => handleHexChange(e.target.value)}
-            className="ml-auto w-24 px-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20"
+            className="ml-auto w-24 px-2 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20"
             spellCheck={false}
           />
         </div>

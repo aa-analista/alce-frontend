@@ -103,7 +103,7 @@ export default function AlceCalendarioView({ onOpenModal, refreshKey }) {
           {onOpenModal && (
             <button
               onClick={() => onOpenModal('actividad')}
-              className="flex items-center gap-1.5 px-3 py-2 bg-[#1a3a3a] text-white rounded-lg text-sm font-medium hover:bg-[#0f2929] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--brand-primary)] transition-colors"
             >
               <Plus className="w-3.5 h-3.5" /> Nueva tarea para el equipo
             </button>
@@ -125,7 +125,7 @@ export default function AlceCalendarioView({ onOpenModal, refreshKey }) {
         <button
           onClick={() => setFilterEmpleado('todos')}
           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-            filterEmpleado === 'todos' ? 'bg-[#1a3a3a] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+            filterEmpleado === 'todos' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
           }`}
         >Todos ({tareasEquipo.length})</button>
         {empleados.map(e => {
@@ -135,7 +135,7 @@ export default function AlceCalendarioView({ onOpenModal, refreshKey }) {
               key={e.id}
               onClick={() => setFilterEmpleado(e.id)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                String(filterEmpleado) === String(e.id) ? 'bg-[#1a3a3a] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+                String(filterEmpleado) === String(e.id) ? 'bg-[var(--brand-primary)] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
               }`}
             >{e.nombre} ({count})</button>
           )
@@ -257,7 +257,7 @@ export default function AlceCalendarioView({ onOpenModal, refreshKey }) {
                 <CalendarIcon className="w-8 h-8 mx-auto mb-3 opacity-20" />
                 <p className="text-sm mb-3">{filterEmpleado === 'todos' ? 'No hay tareas del equipo aún.' : 'Esta persona no tiene tareas en este filtro.'}</p>
                 {onOpenModal && (
-                  <button onClick={() => onOpenModal('actividad')} className="text-xs text-[#1a3a3a] font-medium hover:underline">+ Crear primera tarea</button>
+                  <button onClick={() => onOpenModal('actividad')} className="text-xs text-[var(--brand-primary)] font-medium hover:underline">+ Crear primera tarea</button>
                 )}
               </div>
             ) : (

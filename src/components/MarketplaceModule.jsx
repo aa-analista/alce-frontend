@@ -113,7 +113,7 @@ const MarketplaceModule = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#1a3a3a] border-t-transparent" />
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent" />
       </div>
     )
   }
@@ -122,7 +122,7 @@ const MarketplaceModule = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <Bot className="w-6 h-6 text-[#1a3a3a]" />
+          <Bot className="w-6 h-6 text-[var(--brand-primary)]" />
           Agentes
         </h1>
         <p className="text-slate-500 text-sm mt-1">Habilite, configure y asigne agentes operativos para su equipo.</p>
@@ -145,7 +145,7 @@ const MarketplaceModule = () => {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar agente..."
-            className="w-full pl-10 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 bg-white"
+            className="w-full pl-10 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 bg-white"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -154,7 +154,7 @@ const MarketplaceModule = () => {
               key={f.id}
               onClick={() => setFilter(f.id)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${filter === f.id
-                ? 'bg-[#1a3a3a] text-white'
+                ? 'bg-[var(--brand-primary)] text-white'
                 : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
             >
@@ -177,12 +177,12 @@ const MarketplaceModule = () => {
           return (
             <div
               key={agent.id}
-              className={`bg-white rounded-xl border p-5 transition-all ${agent.active ? 'border-slate-200 hover:border-[#1a3a3a]/20 hover:shadow-sm' : 'border-slate-100'}`}
+              className={`bg-white rounded-xl border p-5 transition-all ${agent.active ? 'border-slate-200 hover:border-[var(--brand-primary)]/20 hover:shadow-sm' : 'border-slate-100'}`}
             >
               <div className="flex justify-between items-start gap-3 mb-4">
                 <div className="flex items-start gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-5 h-5 text-[#1a3a3a]" />
+                    <Icon className="w-5 h-5 text-[var(--brand-primary)]" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-slate-900">{agent.name}</h3>
@@ -193,7 +193,7 @@ const MarketplaceModule = () => {
                   onClick={(e) => toggleAgent(agent.id, e)}
                   disabled={toggling === agent.id}
                   title={agent.active ? 'Desactivar' : 'Activar'}
-                  className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${agent.active ? 'bg-[#1a3a3a]' : 'bg-slate-300'} ${toggling === agent.id ? 'opacity-50' : ''}`}
+                  className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${agent.active ? 'bg-[var(--brand-primary)]' : 'bg-slate-300'} ${toggling === agent.id ? 'opacity-50' : ''}`}
                 >
                   <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${agent.active ? 'translate-x-4' : 'translate-x-0'}`} />
                 </button>

@@ -101,7 +101,7 @@ const AgentAdminPanel = ({
   if (loading) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-8 flex justify-center">
-        <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#1a3a3a] border-t-transparent" />
+        <div className="animate-spin rounded-full h-5 w-5 border-2 border-[var(--brand-primary)] border-t-transparent" />
       </div>
     )
   }
@@ -131,7 +131,7 @@ const AgentAdminPanel = ({
       <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0">
-            <Icon className="w-5 h-5 text-[#1a3a3a]" />
+            <Icon className="w-5 h-5 text-[var(--brand-primary)]" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -149,7 +149,7 @@ const AgentAdminPanel = ({
           disabled={toggling}
           className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-all ${agent.active
             ? 'border-slate-200 text-slate-700 hover:bg-slate-50'
-            : 'border-transparent bg-[#1a3a3a] text-white hover:bg-[#224a4a]'
+            : 'border-transparent bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)]'
             } ${toggling ? 'opacity-50' : ''}`}
         >
           {agent.active ? 'Desactivar' : 'Activar'}
@@ -166,14 +166,14 @@ const AgentAdminPanel = ({
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`flex items-center gap-2 py-3 text-sm transition-colors border-b-2 -mb-px whitespace-nowrap ${active
-                ? 'border-[#1a3a3a] text-slate-900 font-medium'
+                ? 'border-[var(--brand-primary)] text-slate-900 font-medium'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
             >
               <TIcon className="w-4 h-4" />
               {t.label}
               {t.badge > 0 && (
-                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${active ? 'bg-[#e8f0f0] text-[#1a3a3a]' : 'bg-slate-100 text-slate-500'}`}>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${active ? 'bg-[#e8f0f0] text-[var(--brand-primary)]' : 'bg-slate-100 text-slate-500'}`}>
                   {t.badge}
                 </span>
               )}
@@ -309,7 +309,7 @@ const Switch = ({ on, onClick, disabled = false }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${on ? 'bg-[#1a3a3a]' : 'bg-slate-300'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+    className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${on ? 'bg-[var(--brand-primary)]' : 'bg-slate-300'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
   >
     <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${on ? 'translate-x-4' : 'translate-x-0'}`} />
   </button>

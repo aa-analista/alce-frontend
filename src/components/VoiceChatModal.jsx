@@ -261,18 +261,18 @@ const VoiceChatModal = ({ conversationId, onClose, onSaved }) => {
           <div
             className={`w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-5 transition-all ${
               state === 'active' && isAssistantSpeaking
-                ? 'bg-[#e8f0f0] ring-4 ring-[#1a3a3a]/20 animate-pulse'
+                ? 'bg-[#e8f0f0] ring-4 ring-[var(--brand-primary)]/20 animate-pulse'
                 : state === 'active'
                 ? 'bg-[#e8f0f0]'
                 : 'bg-slate-100'
             }`}
           >
             {state === 'connecting' ? (
-              <Loader2 className="w-8 h-8 text-[#1a3a3a] animate-spin" />
+              <Loader2 className="w-8 h-8 text-[var(--brand-primary)] animate-spin" />
             ) : state === 'error' ? (
               <AlertCircle className="w-8 h-8 text-red-500" />
             ) : (
-              <AudioLines className={`w-8 h-8 text-[#1a3a3a] ${isAssistantSpeaking ? 'animate-pulse' : ''}`} />
+              <AudioLines className={`w-8 h-8 text-[var(--brand-primary)] ${isAssistantSpeaking ? 'animate-pulse' : ''}`} />
             )}
           </div>
 
@@ -300,7 +300,7 @@ const VoiceChatModal = ({ conversationId, onClose, onSaved }) => {
           <button
             onClick={finish}
             disabled={saving}
-            className="mt-6 px-6 py-3 bg-[#1a3a3a] text-white rounded-lg font-semibold text-sm hover:bg-[#224a4a] transition-all disabled:opacity-50"
+            className="mt-6 px-6 py-3 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all disabled:opacity-50"
           >
             {saving ? 'Guardando...' : state === 'error' ? 'Cerrar' : 'Finalizar conversacion'}
           </button>

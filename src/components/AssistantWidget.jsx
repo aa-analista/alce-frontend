@@ -265,7 +265,7 @@ const AssistantWidget = () => {
         <div className="w-[380px] h-[550px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 animate-in slide-in-from-bottom-5 fade-in duration-200">
 
           {/* Header */}
-          <div className="bg-[#1a3a3a] px-5 py-3.5 flex items-center justify-between shrink-0">
+          <div className="bg-[var(--brand-primary)] px-5 py-3.5 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
@@ -301,7 +301,7 @@ const AssistantWidget = () => {
                 <div
                   className={`relative max-w-[85%] px-3.5 py-2.5 rounded-xl text-[13px] leading-relaxed break-words ${
                     msg.role === 'user'
-                      ? 'bg-[#1a3a3a] text-white rounded-tr-sm'
+                      ? 'bg-[var(--brand-primary)] text-white rounded-tr-sm'
                       : 'bg-white text-slate-700 border border-slate-200 rounded-tl-sm shadow-sm'
                   }`}
                 >
@@ -328,7 +328,7 @@ const AssistantWidget = () => {
                     </>
                   ) : isProcessing ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1a3a3a]" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--brand-primary)]" />
                       Procesando...
                     </>
                   ) : isSpeaking ? (
@@ -395,7 +395,7 @@ const AssistantWidget = () => {
               </div>
             )}
 
-            <div className="flex-1 bg-slate-50 rounded-xl flex flex-col overflow-hidden border border-slate-200 focus-within:border-[#1a3a3a]/30 focus-within:bg-white transition-all">
+            <div className="flex-1 bg-slate-50 rounded-xl flex flex-col overflow-hidden border border-slate-200 focus-within:border-[var(--brand-primary)]/30 focus-within:bg-white transition-all">
               <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
 
               {selectedImage && (
@@ -439,7 +439,7 @@ const AssistantWidget = () => {
               <div className="flex items-center justify-between px-3 pb-2.5 pt-0.5">
                 <div className="flex items-center gap-2">
                   <button onClick={() => fileInputRef.current?.click()} className="text-slate-400 hover:text-slate-600 transition-colors"><Plus className="w-4 h-4" /></button>
-                  <button onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} className={`transition-colors ${isVoiceEnabled ? 'text-[#1a3a3a]' : 'text-slate-400 hover:text-slate-600'}`}>
+                  <button onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} className={`transition-colors ${isVoiceEnabled ? 'text-[var(--brand-primary)]' : 'text-slate-400 hover:text-slate-600'}`}>
                     {isVoiceEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -466,7 +466,7 @@ const AssistantWidget = () => {
                   <button
                     onClick={() => handleSendMessage()}
                     disabled={!inputText.trim() || isProcessing}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#1a3a3a] text-white disabled:bg-slate-200 disabled:text-slate-400 transition-colors"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-[var(--brand-primary)] text-white disabled:bg-slate-200 disabled:text-slate-400 transition-colors"
                   >
                     <ArrowUp className="w-3.5 h-3.5" />
                   </button>
@@ -481,7 +481,7 @@ const AssistantWidget = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative w-14 h-14 bg-[#1a3a3a] flex items-center justify-center rounded-full shadow-lg shadow-[#1a3a3a]/25 hover:bg-[#224a4a] hover:shadow-[#1a3a3a]/35 transition-all duration-200 hover:-translate-y-0.5"
+          className="group relative w-14 h-14 bg-[var(--brand-primary)] flex items-center justify-center rounded-full shadow-lg shadow-[var(--brand-primary)]/25 hover:bg-[var(--brand-secondary)] hover:shadow-[var(--brand-primary)]/35 transition-all duration-200 hover:-translate-y-0.5"
         >
           <svg className="w-5 h-5 text-white relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </button>

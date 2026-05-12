@@ -87,15 +87,15 @@ const RegisterPage = () => {
       {/* Top Nav */}
       <nav className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
         <Link to="/login" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-[#1a3a3a] rounded-lg flex items-center justify-center">
+          <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-lg flex items-center justify-center">
             <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           </div>
-          <span className="text-[#1a3a3a] font-semibold">Alce AI</span>
+          <span className="text-[var(--brand-primary)] font-semibold">Alce AI</span>
         </Link>
         <div className="hidden sm:flex items-center gap-6 text-sm">
           <a href="#" className="text-slate-500 hover:text-slate-700 transition-colors">Explorar</a>
           <a href="#" className="text-slate-500 hover:text-slate-700 transition-colors">Documentacion</a>
-          <Link to="/register" className="font-semibold text-[#1a3a3a]">Comenzar</Link>
+          <Link to="/register" className="font-semibold text-[var(--brand-primary)]">Comenzar</Link>
         </div>
       </nav>
 
@@ -129,7 +129,7 @@ const RegisterPage = () => {
                     type="text" required
                     value={form.name}
                     onChange={update('name')}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
                     placeholder="Ej. Juan Perez"
                   />
                 </div>
@@ -139,7 +139,7 @@ const RegisterPage = () => {
                     type="email" required
                     value={form.email}
                     onChange={update('email')}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
                     placeholder="nombre@empresa.com"
                   />
                 </div>
@@ -155,7 +155,7 @@ const RegisterPage = () => {
                       required minLength={6}
                       value={form.password}
                       onChange={update('password')}
-                      className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all pr-11"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all pr-11"
                       placeholder="Min. 6 caracteres"
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -176,7 +176,7 @@ const RegisterPage = () => {
                           ? 'border-red-300 focus:ring-red-500/20'
                           : passwordsMatch
                             ? 'border-green-300 focus:ring-green-500/20'
-                            : 'border-slate-200 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40'
+                            : 'border-slate-200 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40'
                       }`}
                       placeholder="Repite la contrasena"
                     />
@@ -197,7 +197,7 @@ const RegisterPage = () => {
                     type="text" required
                     value={form.orgName}
                     onChange={update('orgName')}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
                     placeholder="Nombre legal o comercial"
                   />
                 </div>
@@ -208,7 +208,7 @@ const RegisterPage = () => {
                       value={whatsappDial}
                       onChange={(e) => { setWhatsappDial(e.target.value); setWhatsappDialTouched(true) }}
                       aria-label="Codigo de pais"
-                      className="px-2.5 py-2.5 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all cursor-pointer appearance-none"
+                      className="px-2.5 py-2.5 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all cursor-pointer appearance-none"
                     >
                       {DIAL_CODES.map((c, i) => (
                         <option key={`${c.code}-${c.name}-${i}`} value={c.code}>
@@ -220,7 +220,7 @@ const RegisterPage = () => {
                       type="tel"
                       value={form.whatsapp}
                       onChange={update('whatsapp')}
-                      className="flex-1 min-w-0 px-4 py-2.5 bg-white border border-slate-200 rounded-r-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                      className="flex-1 min-w-0 px-4 py-2.5 bg-white border border-slate-200 rounded-r-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
                       placeholder="55 1234 5678"
                     />
                   </div>
@@ -234,7 +234,7 @@ const RegisterPage = () => {
                   <select
                     value={form.country}
                     onChange={update('country')}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all appearance-none cursor-pointer"
                   >
                     <option value="">Seleccione un pais</option>
                     {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -245,7 +245,7 @@ const RegisterPage = () => {
                   <select
                     value={form.teamSizeId}
                     onChange={update('teamSizeId')}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all appearance-none cursor-pointer"
                   >
                     <option value="">Cantidad de personas</option>
                     {teamSizes.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -259,7 +259,7 @@ const RegisterPage = () => {
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded border-slate-300 text-[#1a3a3a] focus:ring-[#1a3a3a]/50"
+                  className="w-4 h-4 mt-0.5 rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/50"
                 />
                 <span className="text-sm text-slate-600 leading-relaxed">
                   Acepto los{' '}
@@ -275,7 +275,7 @@ const RegisterPage = () => {
                 <button
                   type="submit"
                   disabled={loading || passwordsMismatch || !acceptTerms}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-[#1a3a3a] hover:bg-[#224a4a] text-white font-semibold rounded-lg transition-all text-sm disabled:opacity-50 disabled:hover:bg-[#1a3a3a]"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white font-semibold rounded-lg transition-all text-sm disabled:opacity-50 disabled:hover:bg-[var(--brand-primary)]"
                 >
                   {loading ? (
                     <>
@@ -302,7 +302,7 @@ const RegisterPage = () => {
             <div className="bg-white border border-slate-200 rounded-xl p-6 sticky top-10">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-9 h-9 bg-[#e8f0f0] rounded-lg flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-[#1a3a3a]" />
+                  <ShieldCheck className="w-5 h-5 text-[var(--brand-primary)]" />
                 </div>
                 <h3 className="font-semibold text-slate-900">Acceso Administrador</h3>
               </div>
@@ -311,11 +311,11 @@ const RegisterPage = () => {
               </p>
               <div className="mt-5 space-y-3">
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-4 h-4 text-[#1a3a3a]" />
+                  <ShieldCheck className="w-4 h-4 text-[var(--brand-primary)]" />
                   <span className="text-sm text-slate-600 font-medium">Seguridad de grado Enterprise</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <Globe className="w-4 h-4 text-[#1a3a3a]" />
+                  <Globe className="w-4 h-4 text-[var(--brand-primary)]" />
                   <span className="text-sm text-slate-600 font-medium">Infraestructura distribuida</span>
                 </div>
               </div>

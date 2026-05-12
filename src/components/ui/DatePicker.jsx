@@ -46,7 +46,7 @@ const DatePicker = ({
         type="button"
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-left transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 ${open ? 'ring-2 ring-[#1a3a3a]/20 border-[#1a3a3a]/40' : ''} ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-left transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 ${open ? 'ring-2 ring-[var(--brand-primary)]/20 border-[var(--brand-primary)]/40' : ''} ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
       >
         <span className={value ? 'text-slate-900' : 'text-slate-400'}>
           {value ? formatDisplay(value) : placeholder}
@@ -77,7 +77,7 @@ const DatePicker = ({
           />
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
             <button type="button" onClick={() => { onChange(''); setOpen(false) }} className="text-xs text-slate-500 hover:text-slate-700 font-medium">Borrar</button>
-            <button type="button" onClick={() => { onChange(toIsoDate(new Date())); setOpen(false) }} className="text-xs text-[#1a3a3a] hover:text-[#224a4a] font-semibold">Hoy</button>
+            <button type="button" onClick={() => { onChange(toIsoDate(new Date())); setOpen(false) }} className="text-xs text-[var(--brand-primary)] hover:text-[var(--brand-secondary)] font-semibold">Hoy</button>
           </div>
         </div>
       )}

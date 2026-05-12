@@ -80,24 +80,24 @@ const ActivatePage = () => {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <nav className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
         <Link to="/login" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-[#1a3a3a] rounded-lg flex items-center justify-center">
+          <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-lg flex items-center justify-center">
             <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           </div>
-          <span className="text-[#1a3a3a] font-semibold">Alce AI</span>
+          <span className="text-[var(--brand-primary)] font-semibold">Alce AI</span>
         </Link>
       </nav>
 
       <div className="flex-1 flex items-center justify-center px-6 py-10">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-1">
-            <ShieldCheck className="w-5 h-5 text-[#1a3a3a]" />
+            <ShieldCheck className="w-5 h-5 text-[var(--brand-primary)]" />
             <h1 className="text-2xl font-bold text-slate-900">Activa tu cuenta</h1>
           </div>
           <p className="text-sm text-slate-500">Define tu contraseña para empezar a usar Alce AI.</p>
 
           {verifying ? (
             <div className="mt-8 bg-white rounded-xl border border-slate-200 p-8 text-center">
-              <div className="w-6 h-6 border-2 border-[#1a3a3a]/20 border-t-[#1a3a3a] rounded-full animate-spin mx-auto" />
+              <div className="w-6 h-6 border-2 border-[var(--brand-primary)]/20 border-t-[var(--brand-primary)] rounded-full animate-spin mx-auto" />
               <p className="text-sm text-slate-500 mt-3">Verificando enlace...</p>
             </div>
           ) : tokenError ? (
@@ -113,7 +113,7 @@ const ActivatePage = () => {
               </div>
               <Link
                 to="/login"
-                className="mt-4 inline-block text-sm font-medium text-[#1a3a3a] hover:underline"
+                className="mt-4 inline-block text-sm font-medium text-[var(--brand-primary)] hover:underline"
               >
                 Volver al inicio de sesión →
               </Link>
@@ -138,7 +138,7 @@ const ActivatePage = () => {
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all pr-11"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all pr-11"
                     placeholder="Mínimo 6 caracteres"
                   />
                   <button
@@ -167,7 +167,7 @@ const ActivatePage = () => {
                         ? 'border-red-300 focus:ring-red-500/20'
                         : passwordsMatch
                           ? 'border-green-300 focus:ring-green-500/20'
-                          : 'border-slate-200 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40'
+                          : 'border-slate-200 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40'
                     }`}
                     placeholder="Repite la contraseña"
                   />
@@ -191,7 +191,7 @@ const ActivatePage = () => {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="w-full py-2.5 bg-[#1a3a3a] hover:bg-[#224a4a] text-white font-semibold rounded-lg transition-all text-sm disabled:opacity-50 disabled:hover:bg-[#1a3a3a]"
+                className="w-full py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white font-semibold rounded-lg transition-all text-sm disabled:opacity-50 disabled:hover:bg-[var(--brand-primary)]"
               >
                 {submitting ? (
                   <div className="flex items-center justify-center gap-2">

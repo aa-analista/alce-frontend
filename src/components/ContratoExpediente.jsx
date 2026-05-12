@@ -82,7 +82,7 @@ export default function ContratoExpediente({ propuestaId }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FolderOpen className="w-4 h-4 text-[#1a3a3a]" />
+          <FolderOpen className="w-4 h-4 text-[var(--brand-primary)]" />
           <h3 className="font-semibold text-slate-800 text-sm">Expediente del cliente</h3>
         </div>
         <span className="text-xs text-slate-400">
@@ -103,7 +103,7 @@ export default function ContratoExpediente({ propuestaId }) {
               onClick={() => setPendingCat(c.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 pendingCat === c.id
-                  ? 'bg-[#1a3a3a] text-white'
+                  ? 'bg-[var(--brand-primary)] text-white'
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
             >
@@ -118,7 +118,7 @@ export default function ContratoExpediente({ propuestaId }) {
             Arrastra un archivo aquí o
             <button
               onClick={() => fileRef.current?.click()}
-              className="ml-1 text-[#1a3a3a] font-medium hover:underline"
+              className="ml-1 text-[var(--brand-primary)] font-medium hover:underline"
             >
               haz click para seleccionar
             </button>
@@ -196,7 +196,7 @@ export default function ContratoExpediente({ propuestaId }) {
                         const blob = await r.blob()
                         window.open(URL.createObjectURL(blob), '_blank')
                       }}
-                      className="p-2 text-slate-400 hover:text-[#1a3a3a] hover:bg-slate-50 rounded transition-colors"
+                      className="p-2 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-slate-50 rounded transition-colors"
                       title="Ver archivo"
                     >
                       <ExternalLink className="w-4 h-4" />

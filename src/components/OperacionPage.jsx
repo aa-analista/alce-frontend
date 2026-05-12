@@ -145,7 +145,7 @@ const OperacionPage = () => {
           {TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
-                activeTab === t.id ? 'border-[#1a3a3a] text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
+                activeTab === t.id ? 'border-[var(--brand-primary)] text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}>{t.label}</button>
           ))}
         </div>
@@ -212,7 +212,7 @@ const UpcomingHero = ({ events }) => {
       <div className="flex items-center gap-2">
         <h3 className="font-semibold text-slate-900 text-sm">Próxima semana</h3>
         {count > 0 && (
-          <span className="text-[10px] font-bold text-[#1a3a3a] bg-[#e8f0f0] px-2 py-0.5 rounded-full">{count}</span>
+          <span className="text-[10px] font-bold text-[var(--brand-primary)] bg-[#e8f0f0] px-2 py-0.5 rounded-full">{count}</span>
         )}
       </div>
       <span className="text-[11px] text-slate-400">Próximos 7 días</span>
@@ -394,7 +394,7 @@ const ResumenTab = ({ token, onOpenModal, onOpenDetail, refreshKey }) => {
     { icon: Ban, color: 'bg-red-50 text-red-600', label: 'Bloqueos activos', value: summary?.bloqueos_activos || 0 },
     { icon: CalendarClock, color: 'bg-blue-50 text-blue-600', label: 'Vence hoy', value: summary?.vence_hoy || 0 },
     { icon: Clock, color: 'bg-slate-100 text-slate-600', label: 'Esperando respuesta', value: summary?.esperando_respuesta || 0 },
-    { icon: ClipboardCheck, color: 'bg-[#e8f0f0] text-[#1a3a3a]', label: 'Check-ins pendientes', value: summary?.checkins_pendientes || 0 },
+    { icon: ClipboardCheck, color: 'bg-[#e8f0f0] text-[var(--brand-primary)]', label: 'Check-ins pendientes', value: summary?.checkins_pendientes || 0 },
   ]
 
   return (
@@ -429,7 +429,7 @@ const ResumenTab = ({ token, onOpenModal, onOpenDetail, refreshKey }) => {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-slate-900 text-sm">Requiere atención</h3>
-              <button className="text-xs text-[#1a3a3a] font-medium hover:underline">Ver todos</button>
+              <button className="text-xs text-[var(--brand-primary)] font-medium hover:underline">Ver todos</button>
             </div>
             <div className="divide-y divide-slate-100">
               {attention.length === 0 ? (
@@ -642,7 +642,7 @@ const CompartidoTab = ({ token, onOpenModal, onOpenDetail, refreshKey, projects 
         return p ? (
           <button
             onClick={() => onOpenDetail('project', p)}
-            className="flex items-center gap-2 text-sm text-[#1a3a3a] font-medium hover:underline"
+            className="flex items-center gap-2 text-sm text-[var(--brand-primary)] font-medium hover:underline"
           >
             ✨ Ver panel completo de "{p.name}" → (con resumen IA, bitácora y todo)
           </button>
@@ -656,11 +656,11 @@ const CompartidoTab = ({ token, onOpenModal, onOpenDetail, refreshKey, projects 
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20" />
             </div>
             <div className="flex bg-slate-100 rounded-lg p-0.5">
               {[{ id: 'lista', icon: List, label: 'Lista' }, { id: 'tablero', icon: LayoutGrid, label: 'Tablero' }, { id: 'timeline', icon: GitBranch, label: 'Timeline' }].map(v => (
-                <button key={v.id} onClick={() => setView(v.id)} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${view === v.id ? 'bg-[#1a3a3a] text-white' : 'text-slate-500 hover:text-slate-700'}`}>
+                <button key={v.id} onClick={() => setView(v.id)} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${view === v.id ? 'bg-[var(--brand-primary)] text-white' : 'text-slate-500 hover:text-slate-700'}`}>
                   <v.icon className="w-3 h-3" />{v.label}
                 </button>
               ))}
@@ -724,7 +724,7 @@ const CompartidoTab = ({ token, onOpenModal, onOpenDetail, refreshKey, projects 
                     const act = activities.find(a => a.id === id)
                     if (act && act.status !== st) updateActivity(id, { status: st })
                   }}
-                  className={`rounded-lg p-3 transition-colors ${dragOverCol === st ? 'bg-[#e8f0f0] ring-2 ring-[#1a3a3a]/30' : 'bg-slate-50'}`}
+                  className={`rounded-lg p-3 transition-colors ${dragOverCol === st ? 'bg-[#e8f0f0] ring-2 ring-[var(--brand-primary)]/30' : 'bg-slate-50'}`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-semibold text-slate-500 uppercase flex items-center gap-1.5">
@@ -740,7 +740,7 @@ const CompartidoTab = ({ token, onOpenModal, onOpenDetail, refreshKey, projects 
                         draggable
                         onDragStart={(e) => { e.dataTransfer.setData('activityId', String(a.id)); e.dataTransfer.effectAllowed = 'move' }}
                         onClick={() => onOpenDetail?.('activity', a)}
-                        className="bg-white border border-slate-200 rounded-lg p-2.5 cursor-pointer hover:border-[#1a3a3a]/30 hover:shadow-sm transition-all"
+                        className="bg-white border border-slate-200 rounded-lg p-2.5 cursor-pointer hover:border-[var(--brand-primary)]/30 hover:shadow-sm transition-all"
                       >
                         <p className="text-xs font-medium text-slate-900">{a.name}</p>
                         <p className="text-[10px] text-slate-400 mt-1">{a.project_name || 'Sin proyecto'}</p>
@@ -1135,7 +1135,7 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === t.id ? 'border-[#1a3a3a] text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
+              tab === t.id ? 'border-[var(--brand-primary)] text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}>{t.label}</button>
         ))}
       </div>
@@ -1151,7 +1151,7 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
             { id: 'todos', label: 'Todos' },
           ].map(f => (
             <button key={f.id} onClick={() => setFilter(f.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filter === f.id ? 'bg-[#1a3a3a] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filter === f.id ? 'bg-[var(--brand-primary)] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
               {f.label}
             </button>
           ))}
@@ -1159,13 +1159,13 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAdvanced(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${showAdvanced || activeFilterCount > 0 ? 'bg-[#1a3a3a] text-white border-[#1a3a3a]' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${showAdvanced || activeFilterCount > 0 ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)]' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}
           >
             🎛️ Filtros{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
           </button>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20" />
           </div>
         </div>
       </div>
@@ -1177,7 +1177,7 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
             <div>
               <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Categoría</label>
               <select value={filterCategoria} onChange={(e) => setFilterCategoria(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20">
                 <option value="todas">Todas</option>
                 <option value="personal">Personal</option>
                 <option value="negocio">Negocio</option>
@@ -1190,7 +1190,7 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
             <div>
               <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Prioridad</label>
               <select value={filterPrioridad} onChange={(e) => setFilterPrioridad(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20">
                 <option value="todas">Todas</option>
                 <option value="critica">🚨 Crítica / Urgente</option>
                 <option value="alta">⚠️ Alta</option>
@@ -1201,7 +1201,7 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
             <div>
               <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Estado</label>
               <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20">
                 <option value="todos">Todos</option>
                 <option value="pendiente">⏳ Pendiente</option>
                 <option value="en_proceso">🔄 En proceso</option>
@@ -1212,7 +1212,7 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
             <div>
               <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Asignado a</label>
               <select value={filterAsignado} onChange={(e) => setFilterAsignado(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20">
                 <option value="todos">Todos</option>
                 <option value="sin_asignar">Sin asignar (mis recordatorios)</option>
                 {employees.map(e => (
@@ -1292,7 +1292,7 @@ const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
               {visible.length === 0 && (
                 <tr><td colSpan="6" className="px-4 py-12 text-center">
                   <p className="text-sm text-slate-400 mb-3">Sin elementos en este filtro.</p>
-                  <button onClick={() => onOpenModal('recordatorio')} className="text-xs text-[#1a3a3a] font-medium hover:underline">+ Crear recordatorio</button>
+                  <button onClick={() => onOpenModal('recordatorio')} className="text-xs text-[var(--brand-primary)] font-medium hover:underline">+ Crear recordatorio</button>
                 </td></tr>
               )}
             </tbody>
@@ -1332,7 +1332,7 @@ const HistorialTab = ({ token, refreshKey }) => {
 
   const getIcon = (e) => {
     if (e.entity_type === 'block') return { icon: Ban, bg: 'bg-red-50 text-red-500' }
-    if (e.entity_type === 'request') return { icon: Send, bg: 'bg-[#e8f0f0] text-[#1a3a3a]' }
+    if (e.entity_type === 'request') return { icon: Send, bg: 'bg-[#e8f0f0] text-[var(--brand-primary)]' }
     if (e.action === 'status_change') return { icon: CheckCircle2, bg: 'bg-blue-50 text-blue-500' }
     if (e.action === 'priority_change') return { icon: ArrowUpDown, bg: 'bg-blue-50 text-blue-500' }
     return { icon: CheckCircle2, bg: 'bg-blue-50 text-blue-500' }
@@ -1349,7 +1349,7 @@ const HistorialTab = ({ token, refreshKey }) => {
         <KpiSimple icon={RefreshCw} label="Actualizaciones recientes" value={stats?.actualizaciones || 0} color="bg-blue-50 text-blue-500" />
         <KpiSimple icon={Ban} label="Bloqueos registrados" value={stats?.bloqueos || 0} color="bg-red-50 text-red-500" />
         <KpiSimple icon={ArrowUpDown} label="Cambios de estado" value={stats?.cambios || 0} color="bg-slate-100 text-slate-500" />
-        <KpiSimple icon={Send} label="Solicitudes enviadas" value={stats?.solicitudes || 0} color="bg-[#e8f0f0] text-[#1a3a3a]" />
+        <KpiSimple icon={Send} label="Solicitudes enviadas" value={stats?.solicitudes || 0} color="bg-[#e8f0f0] text-[var(--brand-primary)]" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -1357,7 +1357,7 @@ const HistorialTab = ({ token, refreshKey }) => {
           <div className="flex items-center gap-2 flex-wrap">
             {FILTERS.map(f => (
               <button key={f.id} onClick={() => setFilter(f.id)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${filter === f.id ? 'bg-[#1a3a3a] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${filter === f.id ? 'bg-[var(--brand-primary)] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
                 {f.label}
               </button>
             ))}
@@ -1365,7 +1365,7 @@ const HistorialTab = ({ token, refreshKey }) => {
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar actividad o persona..." className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar actividad o persona..." className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
@@ -1458,7 +1458,7 @@ const ModalShell = ({ title, subtitle, onClose, children, wide }) => (
   </div>
 )
 
-const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
 const labelCls = "block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
 
 const PriorityPicker = ({ value, onChange, extended = false }) => {
@@ -1581,7 +1581,7 @@ const ActivityModal = ({ token, users, employees = [], projects, onClose, onSucc
       <div className="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
         <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Cancelar</button>
         <button className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">Guardar borrador</button>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[#1a3a3a] text-white rounded-lg text-sm font-semibold hover:bg-[#224a4a] disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--brand-secondary)] disabled:opacity-50">
           <Plus className="w-4 h-4" />{saving ? 'Creando...' : 'Crear actividad'}
         </button>
       </div>
@@ -1632,7 +1632,7 @@ const ProjectModal = ({ token, users, onClose, onSuccess }) => {
       </div>
       <div className="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
         <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Cancelar</button>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[#1a3a3a] text-white rounded-lg text-sm font-semibold hover:bg-[#224a4a] disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--brand-secondary)] disabled:opacity-50">
           <FolderPlus className="w-4 h-4" />{saving ? 'Creando...' : 'Crear proyecto'}
         </button>
       </div>
@@ -1761,7 +1761,7 @@ const RequestModal = ({ token, users, projects, onClose, onSuccess }) => {
       </div>
       <div className="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
         <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Cancelar</button>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[#1a3a3a] text-white rounded-lg text-sm font-semibold hover:bg-[#224a4a] disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--brand-secondary)] disabled:opacity-50">
           <Send className="w-4 h-4" />{saving ? 'Enviando...' : 'Enviar solicitud'}
         </button>
       </div>
@@ -1799,7 +1799,7 @@ const PersonalModal = ({ token, onClose, onSuccess }) => {
       </div>
       <div className="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
         <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Cancelar</button>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[#1a3a3a] text-white rounded-lg text-sm font-semibold hover:bg-[#224a4a] disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--brand-secondary)] disabled:opacity-50">
           {saving ? 'Creando...' : 'Crear actividad'}
         </button>
       </div>
@@ -1837,7 +1837,7 @@ const ReminderModal = ({ token, onClose, onSuccess }) => {
       </div>
       <div className="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
         <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Cancelar</button>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[#1a3a3a] text-white rounded-lg text-sm font-semibold hover:bg-[#224a4a] disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--brand-secondary)] disabled:opacity-50">
           {saving ? 'Creando...' : 'Crear recordatorio'}
         </button>
       </div>
@@ -1893,7 +1893,7 @@ const ConvertModal = ({ token, users, projects, item, onClose, onSuccess }) => {
       </div>
       <div className="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
         <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg">Cancelar</button>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[#1a3a3a] text-white rounded-lg text-sm font-semibold hover:bg-[#224a4a] disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--brand-secondary)] disabled:opacity-50">
           {saving ? 'Convirtiendo...' : 'Convertir'}
         </button>
       </div>
@@ -1924,10 +1924,10 @@ const HistoryTimeline = ({ events, loading }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5">
       <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
-        <Clock className="w-4 h-4 text-[#1a3a3a]" /> Historial de seguimiento
+        <Clock className="w-4 h-4 text-[var(--brand-primary)]" /> Historial de seguimiento
       </h3>
       {loading ? (
-        <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-5 w-5 border-2 border-[#1a3a3a] border-t-transparent" /></div>
+        <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-5 w-5 border-2 border-[var(--brand-primary)] border-t-transparent" /></div>
       ) : events.length === 0 ? (
         <p className="text-xs text-slate-400 py-4 text-center">Sin eventos registrados.</p>
       ) : (
@@ -1939,7 +1939,7 @@ const HistoryTimeline = ({ events, loading }) => {
               <li key={e.id} className="relative pl-10 pb-4">
                 {!isLast && <span className="absolute left-4 top-8 bottom-0 w-px bg-slate-200" />}
                 <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-[#e8f0f0] flex items-center justify-center">
-                  <Icon className="w-3.5 h-3.5 text-[#1a3a3a]" />
+                  <Icon className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
                 </div>
                 <p className="text-sm text-slate-900 font-medium">{e.description || e.action}</p>
                 <p className="text-xs text-slate-400 mt-0.5">{fmtRelative(e.created_at)} · {e.user_name || 'Sistema'}</p>
@@ -2044,7 +2044,7 @@ const ActivityDetail = ({ token, data, onBack, onOpenDetail }) => {
         {activity.description && (
           <div className="pt-4 border-t border-slate-100">
             <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-2">
-              <FileText className="w-4 h-4 text-[#1a3a3a]" /> Descripcion
+              <FileText className="w-4 h-4 text-[var(--brand-primary)]" /> Descripcion
             </h3>
             <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{activity.description}</p>
           </div>
@@ -2056,7 +2056,7 @@ const ActivityDetail = ({ token, data, onBack, onOpenDetail }) => {
             className="w-full flex items-center justify-between gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <ClipboardCheck className="w-5 h-5 text-[#1a3a3a]" />
+              <ClipboardCheck className="w-5 h-5 text-[var(--brand-primary)]" />
               <div>
                 <p className="text-sm font-semibold text-slate-900">Pasos del proceso</p>
                 <p className="text-xs text-slate-500">
@@ -2094,7 +2094,7 @@ const ActivityDetail = ({ token, data, onBack, onOpenDetail }) => {
       {requests.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-3">
-            <Send className="w-4 h-4 text-[#1a3a3a]" /> Solicitudes relacionadas <span className="text-slate-400 font-normal">({requests.length})</span>
+            <Send className="w-4 h-4 text-[var(--brand-primary)]" /> Solicitudes relacionadas <span className="text-slate-400 font-normal">({requests.length})</span>
           </h3>
           <div className="divide-y divide-slate-100">
             {requests.map(r => (
@@ -2191,7 +2191,7 @@ const ActivityLog = ({ token, activityId }) => {
     <div className="bg-white border border-slate-200 rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
-          <FileText className="w-4 h-4 text-[#1a3a3a]" /> Bitácora <span className="text-slate-400 font-normal">({logs.length})</span>
+          <FileText className="w-4 h-4 text-[var(--brand-primary)]" /> Bitácora <span className="text-slate-400 font-normal">({logs.length})</span>
         </h3>
       </div>
 
@@ -2208,13 +2208,13 @@ const ActivityLog = ({ token, activityId }) => {
           <div className="flex gap-1.5">
             {Object.entries(KIND_STYLE).map(([k, s]) => (
               <button key={k} onClick={() => setKind(k)}
-                className={`text-xs px-2 py-1 rounded-md transition-colors ${kind === k ? 'bg-[#1a3a3a] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                className={`text-xs px-2 py-1 rounded-md transition-colors ${kind === k ? 'bg-[var(--brand-primary)] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
                 {s.icon} {s.label}
               </button>
             ))}
           </div>
           <button onClick={post} disabled={!text.trim() || posting}
-            className="px-4 py-1.5 bg-[#1a3a3a] text-white rounded-lg text-xs font-medium hover:bg-[#0f2929] disabled:opacity-50">
+            className="px-4 py-1.5 bg-[var(--brand-primary)] text-white rounded-lg text-xs font-medium hover:bg-[var(--brand-primary)] disabled:opacity-50">
             {posting ? '…' : 'Agregar'}
           </button>
         </div>
@@ -2384,7 +2384,7 @@ const RequestDetail = ({ token, data, onBack, onOpenDetail }) => {
             <button
               onClick={markAnswered}
               disabled={saving}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#1a3a3a] text-white hover:bg-[#224a4a] transition-all ${saving ? 'opacity-50' : ''}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)] transition-all ${saving ? 'opacity-50' : ''}`}
             >
               <Check className="w-4 h-4" />
               Marcar como respondida
@@ -2502,7 +2502,7 @@ const ProjectDetail = ({ token, data, onBack, onOpenDetail, onOpenModal }) => {
           <button
             onClick={summarize}
             disabled={summaryLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-br from-[#1a3a3a] to-blue-700 text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-br from-[var(--brand-primary)] to-blue-700 text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
           >
             ✨ {summaryLoading ? 'Generando…' : 'Resumir con IA'}
           </button>
@@ -2552,7 +2552,7 @@ const ProjectDetail = ({ token, data, onBack, onOpenDetail, onOpenModal }) => {
       <div className="bg-white border border-slate-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-slate-900 text-sm">📋 Tareas del proyecto ({activities.length})</h3>
-          <button onClick={() => onOpenModal('actividad')} className="text-xs text-[#1a3a3a] font-medium hover:underline">+ Nueva tarea</button>
+          <button onClick={() => onOpenModal('actividad')} className="text-xs text-[var(--brand-primary)] font-medium hover:underline">+ Nueva tarea</button>
         </div>
         {activities.length === 0 ? (
           <p className="text-xs text-slate-400 py-6 text-center">Sin tareas aún. Crea una para empezar.</p>

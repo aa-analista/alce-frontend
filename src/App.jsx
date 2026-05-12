@@ -35,10 +35,10 @@ function ProtectedRoute({ children }) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-10 h-10 bg-[#1a3a3a] rounded-xl mb-4">
+          <div className="inline-flex items-center justify-center w-10 h-10 bg-[var(--brand-primary)] rounded-xl mb-4">
             <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           </div>
-          <div className="w-6 h-6 border-2 border-[#1a3a3a]/20 border-t-[#1a3a3a] rounded-full animate-spin mx-auto" />
+          <div className="w-6 h-6 border-2 border-[var(--brand-primary)]/20 border-t-[var(--brand-primary)] rounded-full animate-spin mx-auto" />
         </div>
       </div>
     )
@@ -93,7 +93,7 @@ function Dashboard() {
   if (loadingFlows) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#1a3a3a] border-t-transparent" />
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent" />
       </div>
     )
   }

@@ -132,9 +132,9 @@ const UsersModule = () => {
   }
 
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
-  const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+  const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
 
-  if (loading) return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-6 w-6 border-2 border-[#1a3a3a] border-t-transparent" /></div>
+  if (loading) return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent" /></div>
 
   return (
     <div className="space-y-5">
@@ -144,7 +144,7 @@ const UsersModule = () => {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setEditModal(null)} />
           <div className="relative bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-md p-6 mx-4">
             <button onClick={() => setEditModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
-            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><Pencil className="w-4 h-4 text-[#1a3a3a]" /> Editar Usuario</h3>
+            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><Pencil className="w-4 h-4 text-[var(--brand-primary)]" /> Editar Usuario</h3>
             {editError && <div className="mb-3 p-2 bg-red-50 border border-red-100 rounded-lg text-red-600 text-xs">{editError}</div>}
             <div className="space-y-3">
               <div className="space-y-1.5">
@@ -164,7 +164,7 @@ const UsersModule = () => {
               <button onClick={() => handleDeleteUser(editModal.id, editModal.name)} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-all">
                 <Trash2 className="w-3 h-3" /> Eliminar
               </button>
-              <button onClick={handleEditSave} disabled={editSaving} className="flex items-center gap-2 px-5 py-2 bg-[#1a3a3a] text-white rounded-lg font-semibold text-sm hover:bg-[#224a4a] transition-all disabled:opacity-50">
+              <button onClick={handleEditSave} disabled={editSaving} className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all disabled:opacity-50">
                 {editSaving ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <><Save className="w-4 h-4" /><span>Guardar</span></>}
               </button>
             </div>
@@ -175,12 +175,12 @@ const UsersModule = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2"><Users className="w-5 h-5 text-[#1a3a3a]" /> Equipo</h2>
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2"><Users className="w-5 h-5 text-[var(--brand-primary)]" /> Equipo</h2>
           <p className="text-slate-500 text-sm mt-1">Administra empleados y asigna modulos.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => { fetchUsers(); fetchOrgModules() }} className="p-2 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all"><RefreshCw className="w-4 h-4" /></button>
-          <button onClick={() => setShowForm(!showForm)} className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${showForm ? 'bg-slate-100 text-slate-600' : 'bg-[#1a3a3a] text-white hover:bg-[#224a4a] shadow-sm'}`}>
+          <button onClick={() => { fetchUsers(); fetchOrgModules() }} className="p-2 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[#e8f0f0] rounded-lg transition-all"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => setShowForm(!showForm)} className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${showForm ? 'bg-slate-100 text-slate-600' : 'bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)] shadow-sm'}`}>
             <UserPlus className={`w-4 h-4 transition-transform ${showForm ? 'rotate-45' : ''}`} /><span>{showForm ? 'Cancelar' : 'Nuevo Usuario'}</span>
           </button>
         </div>
@@ -189,7 +189,7 @@ const UsersModule = () => {
       {/* Create Form */}
       {showForm && (
         <div className="bg-white p-6 rounded-xl border border-slate-200">
-          <h3 className="font-semibold text-slate-900 text-sm mb-5 flex items-center gap-2"><UserPlus className="w-4 h-4 text-[#1a3a3a]" /> Crear Nuevo Empleado</h3>
+          <h3 className="font-semibold text-slate-900 text-sm mb-5 flex items-center gap-2"><UserPlus className="w-4 h-4 text-[var(--brand-primary)]" /> Crear Nuevo Empleado</h3>
           {formError && <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">{formError}</div>}
           {formSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-100 rounded-lg text-green-600 text-sm">{formSuccess}</div>}
           <form onSubmit={handleCreateUser} className="space-y-4">
@@ -204,7 +204,7 @@ const UsersModule = () => {
                   value={phoneDial}
                   onChange={(e) => setPhoneDial(e.target.value)}
                   aria-label="Codigo de pais"
-                  className="px-2.5 py-2.5 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all cursor-pointer appearance-none"
+                  className="px-2.5 py-2.5 bg-slate-50 border border-r-0 border-slate-200 rounded-l-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all cursor-pointer appearance-none"
                 >
                   {DIAL_CODES.map((c, i) => (
                     <option key={`${c.code}-${c.name}-${i}`} value={c.code}>{c.flag} {c.code}</option>
@@ -214,14 +214,14 @@ const UsersModule = () => {
                   type="tel"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="flex-1 min-w-0 px-4 py-2.5 bg-white border border-slate-200 rounded-r-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 transition-all"
+                  className="flex-1 min-w-0 px-4 py-2.5 bg-white border border-slate-200 rounded-r-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
                   placeholder="55 1234 5678"
                 />
               </div>
               <p className="text-[11px] text-slate-400">Recibirá un mensaje de WhatsApp con el enlace para activar su cuenta y definir su contraseña.</p>
             </div>
             <div className="flex justify-end pt-1">
-              <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a3a] text-white rounded-lg font-semibold text-sm hover:bg-[#224a4a] transition-all active:scale-[0.98] shadow-sm disabled:opacity-50">
+              <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all active:scale-[0.98] shadow-sm disabled:opacity-50">
                 {saving ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <><UserPlus className="w-4 h-4" /><span>Crear Empleado</span></>}
               </button>
             </div>
@@ -232,7 +232,7 @@ const UsersModule = () => {
       {/* Users List */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex justify-between items-center">
-          <div className="flex items-center gap-3"><Users className="w-4 h-4 text-slate-400" /><h2 className="font-semibold text-slate-900 text-sm">Empleados</h2><span className="text-xs bg-[#e8f0f0] text-[#1a3a3a] font-semibold px-2 py-0.5 rounded-md">{users.filter(u => u.role === 'user').length}</span></div>
+          <div className="flex items-center gap-3"><Users className="w-4 h-4 text-slate-400" /><h2 className="font-semibold text-slate-900 text-sm">Empleados</h2><span className="text-xs bg-[#e8f0f0] text-[var(--brand-primary)] font-semibold px-2 py-0.5 rounded-md">{users.filter(u => u.role === 'user').length}</span></div>
         </div>
 
         {users.filter(u => u.role === 'user').length === 0 ? (
@@ -243,7 +243,7 @@ const UsersModule = () => {
               <div key={user.id}>
                 <div className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-semibold text-xs text-white ${user.is_active ? 'bg-[#1a3a3a]' : 'bg-slate-300'}`}>
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-semibold text-xs text-white ${user.is_active ? 'bg-[var(--brand-primary)]' : 'bg-slate-300'}`}>
                       {user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <div>
@@ -268,7 +268,7 @@ const UsersModule = () => {
                         <button
                           onClick={(e) => { e.stopPropagation(); copyActivationLink(user) }}
                           title="Copiar enlace de activación"
-                          className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all"
+                          className="p-1.5 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[#e8f0f0] rounded-lg transition-all"
                         >
                           {copiedId === user.id ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
@@ -282,7 +282,7 @@ const UsersModule = () => {
                           onClick={(e) => { e.stopPropagation(); resendActivation(user.id) }}
                           disabled={resendingId === user.id}
                           title="Generar nuevo enlace y reenviar por WhatsApp"
-                          className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all disabled:opacity-50"
+                          className="p-1.5 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[#e8f0f0] rounded-lg transition-all disabled:opacity-50"
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${resendingId === user.id ? 'animate-spin' : ''}`} />
                         </button>
@@ -296,14 +296,14 @@ const UsersModule = () => {
                           onClick={(e) => { e.stopPropagation(); resendActivation(user.id) }}
                           disabled={resendingId === user.id}
                           title="Generar enlace y enviar por WhatsApp"
-                          className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all disabled:opacity-50"
+                          className="p-1.5 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[#e8f0f0] rounded-lg transition-all disabled:opacity-50"
                         >
                           <Send className={`w-3.5 h-3.5 ${resendingId === user.id ? 'animate-spin' : ''}`} />
                         </button>
                       </>
                     )}
                     {/* Edit button */}
-                    <button onClick={(e) => { e.stopPropagation(); openEditModal(user) }} className="p-1.5 text-slate-400 hover:text-[#1a3a3a] hover:bg-[#e8f0f0] rounded-lg transition-all">
+                    <button onClick={(e) => { e.stopPropagation(); openEditModal(user) }} className="p-1.5 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[#e8f0f0] rounded-lg transition-all">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <span className="text-xs text-slate-400 hidden sm:block">{formatDate(user.created_at)}</span>
@@ -316,7 +316,7 @@ const UsersModule = () => {
                     {/* Modules */}
                     <div className="bg-white rounded-lg border border-slate-200 p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-slate-700 text-sm flex items-center gap-2"><Blocks className="w-4 h-4 text-[#1a3a3a]" /> Modulos Asignados</h4>
+                        <h4 className="font-semibold text-slate-700 text-sm flex items-center gap-2"><Blocks className="w-4 h-4 text-[var(--brand-primary)]" /> Modulos Asignados</h4>
                         <button onClick={(e) => { e.stopPropagation(); toggleUserActive(user.id, user.is_active) }}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${user.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}>
                           {user.is_active ? <><ToggleRight className="w-4 h-4" /> Desactivar</> : <><ToggleLeft className="w-4 h-4" /> Activar</>}
@@ -331,10 +331,10 @@ const UsersModule = () => {
                             const Icon = MODULE_ICONS[mod.id] || Blocks
                             return (
                               <button key={mod.id} onClick={(e) => { e.stopPropagation(); toggleUserModule(user.id, mod.id, assigned) }}
-                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${assigned ? 'border-[#1a3a3a]/20 bg-[#e8f0f0]/50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
-                                <Icon className={`w-4 h-4 ${assigned ? 'text-[#1a3a3a]' : 'text-slate-400'}`} />
+                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${assigned ? 'border-[var(--brand-primary)]/20 bg-[#e8f0f0]/50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                                <Icon className={`w-4 h-4 ${assigned ? 'text-[var(--brand-primary)]' : 'text-slate-400'}`} />
                                 <div className="flex-1 min-w-0"><p className="text-sm font-medium text-slate-700 truncate">{mod.name}</p></div>
-                                <div className={`w-9 h-5 rounded-full flex items-center transition-colors ${assigned ? 'bg-[#1a3a3a] justify-end' : 'bg-slate-200 justify-start'}`}>
+                                <div className={`w-9 h-5 rounded-full flex items-center transition-colors ${assigned ? 'bg-[var(--brand-primary)] justify-end' : 'bg-slate-200 justify-start'}`}>
                                   <div className="w-4 h-4 rounded-full bg-white shadow mx-0.5" />
                                 </div>
                               </button>
@@ -346,18 +346,18 @@ const UsersModule = () => {
 
                     {/* Notification */}
                     <div className="bg-white rounded-lg border border-slate-200 p-4">
-                      <h4 className="font-semibold text-slate-700 text-sm flex items-center gap-2 mb-3"><Bell className="w-4 h-4 text-[#1a3a3a]" /> Enviar Notificacion</h4>
+                      <h4 className="font-semibold text-slate-700 text-sm flex items-center gap-2 mb-3"><Bell className="w-4 h-4 text-[var(--brand-primary)]" /> Enviar Notificacion</h4>
                       {notifSuccess && <div className="mb-3 p-2 bg-green-50 border border-green-100 rounded-lg text-green-600 text-xs text-center">{notifSuccess}</div>}
                       <div className="space-y-2">
                         <input type="text" placeholder="Titulo de la notificacion" value={notifForm.userId === user.id ? notifForm.title : ''} onClick={(e) => { e.stopPropagation(); setNotifForm({ ...notifForm, userId: user.id }) }} onChange={(e) => { e.stopPropagation(); setNotifForm({ ...notifForm, userId: user.id, title: e.target.value }) }} className={inputCls} />
                         <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
                           <input type="text" placeholder="Mensaje (opcional)" value={notifForm.userId === user.id ? notifForm.message : ''} onClick={(e) => e.stopPropagation()} onChange={(e) => { e.stopPropagation(); setNotifForm({ ...notifForm, userId: user.id, message: e.target.value }) }} className={inputCls} />
                           <select value={notifForm.userId === user.id ? notifForm.category : 'general'} onClick={(e) => e.stopPropagation()} onChange={(e) => { e.stopPropagation(); setNotifForm({ ...notifForm, userId: user.id, category: e.target.value }) }}
-                            className="px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 cursor-pointer">
+                            className="px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 cursor-pointer">
                             <option value="general">General</option><option value="operacion">Operacion</option><option value="equipo">Equipo</option><option value="modulos">Modulos</option><option value="actividad">Actividad</option>
                           </select>
                           <button onClick={(e) => { e.stopPropagation(); sendNotification(user.id) }} disabled={sendingNotif || !(notifForm.userId === user.id && notifForm.title.trim())}
-                            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#1a3a3a] text-white rounded-lg text-xs font-semibold hover:bg-[#224a4a] transition-all disabled:opacity-50">
+                            className="flex items-center gap-1.5 px-4 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg text-xs font-semibold hover:bg-[var(--brand-secondary)] transition-all disabled:opacity-50">
                             <Send className="w-3 h-3" /> Enviar
                           </button>
                         </div>

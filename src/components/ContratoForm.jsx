@@ -394,7 +394,7 @@ export default function ContratoForm({ propuesta, onSaved, onCancel }) {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#1a3a3a] text-white text-sm font-medium rounded-lg hover:bg-[#0f2828] transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 bg-[var(--brand-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--brand-primary)] transition-colors disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Guardando…' : 'Guardar y previsualizar'}
@@ -406,13 +406,13 @@ export default function ContratoForm({ propuesta, onSaved, onCancel }) {
 }
 
 // ─── Helpers ───
-const inputCls = "w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/10 focus:border-[#1a3a3a]/30 transition-all"
+const inputCls = "w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/10 focus:border-[var(--brand-primary)]/30 transition-all"
 
 function Card({ icon: Icon, title, children }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Icon className="w-4 h-4 text-[#1a3a3a]" />
+        <Icon className="w-4 h-4 text-[var(--brand-primary)]" />
         <h3 className="font-semibold text-slate-800 text-sm">{title}</h3>
       </div>
       {children}

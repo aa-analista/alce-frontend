@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* ── Brand CSS variables (defaults; AuthContext las sobreescribe por org) ── */
+:root {
+  --brand-primary: #1a3a3a;
+  --brand-secondary: #2d5555;
+  --brand-accent: #3b82f6;
+  --brand-text-on-primary: #ffffff;
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
@@ -63,22 +71,22 @@ body {
 .alce-calendar-wrapper .react-calendar__tile:enabled:hover,
 .alce-calendar-wrapper .react-calendar__tile:enabled:focus {
   background-color: #e8f0f0;
-  color: #1a3a3a;
+  color: var(--brand-primary);
 }
 .alce-calendar-wrapper .react-calendar__tile--active,
 .alce-calendar-wrapper .react-calendar__tile--active:enabled:hover,
 .alce-calendar-wrapper .react-calendar__tile--active:enabled:focus {
-  background: #1a3a3a !important;
+  background: var(--brand-primary) !important;
   color: white !important;
   font-weight: 600;
 }
 .alce-calendar-wrapper .react-calendar__tile--now {
   background: #e8f0f0;
-  color: #1a3a3a;
+  color: var(--brand-primary);
   font-weight: 600;
 }
 .alce-calendar-wrapper .react-calendar__tile--now.react-calendar__tile--active {
-  background: #1a3a3a !important;
+  background: var(--brand-primary) !important;
   color: white !important;
 }
 .alce-calendar-wrapper .react-calendar__month-view__days__day--neighboringMonth {
@@ -124,7 +132,7 @@ body {
 }
 .alce-tour-popover .driver-popover-next-btn,
 .alce-tour-popover .driver-popover-close-btn-text {
-  background: #1a3a3a !important;
+  background: var(--brand-primary) !important;
   color: white !important;
   border: none !important;
   border-radius: 0.5rem !important;
@@ -135,7 +143,7 @@ body {
 }
 .alce-tour-popover .driver-popover-next-btn:hover,
 .alce-tour-popover .driver-popover-close-btn-text:hover {
-  background: #224a4a !important;
+  background: var(--brand-secondary) !important;
 }
 .alce-tour-popover .driver-popover-navigation-btns {
   gap: 0.5rem !important;

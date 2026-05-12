@@ -25,7 +25,7 @@ export default function GestionEquipoModule() {
             onClick={() => setTab(id)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
               tab === id
-                ? 'border-[#1a3a3a] text-[#1a3a3a]'
+                ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >

@@ -9,7 +9,7 @@ import {
 const FEATURE_META = {
   coach_chat:      { label: 'Coach AI (chat)', Icon: MessageSquare, color: 'text-blue-600 bg-blue-50' },
   coach_widget:    { label: 'Coach widget',    Icon: Bot,           color: 'text-indigo-600 bg-indigo-50' },
-  coach_voice:     { label: 'Coach AI (voz)',  Icon: AudioLines,    color: 'text-[#1a3a3a] bg-[#e8f0f0]' },
+  coach_voice:     { label: 'Coach AI (voz)',  Icon: AudioLines,    color: 'text-[var(--brand-primary)] bg-[#e8f0f0]' },
   tts:             { label: 'Texto a voz',     Icon: Volume2,       color: 'text-purple-600 bg-purple-50' },
   whisper:         { label: 'Transcripcion',   Icon: Mic,           color: 'text-amber-600 bg-amber-50' },
   knowledge_chat:  { label: 'Base conocimiento', Icon: Database,    color: 'text-emerald-600 bg-emerald-50' },
@@ -70,7 +70,7 @@ const GastosModule = () => {
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <DollarSign className="w-6 h-6 text-[#1a3a3a]" />
+            <DollarSign className="w-6 h-6 text-[var(--brand-primary)]" />
             Gastos
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -84,7 +84,7 @@ const GastosModule = () => {
             <button
               key={r.id}
               onClick={() => setRange(r.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${range === r.id ? 'bg-[#1a3a3a] text-white' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${range === r.id ? 'bg-[var(--brand-primary)] text-white' : 'text-slate-600 hover:text-slate-900'}`}
             >
               {r.label}
             </button>
@@ -94,7 +94,7 @@ const GastosModule = () => {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="w-6 h-6 text-[#1a3a3a] animate-spin" />
+          <Loader2 className="w-6 h-6 text-[var(--brand-primary)] animate-spin" />
         </div>
       ) : !data ? (
         <div className="text-center py-20">
@@ -106,7 +106,7 @@ const GastosModule = () => {
         <>
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <KpiBig icon={DollarSign} color="bg-[#e8f0f0] text-[#1a3a3a]" label="Gasto en el rango" value={fmtUsd(data.summary.total_cost)} sub={`Hoy: ${fmtUsd(data.summary.cost_today)}`} />
+            <KpiBig icon={DollarSign} color="bg-[#e8f0f0] text-[var(--brand-primary)]" label="Gasto en el rango" value={fmtUsd(data.summary.total_cost)} sub={`Hoy: ${fmtUsd(data.summary.cost_today)}`} />
             <KpiBig icon={Zap} color="bg-blue-50 text-blue-600" label="Tokens consumidos" value={fmtNum(data.summary.total_tokens)} sub={`${fmtNum(data.summary.total_calls)} llamadas`} />
             <KpiBig icon={AudioLines} color="bg-purple-50 text-purple-600" label="Audio (min)" value={((data.summary.total_audio_sec || 0) / 60).toFixed(1)} sub={`${fmtNum(data.summary.total_audio_sec)} seg`} />
             <KpiBig icon={UsersIcon} color="bg-amber-50 text-amber-600" label="Usuarios activos" value={data.summary.active_users} sub="en el rango" />
@@ -115,7 +115,7 @@ const GastosModule = () => {
           {/* Timeline chart */}
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
-              <TrendingUp className="w-4 h-4 text-[#1a3a3a]" /> Gasto diario
+              <TrendingUp className="w-4 h-4 text-[var(--brand-primary)]" /> Gasto diario
             </h3>
             {data.timeline.length === 0 ? (
               <p className="text-xs text-slate-400 py-10 text-center">Sin datos en este rango.</p>
@@ -127,7 +127,7 @@ const GastosModule = () => {
                     <div key={i} className="flex-1 min-w-0 max-w-[80px] flex flex-col items-center gap-1 group">
                       <div className="flex-1 w-full flex items-end">
                         <div
-                          className="w-full bg-[#1a3a3a] rounded-t group-hover:bg-[#224a4a] transition-colors relative"
+                          className="w-full bg-[var(--brand-primary)] rounded-t group-hover:bg-[var(--brand-secondary)] transition-colors relative"
                           style={{ height: `${Math.max(3, pct)}%`, minHeight: '4px' }}
                           title={`${fmtDate(d.day)}: ${fmtUsd(d.cost_usd)} · ${d.calls} llamadas`}
                         />
@@ -144,7 +144,7 @@ const GastosModule = () => {
           {isSuperAdmin && (
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
-                <Building2 className="w-4 h-4 text-[#1a3a3a]" /> Gasto por organizacion
+                <Building2 className="w-4 h-4 text-[var(--brand-primary)]" /> Gasto por organizacion
               </h3>
               {(!data.byOrg || data.byOrg.length === 0) ? (
                 <p className="text-xs text-slate-400 py-6 text-center">Sin consumo de ninguna organizacion en el rango.</p>
@@ -156,7 +156,7 @@ const GastosModule = () => {
                       <div key={o.id}>
                         <div className="flex items-center justify-between text-sm mb-1 gap-3">
                           <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-7 h-7 rounded-md bg-[#e8f0f0] text-[#1a3a3a] flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
+                            <div className="w-7 h-7 rounded-md bg-[#e8f0f0] text-[var(--brand-primary)] flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
                               {o.org_name?.[0] || '?'}
                             </div>
                             <div className="min-w-0">
@@ -172,7 +172,7 @@ const GastosModule = () => {
                           </div>
                         </div>
                         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#1a3a3a]" style={{ width: `${pct}%` }} />
+                          <div className="h-full bg-[var(--brand-primary)]" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     )
@@ -187,7 +187,7 @@ const GastosModule = () => {
             {/* By feature */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
-                <ArrowUpDown className="w-4 h-4 text-[#1a3a3a]" /> Gasto por feature
+                <ArrowUpDown className="w-4 h-4 text-[var(--brand-primary)]" /> Gasto por feature
               </h3>
               {data.byFeature.length === 0 ? (
                 <p className="text-xs text-slate-400 py-6 text-center">Sin consumo.</p>
@@ -209,7 +209,7 @@ const GastosModule = () => {
                           <span className="text-slate-700 font-semibold tabular-nums">{fmtUsd(f.cost_usd)}</span>
                         </div>
                         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#1a3a3a]" style={{ width: `${pct}%` }} />
+                          <div className="h-full bg-[var(--brand-primary)]" style={{ width: `${pct}%` }} />
                         </div>
                         <p className="text-[10px] text-slate-400 mt-0.5">{fmtNum(f.tokens)} tokens · {f.calls} llamadas</p>
                       </div>
@@ -222,7 +222,7 @@ const GastosModule = () => {
             {/* By user */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
-                <UsersIcon className="w-4 h-4 text-[#1a3a3a]" /> Top usuarios por gasto
+                <UsersIcon className="w-4 h-4 text-[var(--brand-primary)]" /> Top usuarios por gasto
               </h3>
               {data.byUser.length === 0 ? (
                 <p className="text-xs text-slate-400 py-6 text-center">Sin consumo.</p>
@@ -251,7 +251,7 @@ const GastosModule = () => {
           {/* Recent entries */}
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#1a3a3a]" />
+              <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
               <h3 className="font-semibold text-slate-900 text-sm">Ultimas llamadas</h3>
               <span className="text-xs text-slate-400">({data.recent.length})</span>
             </div>

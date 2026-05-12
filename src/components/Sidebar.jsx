@@ -85,7 +85,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
       <div className="p-4 pb-2 flex items-center gap-2.5 min-h-[56px]">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-          style={{ background: user?.branding?.primaryColor || '#1a3a3a' }}
+          style={{ background: user?.branding?.primaryColor || 'var(--brand-primary)' }}
         >
           {user?.branding?.logoUrl ? (
             <img src={user.branding.logoUrl} alt="logo" className="w-full h-full object-contain" />
@@ -128,7 +128,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
             <div className={cn(
               "flex items-center rounded-lg group overflow-hidden whitespace-nowrap transition-colors",
               isMarketplaceActive
-                ? "bg-[#1a3a3a] text-white font-medium"
+                ? "bg-[var(--brand-primary)] text-white font-medium"
                 : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
             )}>
               {isAdmin ? (
@@ -247,7 +247,7 @@ const SidebarLink = ({ item, isActive, collapsed, submenu = false }) => {
         "w-full flex items-center gap-2.5 rounded-lg transition-colors duration-150 group overflow-hidden whitespace-nowrap",
         collapsed ? "justify-center px-2 py-2.5" : (submenu ? "px-2.5 py-1.5 text-[12.5px]" : "px-3 py-2 text-[13px]"),
         isActive
-          ? "bg-[#1a3a3a] text-white font-medium"
+          ? "bg-[var(--brand-primary)] text-white font-medium"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       )}
     >

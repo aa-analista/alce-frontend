@@ -45,7 +45,7 @@ const HomeDashboard = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center max-w-md">
-          <div className="w-14 h-14 mx-auto bg-[#1a3a3a] rounded-2xl flex items-center justify-center mb-4">
+          <div className="w-14 h-14 mx-auto bg-[var(--brand-primary)] rounded-2xl flex items-center justify-center mb-4">
             <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
@@ -89,8 +89,8 @@ const HomeDashboard = () => {
       </div>
 
       {/* Status Banner */}
-      <div id="tour-status" className="bg-white border border-slate-200 rounded-xl p-4 flex items-start gap-3 border-l-4 border-l-[#1a3a3a]">
-        <CheckCircle2 className="w-5 h-5 text-[#1a3a3a] mt-0.5 flex-shrink-0" />
+      <div id="tour-status" className="bg-white border border-slate-200 rounded-xl p-4 flex items-start gap-3 border-l-4 border-l-[var(--brand-primary)]">
+        <CheckCircle2 className="w-5 h-5 text-[var(--brand-primary)] mt-0.5 flex-shrink-0" />
         <div>
           <p className="text-sm font-semibold text-slate-900">Workspace configurado correctamente</p>
           <p className="text-sm text-slate-500">El sistema ha verificado su licencia. Actualmente no hay operaciones activas ni modulos en ejecucion. Comience con el checklist a continuacion.</p>
@@ -128,7 +128,7 @@ const HomeDashboard = () => {
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleStep(step.id) }}
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${
-                        done ? 'bg-[#1a3a3a] border-[#1a3a3a]' : 'border-slate-300 hover:border-slate-400'
+                        done ? 'bg-[var(--brand-primary)] border-[var(--brand-primary)]' : 'border-slate-300 hover:border-slate-400'
                       }`}
                     >
                       {done && <CheckCircle2 className="w-3 h-3 text-white" />}
@@ -145,7 +145,7 @@ const HomeDashboard = () => {
         </div>
 
         {/* Coach AI Card — 2 cols */}
-        <div id="tour-coach" className="lg:col-span-2 bg-[#1a3a3a] rounded-xl p-6 text-white flex flex-col justify-between">
+        <div id="tour-coach" className="lg:col-span-2 bg-[var(--brand-primary)] rounded-xl p-6 text-white flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 rounded-full bg-green-400" />
@@ -170,11 +170,11 @@ const HomeDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Quick links — 3 cols */}
         <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div id="tour-guide" className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md hover:border-[#1a3a3a]/20 transition-all cursor-pointer group" onClick={() => startAppTour()}>
+          <div id="tour-guide" className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md hover:border-[var(--brand-primary)]/20 transition-all cursor-pointer group" onClick={() => startAppTour()}>
             <div className="flex items-center justify-between mb-3">
-              <BookOpen className="w-6 h-6 text-slate-400 group-hover:text-[#1a3a3a] transition-colors" />
-              <div className="w-7 h-7 rounded-full bg-[#e8f0f0] flex items-center justify-center group-hover:bg-[#1a3a3a] transition-colors">
-                <Play className="w-3 h-3 text-[#1a3a3a] group-hover:text-white transition-colors ml-0.5" />
+              <BookOpen className="w-6 h-6 text-slate-400 group-hover:text-[var(--brand-primary)] transition-colors" />
+              <div className="w-7 h-7 rounded-full bg-[#e8f0f0] flex items-center justify-center group-hover:bg-[var(--brand-primary)] transition-colors">
+                <Play className="w-3 h-3 text-[var(--brand-primary)] group-hover:text-white transition-colors ml-0.5" />
               </div>
             </div>
             <h4 className="font-semibold text-slate-900 text-sm">Guia Rapida</h4>
@@ -201,7 +201,7 @@ const HomeDashboard = () => {
                   onClick={() => navigate('/marketplace')}
                 >
                   <div className="w-8 h-8 bg-[#e8f0f0] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4 text-[#1a3a3a]" />
+                    <Icon className="w-4 h-4 text-[var(--brand-primary)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900">{mod.name}</p>
@@ -210,7 +210,7 @@ const HomeDashboard = () => {
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
                     status === 'Listo'
                       ? 'bg-slate-100 text-slate-500'
-                      : 'bg-[#e8f0f0] text-[#1a3a3a]'
+                      : 'bg-[#e8f0f0] text-[var(--brand-primary)]'
                   }`}>
                     {status}
                   </span>

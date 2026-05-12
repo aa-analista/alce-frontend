@@ -119,9 +119,9 @@ export default function AsistenteIaTab() {
   return (
     <div className="flex flex-col h-[calc(100vh-220px)] bg-white border border-slate-200 rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-gradient-to-r from-[#1a3a3a]/5 to-blue-50/40">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-gradient-to-r from-[var(--brand-primary)]/5 to-blue-50/40">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1a3a3a] to-blue-700 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--brand-primary)] to-blue-700 flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -146,7 +146,7 @@ export default function AsistenteIaTab() {
           </div>
         ) : messages.length === 0 ? (
           <div className="max-w-md mx-auto text-center py-10">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#1a3a3a] to-blue-700 flex items-center justify-center mb-4">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[var(--brand-primary)] to-blue-700 flex items-center justify-center mb-4">
               <Sparkles className="w-7 h-7 text-white" />
             </div>
             <h4 className="text-base font-semibold text-slate-900 mb-1">¡Hola, {user?.name?.split(' ')[0] || 'Efra'}!</h4>
@@ -170,7 +170,7 @@ export default function AsistenteIaTab() {
             {messages.map((m, i) => (
               <div key={i} className={`flex gap-2.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {m.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1a3a3a] to-blue-700 flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[var(--brand-primary)] to-blue-700 flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
@@ -195,7 +195,7 @@ export default function AsistenteIaTab() {
             ))}
             {sending && (
               <div className="flex gap-2.5 justify-start">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1a3a3a] to-blue-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[var(--brand-primary)] to-blue-700 flex items-center justify-center">
                   <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-2.5">
@@ -228,7 +228,7 @@ export default function AsistenteIaTab() {
           <button
             onClick={() => send()}
             disabled={!input.trim() || sending}
-            className="bg-[#1a3a3a] text-white rounded-xl px-4 py-2.5 hover:bg-[#0f2929] disabled:opacity-40 transition-colors flex items-center gap-1.5 text-sm font-medium"
+            className="bg-[var(--brand-primary)] text-white rounded-xl px-4 py-2.5 hover:bg-[var(--brand-primary)] disabled:opacity-40 transition-colors flex items-center gap-1.5 text-sm font-medium"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             Enviar

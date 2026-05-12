@@ -31,7 +31,7 @@ const TimePicker = ({
         type="button"
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-left transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 ${open ? 'ring-2 ring-[#1a3a3a]/20 border-[#1a3a3a]/40' : ''} ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-left transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 ${open ? 'ring-2 ring-[var(--brand-primary)]/20 border-[var(--brand-primary)]/40' : ''} ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
       >
         <span className={value ? 'text-slate-900 font-mono tabular-nums' : 'text-slate-400'}>
           {value ? `${h}:${m}` : placeholder}
@@ -57,7 +57,7 @@ const TimePicker = ({
               <button
                 key={hh} type="button"
                 onClick={() => onChange(`${hh}:${m || '00'}`)}
-                className={`py-1.5 text-center text-sm font-mono hover:bg-slate-50 transition-colors ${h === hh ? 'bg-[#e8f0f0] text-[#1a3a3a] font-semibold' : 'text-slate-700'}`}
+                className={`py-1.5 text-center text-sm font-mono hover:bg-slate-50 transition-colors ${h === hh ? 'bg-[#e8f0f0] text-[var(--brand-primary)] font-semibold' : 'text-slate-700'}`}
               >
                 {hh}
               </button>
@@ -69,7 +69,7 @@ const TimePicker = ({
               <button
                 key={mm} type="button"
                 onClick={() => { onChange(`${h || '09'}:${mm}`); setOpen(false) }}
-                className={`py-1.5 text-center text-sm font-mono hover:bg-slate-50 transition-colors ${m === mm ? 'bg-[#e8f0f0] text-[#1a3a3a] font-semibold' : 'text-slate-700'}`}
+                className={`py-1.5 text-center text-sm font-mono hover:bg-slate-50 transition-colors ${m === mm ? 'bg-[#e8f0f0] text-[var(--brand-primary)] font-semibold' : 'text-slate-700'}`}
               >
                 {mm}
               </button>

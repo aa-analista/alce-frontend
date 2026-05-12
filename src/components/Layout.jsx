@@ -105,7 +105,7 @@ const Layout = ({ children, userModules = [] }) => {
           <div id="tour-search" className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" placeholder="Buscar en el workspace..." className="w-full pl-10 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/10 focus:border-[#1a3a3a]/30 transition-all" />
+              <input type="text" placeholder="Buscar en el workspace..." className="w-full pl-10 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/10 focus:border-[var(--brand-primary)]/30 transition-all" />
             </div>
           </div>
 
@@ -141,14 +141,14 @@ const Layout = ({ children, userModules = [] }) => {
                   <div className="flex border-b border-slate-100">
                     {['all', 'unread'].map(tab => (
                       <button key={tab} onClick={() => setNotifTab(tab)}
-                        className={`flex-1 py-2 text-xs font-medium border-b-2 transition-all ${notifTab === tab ? 'border-[#1a3a3a] text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+                        className={`flex-1 py-2 text-xs font-medium border-b-2 transition-all ${notifTab === tab ? 'border-[var(--brand-primary)] text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
                         {tab === 'all' ? 'Todas' : 'No leidas'}
                       </button>
                     ))}
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {loadingNotifs ? (
-                      <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 text-[#1a3a3a] animate-spin" /></div>
+                      <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 text-[var(--brand-primary)] animate-spin" /></div>
                     ) : filteredNotifs.length === 0 ? (
                       <div className="py-10 text-center"><Bell className="w-6 h-6 text-slate-200 mx-auto mb-2" /><p className="text-xs text-slate-400">No hay notificaciones</p></div>
                     ) : (
@@ -157,13 +157,13 @@ const Layout = ({ children, userModules = [] }) => {
                           const Icon = NOTIF_ICONS[n.category] || Bell
                           return (
                             <div key={n.id} className="px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50 transition-colors">
-                              <div className="w-8 h-8 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0 mt-0.5"><Icon className="w-4 h-4 text-[#1a3a3a]" /></div>
+                              <div className="w-8 h-8 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0 mt-0.5"><Icon className="w-4 h-4 text-[var(--brand-primary)]" /></div>
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm ${n.is_read ? 'text-slate-600' : 'font-semibold text-slate-900'}`}>{n.title}</p>
                                 <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{n.message}</p>
                                 <p className="text-[10px] text-slate-300 mt-1">{formatTime(n.created_at)}{n.category && <span> · <span className="capitalize">{n.category}</span></span>}</p>
                               </div>
-                              {!n.is_read && <div className="w-2 h-2 rounded-full bg-[#1a3a3a] flex-shrink-0 mt-2" />}
+                              {!n.is_read && <div className="w-2 h-2 rounded-full bg-[var(--brand-primary)] flex-shrink-0 mt-2" />}
                             </div>
                           )
                         })}
@@ -188,7 +188,7 @@ const Layout = ({ children, userModules = [] }) => {
                 <p className="text-xs font-medium text-slate-700 leading-tight">{user?.name || 'Usuario'}</p>
                 <p className="text-[10px] text-slate-400 leading-tight">{roleLabel[user?.role] || user?.role}</p>
               </div>
-              <div className="h-8 w-8 rounded-full bg-[#1a3a3a] text-white flex items-center justify-center font-semibold text-[10px]">{initials}</div>
+              <div className="h-8 w-8 rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center font-semibold text-[10px]">{initials}</div>
             </div>
           </div>
         </header>

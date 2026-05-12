@@ -58,7 +58,7 @@ const Select = ({
         type="button"
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-left transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40 ${open ? 'ring-2 ring-[#1a3a3a]/20 border-[#1a3a3a]/40' : ''} ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-left transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 ${open ? 'ring-2 ring-[var(--brand-primary)]/20 border-[var(--brand-primary)]/40' : ''} ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
       >
         <span className={`truncate ${selected ? 'text-slate-900' : 'text-slate-400'}`}>
           {selected?.label || placeholder}
@@ -78,7 +78,7 @@ const Select = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar..."
-                  className="w-full pl-8 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40"
+                  className="w-full pl-8 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40"
                 />
               </div>
             </div>
@@ -94,7 +94,7 @@ const Select = ({
                     key={`${opt.value}-${idx}`}
                     type="button"
                     onClick={() => { onChange(opt.value); setOpen(false) }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 transition-colors ${isSelected ? 'bg-[#e8f0f0] text-[#1a3a3a] font-medium' : 'text-slate-700'}`}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 transition-colors ${isSelected ? 'bg-[#e8f0f0] text-[var(--brand-primary)] font-medium' : 'text-slate-700'}`}
                   >
                     <span className="flex-1 truncate">{opt.label}</span>
                     {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" />}

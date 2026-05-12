@@ -87,7 +87,7 @@ export default function PublicContratoView() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 text-[#1a3a3a] animate-spin mx-auto mb-2" />
+          <Loader2 className="w-8 h-8 text-[var(--brand-primary)] animate-spin mx-auto mb-2" />
           <p className="text-sm text-slate-500">Cargando propuesta…</p>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function PublicContratoView() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span className="text-xs text-slate-600">
-              Propuesta oficial · Folio <strong className="text-[#1a3a3a]">{propuesta.folio}</strong>
+              Propuesta oficial · Folio <strong className="text-[var(--brand-primary)]">{propuesta.folio}</strong>
             </span>
           </div>
           <button
@@ -169,22 +169,22 @@ export default function PublicContratoView() {
       {/* ─── Documento (igual que el preview interno) ─── */}
       <div className="print-area bg-white shadow-lg max-w-[850px] mx-auto" style={{ minHeight: '1100px' }}>
         {/* MEMBRETE */}
-        <div className="px-12 py-8 border-b-4" style={{ borderColor: '#1a3a3a' }}>
+        <div className="px-12 py-8 border-b-4" style={{ borderColor: 'var(--brand-primary)' }}>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: '#1a3a3a' }}>
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: 'var(--brand-primary)' }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-8 h-8">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#1a3a3a' }}>Extranjería México</h1>
+                <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--brand-primary)' }}>Extranjería México</h1>
                 <p className="text-xs text-slate-500 uppercase tracking-widest">Asesoría migratoria profesional</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-[10px] text-slate-400 uppercase tracking-widest">Folio</p>
-              <p className="text-lg font-mono font-bold" style={{ color: '#1a3a3a' }}>{propuesta.folio}</p>
+              <p className="text-lg font-mono font-bold" style={{ color: 'var(--brand-primary)' }}>{propuesta.folio}</p>
               <p className="text-xs text-slate-500 mt-1">{fmtFecha(fechaEmision)}</p>
             </div>
           </div>
@@ -223,8 +223,8 @@ export default function PublicContratoView() {
             </div>
           </div>
 
-          <div className="border-2 rounded-lg overflow-hidden" style={{ borderColor: '#1a3a3a' }}>
-            <div className="px-5 py-2.5 text-white text-xs font-semibold uppercase tracking-widest" style={{ background: '#1a3a3a' }}>
+          <div className="border-2 rounded-lg overflow-hidden" style={{ borderColor: 'var(--brand-primary)' }}>
+            <div className="px-5 py-2.5 text-white text-xs font-semibold uppercase tracking-widest" style={{ background: 'var(--brand-primary)' }}>
               Honorarios profesionales
             </div>
             <div className="px-5 py-5 flex items-center justify-between">
@@ -233,7 +233,7 @@ export default function PublicContratoView() {
                 <p className="text-[11px] text-slate-400 mt-0.5">Incluye gestión completa del trámite</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold" style={{ color: '#1a3a3a' }}>
+                <p className="text-3xl font-bold" style={{ color: 'var(--brand-primary)' }}>
                   {fmtMoney(propuesta.precio, propuesta.moneda)}
                 </p>
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest">{propuesta.moneda}</p>
@@ -280,12 +280,12 @@ export default function PublicContratoView() {
             <div className="mt-8">
               <p className="text-sm font-semibold text-slate-900">{propuesta.vendedor_nombre || '—'}</p>
               {propuesta.vendedor_puesto && <p className="text-xs text-slate-500">{propuesta.vendedor_puesto}</p>}
-              <p className="text-xs font-semibold mt-1" style={{ color: '#1a3a3a' }}>Extranjería México</p>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'var(--brand-primary)' }}>Extranjería México</p>
             </div>
           </div>
         </div>
 
-        <div className="px-12 py-4 border-t-2 mt-8 text-center" style={{ borderColor: '#1a3a3a' }}>
+        <div className="px-12 py-4 border-t-2 mt-8 text-center" style={{ borderColor: 'var(--brand-primary)' }}>
           <p className="text-[10px] text-slate-400 uppercase tracking-widest">
             Documento generado el {fmtFecha(fechaEmision)} · Folio {propuesta.folio}
           </p>
@@ -296,7 +296,7 @@ export default function PublicContratoView() {
       {puedeFirmar && (
         <div className="no-print max-w-[850px] mx-auto mt-6 bg-white rounded-xl border border-slate-200 p-6">
           <div className="text-center mb-4">
-            <FileSignature className="w-8 h-8 text-[#1a3a3a] mx-auto mb-2" />
+            <FileSignature className="w-8 h-8 text-[var(--brand-primary)] mx-auto mb-2" />
             <h3 className="text-base font-semibold text-slate-900">¿Estás de acuerdo con esta propuesta?</h3>
             <p className="text-xs text-slate-500 mt-1">Tu respuesta nos llegará al instante</p>
           </div>
@@ -309,7 +309,7 @@ export default function PublicContratoView() {
             </button>
             <button
               onClick={() => setShowAccept(true)}
-              className="px-4 py-3 text-sm font-semibold text-white bg-[#1a3a3a] rounded-lg hover:bg-[#0f2828] transition-colors flex items-center justify-center gap-2"
+              className="px-4 py-3 text-sm font-semibold text-white bg-[var(--brand-primary)] rounded-lg hover:bg-[var(--brand-primary)] transition-colors flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
               Aceptar propuesta
@@ -333,7 +333,7 @@ export default function PublicContratoView() {
                   type="text"
                   value={firmaForm.nombre}
                   onChange={e => setFirmaForm({ ...firmaForm, nombre: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40"
                   required
                   autoFocus
                 />
@@ -344,7 +344,7 @@ export default function PublicContratoView() {
                   type="email"
                   value={firmaForm.email}
                   onChange={e => setFirmaForm({ ...firmaForm, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20 focus:border-[#1a3a3a]/40"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40"
                   placeholder="opcional"
                 />
               </div>
@@ -362,7 +362,7 @@ export default function PublicContratoView() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#1a3a3a] rounded-lg hover:bg-[#0f2828] disabled:opacity-50"
+                  className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[var(--brand-primary)] rounded-lg hover:bg-[var(--brand-primary)] disabled:opacity-50"
                 >
                   {submitting ? 'Procesando…' : 'Confirmar aceptación'}
                 </button>
@@ -383,7 +383,7 @@ export default function PublicContratoView() {
                 value={rechazoMotivo}
                 onChange={e => setRechazoMotivo(e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20"
                 placeholder="Ej: Encontré una opción más económica, ya no necesito el servicio…"
               />
               <div className="flex gap-2">
