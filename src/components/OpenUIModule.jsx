@@ -22,9 +22,16 @@ function buildOpenUIHtml(code, title = 'Respuesta') {
 <link rel="stylesheet" href="${OPENUI_CDN}/dist/openui-styles.css">
 <style>
   * { box-sizing: border-box; margin: 0; }
-  html, body { background: transparent; }
+  html, body {
+    background: transparent;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0;
+  }
   body { padding: 4px; overflow: visible; font-family: system-ui, -apple-system, sans-serif; }
-  #openui-root { width: 100%; }
+  #openui-root { width: 100%; display: block; }
+  /* Forzar que cualquier wrapper full-height del bundle no estire de más */
+  #openui-root > * { min-height: 0 !important; height: auto !important; }
   .openui-loading { padding: 32px; color: #888; text-align: center; font-size: 14px; }
   .openui-error { padding: 16px; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; font-size: 13px; }
   .openui-error strong { display: block; margin-bottom: 4px; }
@@ -33,14 +40,20 @@ function buildOpenUIHtml(code, title = 'Respuesta') {
 <body>
 <div id="openui-root"><div class="openui-loading">Cargando componentes…</div></div>
 <script>
-  // Reportar altura al parent para auto-resize del iframe
+  // Reportar altura al parent. Medimos el alto REAL de #openui-root (no body).
   var _rhLast = 0, _rhRaf = 0;
   function reportHeight() {
-    var saved = document.body.style.cssText;
-    document.body.style.setProperty('height', 'auto', 'important');
-    document.body.style.setProperty('overflow', 'visible', 'important');
-    var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-    document.body.style.cssText = saved;
+    var el = document.getElementById('openui-root');
+    // Si hay un child rendereado, usamos su bounding rect (más preciso que scrollHeight)
+    var h;
+    if (el && el.firstElementChild) {
+      h = Math.ceil(el.firstElementChild.getBoundingClientRect().height);
+    } else if (el) {
+      h = Math.ceil(el.getBoundingClientRect().height);
+    } else {
+      h = document.body.scrollHeight;
+    }
+    h = h + 8; // pequeño padding
     if (h === _rhLast) return;
     _rhLast = h;
     parent.postMessage({ type: 'iframe:height', height: h }, '*');
@@ -188,7 +201,7 @@ function OpenUIIframe({ code, title, streaming }) {
     const handler = (e) => {
       if (e.source !== iframeRef.current?.contentWindow) return
       if (e.data?.type === 'iframe:height' && typeof e.data.height === 'number') {
-        setHeight(Math.min(Math.max(e.data.height + 8, 100), 2400))
+        setHeight(Math.min(Math.max(e.data.height, 80), 2400))
       }
       if (e.data?.type === 'openui:ready') {
         isReadyRef.current = true
