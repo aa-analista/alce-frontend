@@ -8,6 +8,7 @@ import AccountabilityModule from './components/AccountabilityModule'
 import MarketplaceModule from './components/MarketplaceModule'
 import UsersModule from './components/UsersModule'
 import GastosModule from './components/GastosModule'
+import OpenUIModule from './components/OpenUIModule'
 import ClientesModule from './components/ClientesModule'
 import SettingsModule from './components/SettingsModule'
 import KnowledgeBaseModule from './components/KnowledgeBaseModule'
@@ -127,6 +128,7 @@ function App() {
             <Route path="marketplace" element={<MarketplaceModule />} />
             <Route path="usuarios" element={<UsersModule />} />
             <Route path="gastos" element={<GastosModule />} />
+            <Route path="openui" element={<OpenUIModule />} />
             <Route path="clientes" element={<ClientesModule />} />
             <Route path="ajustes" element={<SettingsModule />} />
             {/* Module routes (accessible via URL, not in sidebar) */}
