@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Home, Sparkles, BarChart3, Users, Bot, Activity, Settings, LogOut,
   MessageSquare, FileText, Clock, Database, ChevronDown, Blocks, DollarSign,
-  UserPlus, CalendarCheck, FileSignature, Wand2
+  UserPlus, CalendarCheck, FileSignature, Wand2, Palette
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -34,6 +34,7 @@ const FIXED_ITEMS = [
   { id: 'usuarios', path: '/usuarios', label: 'Equipo', icon: Users, adminOnly: true },
   { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true },
   { id: 'openui', path: '/openui', label: 'OpenUI', icon: Wand2, alwaysShow: true },
+  { id: 'design', path: '/design', label: 'Diseño', icon: Palette, alwaysShow: true },
 ]
 
 const CORE_IDS = ['coach-ai', 'operacion', 'actividad', 'contratos']
