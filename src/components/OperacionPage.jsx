@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   Plus, AlertTriangle, Ban, CalendarClock, Clock, ClipboardCheck, Send, RefreshCw,
@@ -9,6 +10,14 @@ import {
 import DatePicker from './ui/DatePicker'
 import TimePicker from './ui/TimePicker'
 import Select from './ui/Select'
+// ─── Gestión de Equipo (fusionada en Operación) ───
+import AlcePersonalView from './AlcePersonalView.jsx'
+import AlcePlantillasView from './AlcePlantillasView.jsx'
+import AlceCalendarioView from './AlceCalendarioView.jsx'
+// ─── Asistente IA (Sprint 4) ───
+import AsistenteIaTab from './AsistenteIaTab.jsx'
+// ─── Modal de pasos/plantillas para una actividad ───
+import AlceSeguimientoModal from './AlceSeguimientoModal.jsx'
 
 const PRIORITY_LABELS = { baja: 'BAJA', media: 'MEDIA', alta: 'ALTA', critica: 'CRÍTICA' }
 const PRIORITY_COLORS = {
@@ -46,27 +55,76 @@ const TABS = [
   { id: 'resumen', label: 'Resumen' },
   { id: 'compartido', label: 'Trabajo compartido' },
   { id: 'agenda', label: 'Mi agenda' },
+  // ─── Equipo (Recordatorios eliminado: fusionado con Mi agenda) ───
+  { id: 'calendario-equipo', label: 'Calendario equipo' },
+  { id: 'mi-equipo', label: 'Mi equipo' },
+  { id: 'plantillas', label: 'Plantillas' },
   { id: 'historial', label: 'Historial' },
+  // ─── Asistente IA ───
+  { id: 'asistente-ia', label: '✨ Asistente IA' },
 ]
 
 // ═══════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════
 const OperacionPage = () => {
-  const { token } = useAuth()
-  const [activeTab, setActiveTab] = useState('resumen')
+  const { token, user } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Tab inicial: si viene state.tab desde otra navegación, lo usa; si no, 'resumen'
+  const [activeTab, setActiveTab] = useState(location.state?.tab || 'resumen')
+
+  // Si llega un state.tab nuevo (ej. al volver desde AlceEmpleadoView), aplicarlo
+  useEffect(() => {
+    if (location.state?.tab && location.state.tab !== activeTab) {
+      setActiveTab(location.state.tab)
+      // Limpiar el state para no re-disparar al cambiar de tab manualmente
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state])
   const [modal, setModal] = useState(null)
   const [users, setUsers] = useState([])
+  const [employees, setEmployees] = useState([])
   const [projects, setProjects] = useState([])
   const [refreshKey, setRefreshKey] = useState(0)
   const [detailView, setDetailView] = useState(null) // { type: 'activity'|'block'|'request', data }
+  const [autoRefreshOn, setAutoRefreshOn] = useState(true) // toggle UI por si quieres pausarlo
+  const [lastRefreshAt, setLastRefreshAt] = useState(new Date())
+
+  // ── Auto-refresh: polling cada 12s + refresh al regresar a la ventana ──
+  useEffect(() => {
+    if (!autoRefreshOn) return
+    const tick = () => {
+      // Solo refrescar cuando la pestaña está visible (ahorra recursos)
+      if (document.visibilityState !== 'visible') return
+      setRefreshKey(k => k + 1)
+      setLastRefreshAt(new Date())
+    }
+    const interval = setInterval(tick, 12000)
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [autoRefreshOn])
 
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
-  // Load shared lists (users + projects) — used by modals
+  // Load shared lists (users + employees + projects) — used by modals
   useEffect(() => {
     fetch('/api/users', { headers }).then(r => r.json()).then(d => setUsers(d.users || [])).catch(() => {})
     fetch('/api/operacion/projects', { headers }).then(r => r.json()).then(d => setProjects(d.projects || [])).catch(() => {})
+    // Personal endpoint usa el compat shim → alce_op_employees activos (con whatsapp + user_id)
+    fetch('/api/personal?activo=true', { headers }).then(r => r.json()).then(data => {
+      const list = Array.isArray(data) ? data : []
+      setEmployees(list.map(e => ({
+        id: e.id, name: e.nombre, whatsapp: e.whatsapp, user_id: e.user_id, rol: e.rol,
+      })))
+    }).catch(() => {})
   }, [refreshKey])
 
   const refresh = () => setRefreshKey(k => k + 1)
@@ -77,29 +135,46 @@ const OperacionPage = () => {
   if (detailView?.type === 'activity') return <ActivityDetail token={token} data={detailView.data} onBack={closeDetail} onOpenDetail={openDetail} />
   if (detailView?.type === 'block') return <BlockDetail token={token} data={detailView.data} onBack={closeDetail} onOpenDetail={openDetail} />
   if (detailView?.type === 'request') return <RequestDetail token={token} data={detailView.data} onBack={closeDetail} onOpenDetail={openDetail} />
+  if (detailView?.type === 'project') return <ProjectDetail token={token} data={detailView.data} onBack={closeDetail} onOpenDetail={openDetail} onOpenModal={setModal} />
 
   return (
     <div className="space-y-5">
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
-              activeTab === t.id ? 'border-[#1a3a3a] text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}>{t.label}</button>
-        ))}
+      {/* Tabs + auto-refresh indicator */}
+      <div className="flex border-b border-slate-200 items-center">
+        <div className="flex flex-1 overflow-x-auto">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
+                activeTab === t.id ? 'border-[#1a3a3a] text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}>{t.label}</button>
+          ))}
+        </div>
+        <button
+          onClick={() => setAutoRefreshOn(v => !v)}
+          title={autoRefreshOn ? `Auto-actualizándose cada 12s · última: ${lastRefreshAt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : 'Auto-refresh pausado · click para activar'}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors flex-shrink-0 mb-1 ${
+            autoRefreshOn ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${autoRefreshOn ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+          {autoRefreshOn ? 'En vivo' : 'Pausado'}
+        </button>
       </div>
 
       {activeTab === 'resumen' && <ResumenTab token={token} onOpenModal={setModal} onOpenDetail={openDetail} refreshKey={refreshKey} />}
       {activeTab === 'compartido' && <CompartidoTab token={token} onOpenModal={setModal} onOpenDetail={openDetail} refreshKey={refreshKey} projects={projects} />}
-      {activeTab === 'agenda' && <AgendaTab token={token} onOpenModal={setModal} refreshKey={refreshKey} />}
+      {activeTab === 'agenda' && <AgendaTab token={token} onOpenModal={setModal} refreshKey={refreshKey} userId={user?.id} />}
+      {activeTab === 'calendario-equipo' && <AlceCalendarioView onOpenModal={setModal} refreshKey={refreshKey} />}
+      {activeTab === 'mi-equipo' && <AlcePersonalView />}
+      {activeTab === 'plantillas' && <AlcePlantillasView />}
       {activeTab === 'historial' && <HistorialTab token={token} refreshKey={refreshKey} />}
+      {activeTab === 'asistente-ia' && <AsistenteIaTab />}
 
       {/* Modals */}
-      {modal === 'actividad' && <ActivityModal token={token} users={users} projects={projects} onClose={() => setModal(null)} onSuccess={refresh} />}
+      {modal === 'actividad' && <ActivityModal token={token} users={users} employees={employees} projects={projects} onClose={() => setModal(null)} onSuccess={refresh} />}
       {modal === 'proyecto' && <ProjectModal token={token} users={users} onClose={() => setModal(null)} onSuccess={refresh} />}
       {modal === 'bloqueo' && <BlockModal token={token} users={users} projects={projects} onClose={() => setModal(null)} onSuccess={refresh} />}
-      {modal === 'solicitud' && <RequestModal token={token} users={users} projects={projects} onClose={() => setModal(null)} onSuccess={refresh} />}
+      {modal === 'solicitud' && <RequestModal token={token} users={users} employees={employees} projects={projects} onClose={() => setModal(null)} onSuccess={refresh} />}
       {modal === 'personal' && <PersonalModal token={token} onClose={() => setModal(null)} onSuccess={refresh} />}
       {modal === 'recordatorio' && <ReminderModal token={token} onClose={() => setModal(null)} onSuccess={refresh} />}
       {modal?.type === 'convertir' && <ConvertModal token={token} users={users} projects={projects} item={modal.item} onClose={() => setModal(null)} onSuccess={refresh} />}
@@ -110,11 +185,154 @@ const OperacionPage = () => {
 // ═══════════════════════════════════════════════════════════
 // RESUMEN TAB
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// PRÓXIMA SEMANA — timeline compacto (white card, scroll interno)
+// ═══════════════════════════════════════════════════════════
+const UpcomingHero = ({ events }) => {
+  // Helpers
+  const today = new Date(); today.setHours(0,0,0,0)
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1)
+  // 🛠 dayKey en hora LOCAL (no UTC) para evitar dos "Hoy" cuando hay TZ shift
+  const dayKey = (when) => {
+    const d = new Date(when)
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  }
+  const dayLabel = (when) => {
+    const evDay = new Date(when); evDay.setHours(0,0,0,0)
+    if (evDay.getTime() === today.getTime()) return 'Hoy'
+    if (evDay.getTime() === tomorrow.getTime()) return 'Mañana'
+    return when.toLocaleDateString('es-MX', { weekday: 'short', day: '2-digit', month: 'short' })
+  }
+  const isToday = (when) => { const x = new Date(when); x.setHours(0,0,0,0); return x.getTime() === today.getTime() }
+  const isTomorrow = (when) => { const x = new Date(when); x.setHours(0,0,0,0); return x.getTime() === tomorrow.getTime() }
+
+  // Header reutilizable
+  const Header = ({ count }) => (
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        <h3 className="font-semibold text-slate-900 text-sm">Próxima semana</h3>
+        {count > 0 && (
+          <span className="text-[10px] font-bold text-[#1a3a3a] bg-[#e8f0f0] px-2 py-0.5 rounded-full">{count}</span>
+        )}
+      </div>
+      <span className="text-[11px] text-slate-400">Próximos 7 días</span>
+    </div>
+  )
+
+  // ── Generar 7 columnas fijas: hoy + 6 días siguientes ──
+  const days = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(today); d.setDate(d.getDate() + i)
+    return d
+  })
+
+  // Agrupar eventos por día local
+  const grouped = events.reduce((acc, ev) => {
+    const k = dayKey(ev.when)
+    if (!acc[k]) acc[k] = []
+    acc[k].push(ev)
+    return acc
+  }, {})
+
+  // Construir columnas con fallback "vacío"
+  const columns = days.map(d => ({
+    key: dayKey(d),
+    date: d,
+    label: dayLabel(d),
+    dayNumber: d.getDate(),
+    monthShort: d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', ''),
+    items: (grouped[dayKey(d)] || []).sort((a, b) => a.when - b.when),
+  }))
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <Header count={events.length} />
+
+      {/* Grid de 7 columnas (responsive: 2 cols en mobile, scroll horizontal hasta 7) */}
+      <div className="grid grid-cols-7 gap-2 min-w-[840px] md:min-w-0 overflow-x-auto md:overflow-visible">
+        {columns.map((g) => {
+          const isHoy = isToday(g.date)
+          const isManana = isTomorrow(g.date)
+          // Header de columna con acento por proximidad
+          const headerBg = isHoy ? 'bg-amber-50 border-amber-200' :
+                           isManana ? 'bg-emerald-50 border-emerald-200' :
+                           'bg-slate-50 border-slate-200'
+          const headerLabel = isHoy ? 'text-amber-700' :
+                              isManana ? 'text-emerald-700' :
+                              'text-slate-500'
+          const headerNumber = isHoy ? 'text-amber-900' :
+                               isManana ? 'text-emerald-900' :
+                               'text-slate-700'
+
+          return (
+            <div key={g.key} className="flex flex-col rounded-lg border border-slate-200 bg-white overflow-hidden">
+              {/* Header del día */}
+              <div className={`px-2.5 py-2 border-b ${headerBg}`}>
+                <div className="flex items-baseline justify-between gap-1">
+                  <p className={`text-[10px] font-bold uppercase tracking-wider ${headerLabel} truncate`}>
+                    {g.label}
+                  </p>
+                  {!isHoy && !isManana && (
+                    <span className={`text-[10px] font-semibold ${headerNumber}`}>{g.monthShort}</span>
+                  )}
+                </div>
+                <div className="flex items-baseline justify-between mt-0.5">
+                  <span className={`text-base font-bold ${headerNumber}`}>{g.dayNumber}</span>
+                  {g.items.length > 0 && (
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isHoy ? 'bg-amber-200 text-amber-900' : isManana ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-700'}`}>
+                      {g.items.length}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Cuerpo: eventos o estado vacío */}
+              <div className="flex-1 p-1.5 space-y-1.5 max-h-[220px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                {g.items.length === 0 ? (
+                  <div className="h-full flex items-center justify-center py-6">
+                    <p className="text-[10px] text-slate-300 text-center leading-tight">Sin tareas<br/>por el momento</p>
+                  </div>
+                ) : (
+                  g.items.map(ev => {
+                    const time = ev.when.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                    const kindIcon = ev.kind === 'recordatorio' ? '⏰' : ev.kind === 'tarea_equipo' ? '👥' : '📋'
+                    const isHighPri = ev.priority === 'critica' || ev.priority === 'urgente' || ev.priority === 'alta'
+                    return (
+                      <div key={ev.id} className="bg-slate-50 hover:bg-slate-100 transition-colors rounded-md px-2 py-1.5 cursor-default">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className="text-[11px] leading-none">{kindIcon}</span>
+                          <span className="text-[10px] font-bold text-slate-700">{time}</span>
+                          <div className="flex gap-0.5 ml-auto">
+                            {ev.whatsapp && (
+                              <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-emerald-100 text-emerald-700" title="Creado vía WhatsApp">📱</span>
+                            )}
+                            {isHighPri && (
+                              <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-red-100 text-red-700" title="Prioridad alta/crítica">!</span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-[11px] font-medium text-slate-900 leading-snug line-clamp-2">{ev.title}</p>
+                        {ev.responsible && (
+                          <p className="text-[9px] text-slate-400 truncate mt-0.5">{ev.responsible}</p>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 const ResumenTab = ({ token, onOpenModal, onOpenDetail, refreshKey }) => {
   const [summary, setSummary] = useState(null)
   const [activities, setActivities] = useState([])
   const [blocks, setBlocks] = useState([])
   const [requests, setRequests] = useState([])
+  const [reminders, setReminders] = useState([]) // recordatorios personales (vía /api/recordatorios)
 
   useEffect(() => {
     const h = { Authorization: `Bearer ${token}` }
@@ -122,7 +340,52 @@ const ResumenTab = ({ token, onOpenModal, onOpenDetail, refreshKey }) => {
     fetch('/api/operacion/activities', { headers: h }).then(r => r.json()).then(d => setActivities(d.activities || [])).catch(() => {})
     fetch('/api/operacion/blocks', { headers: h }).then(r => r.json()).then(d => setBlocks((d.blocks || []).filter(b => !b.resolved))).catch(() => {})
     fetch('/api/operacion/requests', { headers: h }).then(r => r.json()).then(d => setRequests((d.requests || []).filter(r => r.status === 'pendiente'))).catch(() => {})
+    fetch('/api/recordatorios?limit=200', { headers: h }).then(r => r.json()).then(d => setReminders(Array.isArray(d) ? d : [])).catch(() => {})
   }, [token, refreshKey])
+
+  // ── Eventos próximos (próximos 7 días) ──
+  const upcomingEvents = (() => {
+    const now = new Date()
+    const in7Days = new Date(); in7Days.setDate(in7Days.getDate() + 7)
+    const evts = []
+    // Recordatorios personales tuyos + tareas que tú creaste/te asignaron (vía recordatorios shim)
+    reminders.forEach(r => {
+      if (!r.fecha_recordar || r.estado === 'completado') return
+      const dt = new Date(r.fecha_recordar)
+      if (isNaN(dt) || dt < now || dt > in7Days) return
+      evts.push({
+        id: `rem-${r.id}`,
+        kind: r._kind === 'reminder' ? 'recordatorio' : 'tarea',
+        title: r.mensaje,
+        when: dt,
+        whatsapp: r.created_via === 'whatsapp',
+        responsible: r.personal_nombre,
+        priority: r.prioridad,
+      })
+    })
+    // Tareas del equipo asignadas a OTROS (que vienen en /api/operacion/activities)
+    activities.forEach(a => {
+      if (!a.due_date || a.status === 'completada') return
+      const iso = a.due_time ? `${a.due_date.slice(0,10)}T${a.due_time}` : `${a.due_date.slice(0,10)}T00:00:00`
+      const dt = new Date(iso)
+      if (isNaN(dt) || dt < now || dt > in7Days) return
+      // Evita duplicar las que ya vienen como reminder _kind='activity'
+      if (evts.some(e => e.id === `rem-${a.id}`)) return
+      evts.push({
+        id: `act-${a.id}`,
+        kind: 'tarea_equipo',
+        title: a.name,
+        when: dt,
+        whatsapp: a.created_via === 'whatsapp',
+        responsible: a.responsible_name,
+        priority: a.priority,
+      })
+    })
+    return evts.sort((a, b) => a.when - b.when).slice(0, 12)
+  })()
+
+  // Total real de eventos próximos (sin slice) para el contador y el side widget
+  const upcomingTopForSide = upcomingEvents.slice(0, 5)
 
   const attention = activities.filter(a => (a.priority === 'alta' || a.priority === 'critica') && a.status !== 'completada').slice(0, 3)
 
@@ -141,6 +404,9 @@ const ResumenTab = ({ token, onOpenModal, onOpenDetail, refreshKey }) => {
         <h2 className="text-2xl font-bold text-slate-900">Operación</h2>
         <p className="text-sm text-slate-500 mt-1">Monitoreo del trabajo compartido, prioridades, bloqueos y seguimiento del equipo</p>
       </div>
+
+      {/* HERO — Tu próxima semana */}
+      <UpcomingHero events={upcomingEvents} />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -343,25 +609,45 @@ const CompartidoTab = ({ token, onOpenModal, onOpenDetail, refreshKey, projects 
         <KpiSimple label="Vencimientos próximos" value={kpis.vencimientos_proximos} sub="Próx. 48h" />
       </div>
 
-      {/* Project filter pills */}
+      {/* Project filter pills con indicador de health */}
       <div className="flex items-center gap-2 flex-wrap">
         <button onClick={() => setSelectedProject(null)}
           className={`px-4 py-2 rounded-lg border text-sm transition-all ${!selectedProject ? 'bg-slate-100 border-slate-300 text-slate-900 font-medium' : 'bg-white border-slate-200 text-slate-500'}`}>
-          Todos
+          Todos los proyectos
         </button>
-        {projects.slice(0, 4).map(p => (
-          <button key={p.id} onClick={() => setSelectedProject(p.id)}
-            className={`px-4 py-2 rounded-lg border text-sm transition-all text-left ${selectedProject === p.id ? 'bg-slate-100 border-slate-300' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-slate-900 text-xs">{p.name}</span>
-              <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${p.blocks_count > 0 ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'}`}>
-                {p.blocks_count > 0 ? 'EN RIESGO' : 'EN CONTROL'}
-              </span>
-            </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{p.open_count} abiertas · {p.blocks_count} bloqueos</div>
-          </button>
-        ))}
+        {projects.map(p => {
+          const health = p.health || { state: 'sin_datos', label: 'Sin datos' }
+          const dotCls = {
+            bien: 'bg-emerald-500', en_progreso: 'bg-amber-500',
+            en_riesgo: 'bg-red-500', sin_datos: 'bg-slate-300',
+          }[health.state] || 'bg-slate-300'
+          return (
+            <button key={p.id} onClick={() => setSelectedProject(p.id)}
+              className={`px-4 py-2 rounded-lg border text-sm transition-all text-left ${selectedProject === p.id ? 'bg-slate-100 border-slate-300' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${dotCls}`} />
+                <span className="font-medium text-slate-900 text-xs">{p.name}</span>
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">
+                {p.open_count} abiertas · {p.blocks_count || 0} bloq · {health.label.replace(/^[^ ]+ /, '')}
+              </div>
+            </button>
+          )
+        })}
       </div>
+
+      {/* Botón ver detalle si hay proyecto seleccionado */}
+      {selectedProject && (() => {
+        const p = projects.find(x => x.id === selectedProject)
+        return p ? (
+          <button
+            onClick={() => onOpenDetail('project', p)}
+            className="flex items-center gap-2 text-sm text-[#1a3a3a] font-medium hover:underline"
+          >
+            ✨ Ver panel completo de "{p.name}" → (con resumen IA, bitácora y todo)
+          </button>
+        ) : null
+      })()}
 
       {/* Activities section */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -724,52 +1010,145 @@ const TimelineView = ({ activities, updateActivity }) => {
 // ═══════════════════════════════════════════════════════════
 // MI AGENDA TAB
 // ═══════════════════════════════════════════════════════════
-const AgendaTab = ({ token, onOpenModal, refreshKey }) => {
-  const [items, setItems] = useState([])
+const AgendaTab = ({ token, onOpenModal, refreshKey, userId }) => {
+  const [activities, setActivities] = useState([])
+  const [reminders, setReminders] = useState([])
+  const [employees, setEmployees] = useState([])
   const [filter, setFilter] = useState('semana')
   const [search, setSearch] = useState('')
-  const [view, setView] = useState('lista')
+  const [tab, setTab] = useState('todo') // 'todo' | 'tareas' | 'recordatorios'
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [filterCategoria, setFilterCategoria] = useState('todas')
+  const [filterPrioridad, setFilterPrioridad] = useState('todas')
+  const [filterEstado, setFilterEstado] = useState('todos')
+  const [filterAsignado, setFilterAsignado] = useState('todos')
 
+  // Cargar mis tareas (asignadas a mí o creadas por mí) + mis recordatorios + employees para filtro
   useEffect(() => {
-    fetch(`/api/operacion/personal?filter=${filter}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => setItems(d.items || []))
-  }, [token, refreshKey, filter])
+    const headers = { Authorization: `Bearer ${token}` }
+    fetch('/api/recordatorios', { headers })
+      .then(r => r.json())
+      .then(data => {
+        const arr = Array.isArray(data) ? data : []
+        const acts = arr.filter(i => i._kind !== 'reminder')
+        const rems = arr.filter(i => i._kind === 'reminder')
+        setActivities(acts)
+        setReminders(rems)
+      })
+      .catch(() => {})
+    fetch('/api/personal?activo=true', { headers })
+      .then(r => r.json())
+      .then(data => setEmployees(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [token, refreshKey])
 
-  const filtered = items.filter(i => !search || i.name.toLowerCase().includes(search.toLowerCase()))
+  // Filtros temporales
+  const isInRange = (iso) => {
+    if (!iso || filter === 'todos') return true
+    const d = new Date(iso)
+    const today = new Date(); today.setHours(0,0,0,0)
+    const inDays = (n) => {
+      const end = new Date(today); end.setDate(today.getDate() + n)
+      return d >= today && d <= end
+    }
+    if (filter === 'hoy') return d.toDateString() === today.toDateString()
+    if (filter === 'semana') return inDays(7)
+    if (filter === 'mes') return inDays(30)
+    if (filter === 'vencidas') return d < today
+    return true
+  }
+
+  const all = [
+    ...activities.map(a => ({ ...a, _type: a.personal_id ? 'tarea' : 'tarea-propia' })),
+    ...reminders.map(r => ({ ...r, _type: 'recordatorio' })),
+  ]
+
+  // Normalizar prioridad para filtro consistente
+  const normPrio = (p) => p === 'urgente' ? 'critica' : p === 'normal' ? 'media' : p
+
+  const visible = all
+    .filter(i => {
+      if (tab === 'tareas' && i._type === 'recordatorio') return false
+      if (tab === 'recordatorios' && i._type !== 'recordatorio') return false
+      return true
+    })
+    .filter(i => isInRange(i.fecha_recordar))
+    .filter(i => !search || (i.mensaje || '').toLowerCase().includes(search.toLowerCase()))
+    .filter(i => filterCategoria === 'todas' || (i.categoria || 'personal') === filterCategoria)
+    .filter(i => filterPrioridad === 'todas' || normPrio(i.prioridad) === filterPrioridad)
+    .filter(i => {
+      if (filterEstado === 'todos') return true
+      if (filterEstado === 'vencidas') {
+        return i.estado !== 'completado' && i.fecha_recordar && new Date(i.fecha_recordar) < new Date()
+      }
+      return i.estado === filterEstado
+    })
+    .filter(i => {
+      if (filterAsignado === 'todos') return true
+      if (filterAsignado === 'sin_asignar') return !i.personal_id
+      if (filterAsignado === 'mis') return !i.personal_id // recordatorios sin asignación = míos
+      return String(i.personal_id) === String(filterAsignado)
+    })
+    .sort((a, b) => new Date(a.fecha_recordar || 0) - new Date(b.fecha_recordar || 0))
+
+  const activeFilterCount = [filterCategoria, filterPrioridad, filterEstado, filterAsignado]
+    .filter(v => v !== 'todas' && v !== 'todos').length
+
+  // KPIs
+  const today = new Date(); today.setHours(0,0,0,0)
+  const isToday = (iso) => iso && new Date(iso).toDateString() === today.toDateString()
+  const isPast = (iso) => iso && new Date(iso) < today
+  const stats = {
+    hoy: all.filter(i => isToday(i.fecha_recordar) && i.estado !== 'completado').length,
+    pendientes: all.filter(i => i.estado === 'pendiente' || i.estado === 'por_iniciar').length,
+    vencidas: all.filter(i => isPast(i.fecha_recordar) && i.estado !== 'completado').length,
+    total: all.length,
+  }
 
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Mi agenda</h2>
-          <p className="text-sm text-slate-500 mt-1">Pendientes, recordatorios y acciones personales de la operación.</p>
+          <p className="text-sm text-slate-500 mt-1">Tus tareas asignadas + recordatorios personales en un solo lugar.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <ActionBtn icon={Plus} label="Nueva actividad" onClick={() => onOpenModal('personal')} />
+          <ActionBtn icon={Plus} label="Nueva tarea" onClick={() => onOpenModal('actividad')} />
           <ActionBtn icon={Bell} label="Nuevo recordatorio" onClick={() => onOpenModal('recordatorio')} />
-          <ActionBtn icon={Repeat} label="Convertir en compartida" onClick={() => {
-            const linkable = items.filter(i => i.type === 'personal')
-            if (linkable.length === 0) { alert('No tienes actividades personales para convertir.'); return }
-            onOpenModal({ type: 'convertir', item: null })
-          }} />
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiSimple label="Pendientes de hoy" value={items.filter(i => i.status === 'pendiente').length} />
-        <KpiSimple label="Recordatorios activos" value={0} />
-        <KpiSimple label="Esperando respuesta" value={0} />
-        <KpiSimple label="Vencimientos próximos" value={items.length} />
+        <KpiSimple label="Para hoy" value={stats.hoy} />
+        <KpiSimple label="Pendientes" value={stats.pendientes} />
+        <KpiSimple label="Vencidas" value={stats.vencidas} />
+        <KpiSimple label="Total" value={stats.total} />
       </div>
 
-      {/* Filters + view */}
+      {/* Tabs internos */}
+      <div className="flex items-center gap-1 border-b border-slate-200">
+        {[
+          { id: 'todo', label: `Todo (${all.length})` },
+          { id: 'tareas', label: `📋 Tareas (${activities.length})` },
+          { id: 'recordatorios', label: `🔔 Recordatorios (${reminders.length})` },
+        ].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === t.id ? 'border-[#1a3a3a] text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* Filtros temporales + búsqueda */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           {[
-            { id: 'hoy', label: 'Hoy' }, { id: 'semana', label: 'Esta semana' },
-            { id: 'pendientes', label: 'Pendientes' }, { id: 'recordatorios', label: 'Recordatorios' },
-            { id: 'seguimiento', label: 'Seguimiento' }, { id: 'vinculadas', label: 'Vinculadas' },
+            { id: 'hoy', label: 'Hoy' },
+            { id: 'semana', label: 'Esta semana' },
+            { id: 'mes', label: 'Este mes' },
+            { id: 'vencidas', label: 'Vencidas' },
+            { id: 'todos', label: 'Todos' },
           ].map(f => (
             <button key={f.id} onClick={() => setFilter(f.id)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filter === f.id ? 'bg-[#1a3a3a] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
@@ -778,58 +1157,150 @@ const AgendaTab = ({ token, onOpenModal, refreshKey }) => {
           ))}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAdvanced(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${showAdvanced || activeFilterCount > 0 ? 'bg-[#1a3a3a] text-white border-[#1a3a3a]' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}
+          >
+            🎛️ Filtros{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+          </button>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20" />
           </div>
-          <div className="flex bg-slate-100 rounded-lg p-0.5">
-            {[{ id: 'lista', icon: List }, { id: 'calendario', icon: CalendarClock }, { id: 'timeline', icon: GitBranch }].map(v => (
-              <button key={v.id} onClick={() => setView(v.id)} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${view === v.id ? 'bg-[#1a3a3a] text-white' : 'text-slate-500'}`}>
-                <v.icon className="w-3 h-3" />{v.id.charAt(0).toUpperCase() + v.id.slice(1)}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Filtros avanzados (colapsables) */}
+      {showAdvanced && (
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Categoría</label>
+              <select value={filterCategoria} onChange={(e) => setFilterCategoria(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                <option value="todas">Todas</option>
+                <option value="personal">Personal</option>
+                <option value="negocio">Negocio</option>
+                <option value="salud">Salud</option>
+                <option value="escuela">Escuela</option>
+                <option value="trabajo">Trabajo</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Prioridad</label>
+              <select value={filterPrioridad} onChange={(e) => setFilterPrioridad(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                <option value="todas">Todas</option>
+                <option value="critica">🚨 Crítica / Urgente</option>
+                <option value="alta">⚠️ Alta</option>
+                <option value="media">Media / Normal</option>
+                <option value="baja">Baja</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Estado</label>
+              <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                <option value="todos">Todos</option>
+                <option value="pendiente">⏳ Pendiente</option>
+                <option value="en_proceso">🔄 En proceso</option>
+                <option value="completado">✅ Completado</option>
+                <option value="vencidas">🔴 Vencidas</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Asignado a</label>
+              <select value={filterAsignado} onChange={(e) => setFilterAsignado(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a3a]/20">
+                <option value="todos">Todos</option>
+                <option value="sin_asignar">Sin asignar (mis recordatorios)</option>
+                {employees.map(e => (
+                  <option key={e.id} value={e.id}>🧑 {e.nombre}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => { setFilterCategoria('todas'); setFilterPrioridad('todas'); setFilterEstado('todos'); setFilterAsignado('todos') }}
+              className="mt-3 text-xs text-slate-500 hover:text-slate-700 underline"
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Tabla */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr className="text-[10px] text-slate-400 uppercase tracking-wider">
                 <th className="px-4 py-2.5 text-left font-medium">Tipo</th>
-                <th className="px-4 py-2.5 text-left font-medium">Actividad</th>
+                <th className="px-4 py-2.5 text-left font-medium">Título</th>
                 <th className="px-4 py-2.5 text-left font-medium">Fecha</th>
-                <th className="px-4 py-2.5 text-left font-medium">Hora</th>
+                <th className="px-4 py-2.5 text-left font-medium">Asignada a</th>
                 <th className="px-4 py-2.5 text-left font-medium">Prioridad</th>
                 <th className="px-4 py-2.5 text-left font-medium">Estado</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filtered.map(i => (
-                <tr key={i.id} className="hover:bg-slate-50/50">
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${
-                      i.type === 'personal' ? 'bg-[#e8f0f0] text-[#1a3a3a]' :
-                      i.type === 'vinculada' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
-                    }`}>{i.type === 'personal' ? '👤' : i.type === 'vinculada' ? '🔗' : '🔔'} {i.type}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-slate-900 font-medium">{i.name}</p>
-                    {i.project_name && <p className="text-xs text-slate-400">{i.project_name}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{fmtDate(i.date)}</td>
-                  <td className="px-4 py-3 text-slate-600">{i.time?.substring(0, 5) || '—'}</td>
-                  <td className="px-4 py-3"><span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-semibold ${PRIORITY_COLORS[i.priority]}`}>{PRIORITY_LABELS[i.priority]}</span></td>
-                  <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 text-xs"><span className={`w-1.5 h-1.5 rounded-full ${i.status === 'pendiente' ? 'bg-amber-500' : 'bg-green-500'}`} />{i.status === 'pendiente' ? 'Pendiente' : 'Completada'}</span></td>
-                </tr>
-              ))}
-              {filtered.length === 0 && <tr><td colSpan="6" className="px-4 py-10 text-center text-xs text-slate-400">Sin elementos.</td></tr>}
+              {visible.map(i => {
+                const typeIcon = i._type === 'recordatorio' ? '🔔' : '📋'
+                const typeLabel = i._type === 'recordatorio' ? 'Recordatorio' : 'Tarea'
+                const typeStyle = i._type === 'recordatorio' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'
+                const fecha = i.fecha_recordar
+                  ? new Date(i.fecha_recordar).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                  : '—'
+                const vencido = i.estado !== 'completado' && fecha !== '—' && new Date(i.fecha_recordar) < new Date()
+                return (
+                  <tr key={`${i._type}-${i.id}`} className="hover:bg-slate-50/50">
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${typeStyle}`}>
+                        {typeIcon} {typeLabel}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-slate-900 font-medium">{i.mensaje}</p>
+                      <p className="text-[10px] text-slate-400">[#{i.id}]{i.categoria ? ` · ${i.categoria}` : ''}</p>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {fecha}
+                      {vencido && <span className="ml-1.5 text-[10px] text-red-600 font-semibold">VENCIDO</span>}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{i.personal_nombre || <span className="text-slate-300">—</span>}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-semibold ${PRIORITY_COLORS[i.prioridad === 'urgente' ? 'critica' : i.prioridad === 'normal' ? 'media' : i.prioridad] || 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                        {(i.prioridad || 'media').toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1.5 text-xs">
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          i.estado === 'completado' ? 'bg-green-500' :
+                          i.estado === 'en_proceso' ? 'bg-blue-500' :
+                          vencido ? 'bg-red-500' : 'bg-amber-500'
+                        }`} />
+                        {i.estado || 'pendiente'}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+              {visible.length === 0 && (
+                <tr><td colSpan="6" className="px-4 py-12 text-center">
+                  <p className="text-sm text-slate-400 mb-3">Sin elementos en este filtro.</p>
+                  <button onClick={() => onOpenModal('recordatorio')} className="text-xs text-[#1a3a3a] font-medium hover:underline">+ Crear recordatorio</button>
+                </td></tr>
+              )}
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-2 text-xs text-slate-400 border-t border-slate-100">{filtered.length} de {items.length} elementos</div>
+        <div className="px-4 py-2 text-xs text-slate-400 border-t border-slate-100">
+          {visible.length} de {all.length} elementos
+        </div>
       </div>
     </div>
   )
@@ -1005,20 +1476,54 @@ const PriorityPicker = ({ value, onChange, extended = false }) => {
 }
 
 // Nueva actividad (compartida)
-const ActivityModal = ({ token, users, projects, onClose, onSuccess }) => {
-  const [form, setForm] = useState({ projectId: '', name: '', responsibleId: '', startDate: '', dueDate: '', priority: 'media' })
+const ActivityModal = ({ token, users, employees = [], projects, onClose, onSuccess }) => {
+  const [form, setForm] = useState({ projectId: '', name: '', assignee: '', startDate: '', dueDate: '', priority: 'media', notes: '' })
   const [saving, setSaving] = useState(false)
 
+  // Combina users + employees deduplicando por nombre.
+  // Si el employee tiene user_id (es admin con login), se prefiere el employee
+  // (porque tiene whatsapp asignado para notificación directa).
+  const assigneeOptions = (() => {
+    const norm = (s) => String(s || '').toLowerCase().trim()
+    const employeeNames = new Set(employees.map(e => norm(e.name)))
+    const employeeUserIds = new Set(employees.map(e => e.user_id).filter(Boolean))
+    // Users que NO tienen un employee equivalente (por nombre o user_id)
+    const filteredUsers = users.filter(u => !employeeNames.has(norm(u.name)) && !employeeUserIds.has(u.id))
+    return [
+      ...employees.map(e => ({
+        value: `emp:${e.id}`,
+        label: e.user_id ? `🧑 ${e.name} (admin)` : `🧑 ${e.name}`,
+      })),
+      ...filteredUsers.map(u => ({ value: `user:${u.id}`, label: `👤 ${u.name} (admin)` })),
+    ].sort((a, b) => a.label.localeCompare(b.label))
+  })()
+
   const save = async () => {
-    if (!form.name || !form.projectId || !form.responsibleId || !form.dueDate) return alert('Completa los campos requeridos')
+    if (!form.name || !form.projectId || !form.assignee || !form.dueDate) return alert('Completa los campos requeridos')
+    const [type, idStr] = form.assignee.split(':')
+    const id = parseInt(idStr, 10)
+    const body = {
+      projectId: form.projectId,
+      name: form.name,
+      startDate: form.startDate || null,
+      dueDate: form.dueDate,
+      priority: form.priority,
+      notes: form.notes || null,
+      responsibleId: type === 'user' ? id : null,
+      assignedEmployeeId: type === 'emp' ? id : null,
+    }
     setSaving(true)
-    const res = await fetch('/api/operacion/activities', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(form) })
+    const res = await fetch('/api/operacion/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    })
     setSaving(false)
     if (res.ok) { onSuccess(); onClose() } else alert('Error al crear')
   }
 
   return (
-    <ModalShell title="Nueva actividad" subtitle="Cree una actividad operativa dentro de un proyecto en curso." onClose={onClose} wide>
+    <ModalShell title="Nueva actividad" subtitle="Crea una tarea dentro de un proyecto. La persona asignada recibirá una notificación de WhatsApp." onClose={onClose} wide>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-4">
           <div><label className={labelCls}>Proyecto *</label>
@@ -1031,16 +1536,17 @@ const ActivityModal = ({ token, users, projects, onClose, onSuccess }) => {
             />
           </div>
           <div><label className={labelCls}>Nombre de la actividad *</label>
-            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej: Validación fiscal Perú" className={inputCls} />
+            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej: Entregar el reporte mensual" className={inputCls} />
           </div>
-          <div><label className={labelCls}>Responsable *</label>
+          <div><label className={labelCls}>Asignar a *</label>
             <Select
-              value={form.responsibleId}
-              onChange={(v) => setForm({ ...form, responsibleId: v })}
-              options={users.map(u => ({ value: u.id, label: u.name }))}
-              placeholder="Seleccionar responsable"
+              value={form.assignee}
+              onChange={(v) => setForm({ ...form, assignee: v })}
+              options={assigneeOptions}
+              placeholder="Seleccionar persona"
               searchable
             />
+            <p className="text-[10px] text-slate-400 mt-1">👤 Admin con login · 🧑 Empleado (recibe WhatsApp)</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelCls}>Fecha inicio</label>
@@ -1051,6 +1557,9 @@ const ActivityModal = ({ token, users, projects, onClose, onSuccess }) => {
             </div>
           </div>
           <div><label className={labelCls}>Prioridad</label><PriorityPicker value={form.priority} onChange={(v) => setForm({ ...form, priority: v })} extended /></div>
+          <div><label className={labelCls}>Notas (opcional)</label>
+            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Detalles, contexto..." rows={2} className={inputCls + ' resize-none'} />
+          </div>
         </div>
         <div className="space-y-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
@@ -1061,14 +1570,11 @@ const ActivityModal = ({ token, users, projects, onClose, onSuccess }) => {
               <div className="flex justify-between"><span className="text-slate-500">Tipo</span><span className="font-medium">Operativa</span></div>
             </div>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase mb-3">Qué ocurrirá</p>
-            <ul className="space-y-1.5 text-xs text-slate-600">
-              <li className="flex gap-2"><ChevronRight className="w-3 h-3 mt-0.5" />Aparecerá en Trabajo compartido</li>
-              <li className="flex gap-2"><ChevronRight className="w-3 h-3 mt-0.5" />Visible en Tablero y Timeline</li>
-              <li className="flex gap-2"><ChevronRight className="w-3 h-3 mt-0.5" />Disponible para seguimiento</li>
-              <li className="flex gap-2"><ChevronRight className="w-3 h-3 mt-0.5" />El responsable podrá ser notificado</li>
-            </ul>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-[10px] font-semibold text-blue-700 uppercase mb-2">📲 Notificación automática</p>
+            <p className="text-xs text-blue-900 leading-relaxed">
+              Si la persona asignada tiene WhatsApp registrado, recibirá un aviso de inmediato con los datos de la tarea.
+            </p>
           </div>
         </div>
       </div>
@@ -1464,6 +1970,8 @@ const ActivityDetail = ({ token, data, onBack, onOpenDetail }) => {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showSteps, setShowSteps] = useState(false)
+  const [stepsCount, setStepsCount] = useState(null)
 
   const jsonHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
@@ -1474,6 +1982,12 @@ const ActivityDetail = ({ token, data, onBack, onOpenDetail }) => {
       fetch(`/api/operacion/history?type=activity&entityId=${data.id}`, { headers: h }).then(r => r.json()).then(d => setEvents(d.events || [])),
       fetch('/api/operacion/blocks', { headers: h }).then(r => r.json()).then(d => setBlocks((d.blocks || []).filter(b => b.activity_id === data.id))),
       fetch('/api/operacion/requests', { headers: h }).then(r => r.json()).then(d => setRequests((d.requests || []).filter(r => r.activity_id === data.id))),
+      fetch(`/api/seguimiento/tarea/${data.id}`, { headers: h }).then(r => r.json()).then(arr => {
+        const list = Array.isArray(arr) ? arr : []
+        const total = list.length
+        const done = list.filter(s => s.completado).length
+        setStepsCount({ total, done })
+      }).catch(() => setStepsCount({ total: 0, done: 0 })),
     ]).finally(() => setLoading(false))
   }
 
@@ -1535,6 +2049,26 @@ const ActivityDetail = ({ token, data, onBack, onOpenDetail }) => {
             <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{activity.description}</p>
           </div>
         )}
+        {/* Botón pasos / plantilla */}
+        <div className="pt-4 border-t border-slate-100">
+          <button
+            onClick={() => setShowSteps(true)}
+            className="w-full flex items-center justify-between gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left"
+          >
+            <div className="flex items-center gap-3">
+              <ClipboardCheck className="w-5 h-5 text-[#1a3a3a]" />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Pasos del proceso</p>
+                <p className="text-xs text-slate-500">
+                  {stepsCount && stepsCount.total > 0
+                    ? `${stepsCount.done} de ${stepsCount.total} completados`
+                    : 'Sin pasos. Carga una plantilla o agrega pasos manualmente.'}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
       </div>
 
       {/* Related blocks */}
@@ -1576,7 +2110,142 @@ const ActivityDetail = ({ token, data, onBack, onOpenDetail }) => {
         </div>
       )}
 
+      <ActivityLog token={token} activityId={data.id} />
+
       <HistoryTimeline events={events} loading={loading} />
+
+      {/* Modal de pasos/plantillas */}
+      {showSteps && (
+        <AlceSeguimientoModal
+          tarea={{
+            id: activity.id,
+            mensaje: activity.name,
+            categoria: activity.category || 'negocio',
+            prioridad: activity.priority,
+            fecha_recordar: activity.due_date,
+            estado: activity.status,
+            personal_id: activity.assigned_employee_id,
+            personal_nombre: activity.employee_name || activity.responsible_name,
+          }}
+          onClose={() => { setShowSteps(false); fetchAll() }}
+          onEstadoChanged={(newStatus) => patch({ status: newStatus === 'completado' ? 'completada' : newStatus })}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── ACTIVITY LOG (bitácora libre) ───
+const ActivityLog = ({ token, activityId }) => {
+  const [logs, setLogs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [text, setText] = useState('')
+  const [kind, setKind] = useState('note')
+  const [posting, setPosting] = useState(false)
+
+  const headers = { Authorization: `Bearer ${token}` }
+  const jsonHeaders = { ...headers, 'Content-Type': 'application/json' }
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const r = await fetch(`/api/operacion/activities/${activityId}/logs`, { headers })
+      const d = await r.json()
+      setLogs(d.logs || [])
+    } catch (e) { /* ignore */ }
+    finally { setLoading(false) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activityId, token])
+
+  useEffect(() => { load() }, [load])
+
+  const post = async () => {
+    if (!text.trim() || posting) return
+    setPosting(true)
+    try {
+      const r = await fetch(`/api/operacion/activities/${activityId}/logs`, {
+        method: 'POST', headers: jsonHeaders,
+        body: JSON.stringify({ message: text.trim(), kind }),
+      })
+      if (r.ok) { setText(''); load() }
+    } catch (e) { /* ignore */ }
+    finally { setPosting(false) }
+  }
+
+  const remove = async (logId) => {
+    if (!confirm('¿Borrar esta entrada de bitácora?')) return
+    try {
+      await fetch(`/api/operacion/activities/${activityId}/logs/${logId}`, { method: 'DELETE', headers })
+      load()
+    } catch (e) { /* ignore */ }
+  }
+
+  const KIND_STYLE = {
+    note:      { icon: '📝', label: 'Nota',      color: 'text-slate-700' },
+    progress:  { icon: '✅', label: 'Avance',    color: 'text-emerald-700' },
+    blocker:   { icon: '🚧', label: 'Obstáculo', color: 'text-red-700' },
+    milestone: { icon: '🎯', label: 'Hito',      color: 'text-blue-700' },
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
+          <FileText className="w-4 h-4 text-[#1a3a3a]" /> Bitácora <span className="text-slate-400 font-normal">({logs.length})</span>
+        </h3>
+      </div>
+
+      {/* Composer */}
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Escribe una nota, avance, obstáculo o hito… (libre)"
+          rows={2}
+          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300 resize-none"
+        />
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-1.5">
+            {Object.entries(KIND_STYLE).map(([k, s]) => (
+              <button key={k} onClick={() => setKind(k)}
+                className={`text-xs px-2 py-1 rounded-md transition-colors ${kind === k ? 'bg-[#1a3a3a] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                {s.icon} {s.label}
+              </button>
+            ))}
+          </div>
+          <button onClick={post} disabled={!text.trim() || posting}
+            className="px-4 py-1.5 bg-[#1a3a3a] text-white rounded-lg text-xs font-medium hover:bg-[#0f2929] disabled:opacity-50">
+            {posting ? '…' : 'Agregar'}
+          </button>
+        </div>
+      </div>
+
+      {/* Lista de entradas */}
+      <div className="mt-4">
+        {loading ? (
+          <p className="text-xs text-slate-400 py-4 text-center">Cargando bitácora…</p>
+        ) : logs.length === 0 ? (
+          <p className="text-xs text-slate-400 py-4 text-center">Sin entradas todavía. Empieza la bitácora arriba.</p>
+        ) : (
+          <ol className="relative space-y-3">
+            {logs.map(l => {
+              const ks = KIND_STYLE[l.kind] || KIND_STYLE.note
+              return (
+                <li key={l.id} className="flex gap-3 group">
+                  <span className="text-base flex-shrink-0">{ks.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm whitespace-pre-wrap ${ks.color}`}>{l.message}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[11px] text-slate-400">{l.user_name || l.employee_name || 'Sistema'} · {fmtRelative(l.created_at)}</span>
+                      <button onClick={() => remove(l.id)} className="opacity-0 group-hover:opacity-100 text-[11px] text-slate-300 hover:text-red-500 transition-opacity">borrar</button>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        )}
+      </div>
     </div>
   )
 }
@@ -1742,6 +2411,202 @@ const RequestDetail = ({ token, data, onBack, onOpenDetail }) => {
       </div>
 
       <HistoryTimeline events={events} loading={loading} />
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROJECT DETAIL — vista completa de un proyecto
+// ═══════════════════════════════════════════════════════════
+const HEALTH_STYLE = {
+  bien:        { dot: 'bg-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700', label: '🟢 Va bien' },
+  en_progreso: { dot: 'bg-amber-500',   bg: 'bg-amber-50',   text: 'text-amber-700',   label: '🟡 En progreso' },
+  en_riesgo:   { dot: 'bg-red-500',     bg: 'bg-red-50',     text: 'text-red-700',     label: '🔴 En riesgo' },
+  sin_datos:   { dot: 'bg-slate-300',   bg: 'bg-slate-50',   text: 'text-slate-500',   label: '⚫ Sin datos' },
+}
+
+const ProjectDetail = ({ token, data, onBack, onOpenDetail, onOpenModal }) => {
+  const [project, setProject] = useState(null)
+  const [activities, setActivities] = useState([])
+  const [blocks, setBlocks] = useState([])
+  const [requests, setRequests] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [summary, setSummary] = useState(null)
+  const [summaryLoading, setSummaryLoading] = useState(false)
+
+  const headers = { Authorization: `Bearer ${token}` }
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const r = await fetch(`/api/operacion/projects/${data.id}`, { headers })
+      const d = await r.json()
+      setProject(d.project)
+      setActivities(d.activities || [])
+      setBlocks(d.blocks || [])
+      setRequests(d.requests || [])
+    } catch (e) { console.error(e) }
+    finally { setLoading(false) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.id, token])
+
+  useEffect(() => { load() }, [load])
+
+  const summarize = async () => {
+    setSummaryLoading(true)
+    setSummary(null)
+    try {
+      const r = await fetch(`/api/assistant-ia/summarize-project/${data.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      })
+      const d = await r.json()
+      setSummary(d.summary || d.error || 'Sin respuesta')
+    } catch (e) { setSummary('⚠️ Error: ' + e.message) }
+    finally { setSummaryLoading(false) }
+  }
+
+  if (loading) return <div className="space-y-5"><BackLink onBack={onBack} /><div className="text-center py-20 text-slate-400">Cargando proyecto…</div></div>
+  if (!project) return <div className="space-y-5"><BackLink onBack={onBack} /><div className="text-center py-20 text-slate-400">Proyecto no encontrado.</div></div>
+
+  const h = HEALTH_STYLE[project.health?.state] || HEALTH_STYLE.sin_datos
+  const total = parseInt(project.total_count) || 0
+  const done = parseInt(project.completed_count) || 0
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0
+
+  return (
+    <div className="space-y-5">
+      <BackLink onBack={onBack} />
+
+      {/* Header */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="flex items-start justify-between flex-wrap gap-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${h.bg} ${h.text}`}>
+                <span className={`w-2 h-2 rounded-full ${h.dot}`} />
+                {h.label}
+              </span>
+              {project.health?.reason && (
+                <span className="text-xs text-slate-500">· {project.health.reason}</span>
+              )}
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">{project.name}</h2>
+            {project.objective && <p className="text-sm text-slate-600 mt-1.5">{project.objective}</p>}
+            <div className="flex flex-wrap gap-3 mt-3 text-xs text-slate-500">
+              {project.area && <span>🏷️ {project.area}</span>}
+              {project.responsible_name && <span>👤 Responsable: {project.responsible_name}</span>}
+              {project.close_date && <span>📅 Cierre: {fmtDate(project.close_date)}</span>}
+            </div>
+          </div>
+          <button
+            onClick={summarize}
+            disabled={summaryLoading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-br from-[#1a3a3a] to-blue-700 text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          >
+            ✨ {summaryLoading ? 'Generando…' : 'Resumir con IA'}
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-5">
+          <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+            <span>{done}/{total} tareas completadas</span>
+            <span className="font-semibold text-slate-700">{pct}%</span>
+          </div>
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct === 100 ? '#10b981' : '#3b82f6' }} />
+          </div>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+          <KpiSimple label="Tareas activas" value={parseInt(project.open_count)||0} />
+          <KpiSimple label="Vencidas" value={parseInt(project.overdue_count)||0} />
+          <KpiSimple label="Bloqueos" value={parseInt(project.blocks_count)||0} />
+          <KpiSimple label="Bloqueos críticos" value={parseInt(project.critical_blocks)||0} />
+        </div>
+      </div>
+
+      {/* Resumen IA */}
+      {summary && (
+        <div className="bg-gradient-to-br from-blue-50 to-[#e8f0f0] border border-blue-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-base">✨</span>
+            <h3 className="font-semibold text-slate-900 text-sm">Resumen del proyecto</h3>
+          </div>
+          <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+            {String(summary).split('\n').map((line, i) => {
+              const clean = line.replace(/\*\*(.+?)\*\*/g, '«$1»')
+              return <p key={i} className="mb-2" dangerouslySetInnerHTML={{
+                __html: line
+                  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+              }} />
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Tareas */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-slate-900 text-sm">📋 Tareas del proyecto ({activities.length})</h3>
+          <button onClick={() => onOpenModal('actividad')} className="text-xs text-[#1a3a3a] font-medium hover:underline">+ Nueva tarea</button>
+        </div>
+        {activities.length === 0 ? (
+          <p className="text-xs text-slate-400 py-6 text-center">Sin tareas aún. Crea una para empezar.</p>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {activities.map(a => (
+              <div key={a.id} onClick={() => onOpenDetail('activity', a)} className="py-2.5 flex items-center gap-3 cursor-pointer hover:bg-slate-50/50 -mx-2 px-2 rounded-lg">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${PRIORITY_DOT[a.priority]}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{a.name}</p>
+                  <p className="text-xs text-slate-400">{a.employee_name || a.responsible_name || '—'} · {fmtDate(a.due_date)}</p>
+                </div>
+                <span className={`text-[11px] px-2 py-0.5 rounded ${STATUS_COLORS[a.status]}`}>{STATUS_LABELS[a.status]}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Bloqueos activos */}
+      {blocks.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="font-semibold text-slate-900 text-sm mb-3">🚧 Bloqueos activos ({blocks.length})</h3>
+          <div className="space-y-2">
+            {blocks.map(b => (
+              <div key={b.id} onClick={() => onOpenDetail('block', b)} className="flex items-start gap-3 p-3 bg-red-50/50 rounded-lg cursor-pointer hover:bg-red-50">
+                <span className={`mt-0.5 text-xs px-2 py-0.5 rounded font-bold ${b.urgency === 'critica' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{b.urgency.toUpperCase()}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-900">{b.description}</p>
+                  <p className="text-xs text-slate-500">Responsable: {b.responsible_name || '—'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Solicitudes */}
+      {requests.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="font-semibold text-slate-900 text-sm mb-3">📨 Solicitudes ({requests.length})</h3>
+          <div className="space-y-2">
+            {requests.map(r => (
+              <div key={r.id} onClick={() => onOpenDetail('request', r)} className="flex items-start gap-3 p-3 bg-slate-50/50 rounded-lg cursor-pointer hover:bg-slate-100/50">
+                <span className={`mt-0.5 w-2 h-2 rounded-full ${r.status === 'pendiente' ? 'bg-amber-500' : 'bg-green-500'}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-900">{r.message}</p>
+                  <p className="text-xs text-slate-500">Para: {r.responsible_name || '—'} · {r.status}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
