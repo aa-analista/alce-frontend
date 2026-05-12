@@ -8,6 +8,26 @@ export const useAuth = () => {
   return ctx
 }
 
+const DEFAULT_BRANDING = {
+  displayName: null,
+  primaryColor: '#1a3a3a',
+  secondaryColor: '#2d5555',
+  accentColor: '#3b82f6',
+  textOnPrimary: '#ffffff',
+  logoUrl: null,
+}
+
+// Aplica el branding como CSS variables en :root para uso global
+export function applyBrandingToDOM(branding) {
+  if (typeof document === 'undefined') return
+  const b = { ...DEFAULT_BRANDING, ...(branding || {}) }
+  const root = document.documentElement
+  root.style.setProperty('--brand-primary', b.primaryColor)
+  root.style.setProperty('--brand-secondary', b.secondaryColor)
+  root.style.setProperty('--brand-accent', b.accentColor)
+  root.style.setProperty('--brand-text-on-primary', b.textOnPrimary)
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(() => localStorage.getItem('alce_token'))
@@ -30,6 +50,7 @@ export const AuthProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json()
         setUser(data.user)
+        applyBrandingToDOM(data.user?.branding)
       } else {
         // Invalid / expired token (o suspensión por org)
         try {
@@ -61,6 +82,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('alce_token', data.token)
     setToken(data.token)
     setUser(data.user)
+    applyBrandingToDOM(data.user?.branding)
     return data
   }
 
@@ -91,8 +113,14 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => prev ? { ...prev, ...updates } : prev)
   }
 
+  // Update branding y aplica al DOM en vivo (sin esperar refresh del /me)
+  const updateBranding = (branding) => {
+    setUser(prev => prev ? { ...prev, branding: { ...(prev.branding || {}), ...branding } } : prev)
+    applyBrandingToDOM(branding)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, updateUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, updateUser, updateBranding }}>
       {children}
     </AuthContext.Provider>
   )

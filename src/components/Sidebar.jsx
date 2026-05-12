@@ -83,14 +83,29 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
     )}>
       {/* Logo */}
       <div className="p-4 pb-2 flex items-center gap-2.5 min-h-[56px]">
-        <div className="w-9 h-9 bg-[#1a3a3a] rounded-xl flex items-center justify-center flex-shrink-0">
-          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+          style={{ background: user?.branding?.primaryColor || '#1a3a3a' }}
+        >
+          {user?.branding?.logoUrl ? (
+            <img src={user.branding.logoUrl} alt="logo" className="w-full h-full object-contain" />
+          ) : (
+            <svg
+              className="w-4 h-4"
+              style={{ color: user?.branding?.textOnPrimary || '#ffffff' }}
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          )}
         </div>
         <div className={cn(
           "min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap",
           collapsed ? "w-0 opacity-0" : "w-24 opacity-100"
         )}>
-          <span className="text-sm font-bold text-slate-900 tracking-tight block">Alce AI</span>
+          <span className="text-sm font-bold text-slate-900 tracking-tight block">
+            {user?.branding?.displayName || user?.orgName || 'Alce AI'}
+          </span>
           <p className="text-[9px] text-slate-400 font-medium uppercase tracking-[0.15em] leading-none">Plataforma B2B</p>
         </div>
       </div>
