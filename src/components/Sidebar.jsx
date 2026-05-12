@@ -100,10 +100,13 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
           )}
         </div>
         <div className={cn(
-          "min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap",
-          collapsed ? "w-0 opacity-0" : "w-24 opacity-100"
+          "min-w-0 transition-all duration-300 overflow-hidden",
+          collapsed ? "w-0 opacity-0" : "flex-1 opacity-100"
         )}>
-          <span className="text-sm font-bold text-slate-900 tracking-tight block">
+          <span
+            className="text-sm font-bold text-slate-900 tracking-tight block truncate"
+            title={user?.branding?.displayName || user?.orgName || 'Alce AI'}
+          >
             {user?.branding?.displayName || user?.orgName || 'Alce AI'}
           </span>
           <p className="text-[9px] text-slate-400 font-medium uppercase tracking-[0.15em] leading-none">Plataforma B2B</p>
