@@ -19,6 +19,9 @@ const DEFAULT_BRANDING = {
   secondaryColor: '#2d5555',
   accentColor: '#3b82f6',
   textOnPrimary: '#ffffff',
+  sidebarBg: '#ffffff',
+  navbarBg: '#ffffff',
+  contentBg: '#f8fafc',
   logoUrl: null,
 }
 
@@ -58,7 +61,10 @@ const SettingsModule = () => {
     brandingDraft.primaryColor !== branding.primaryColor ||
     brandingDraft.secondaryColor !== branding.secondaryColor ||
     brandingDraft.accentColor !== branding.accentColor ||
-    brandingDraft.textOnPrimary !== branding.textOnPrimary
+    brandingDraft.textOnPrimary !== branding.textOnPrimary ||
+    brandingDraft.sidebarBg !== branding.sidebarBg ||
+    brandingDraft.navbarBg !== branding.navbarBg ||
+    brandingDraft.contentBg !== branding.contentBg
 
   const handleBrandingChange = (key, value) => {
     setBrandingDraft(prev => ({ ...prev, [key]: value }))
@@ -81,6 +87,9 @@ const SettingsModule = () => {
           secondaryColor: brandingDraft.secondaryColor,
           accentColor: brandingDraft.accentColor,
           textOnPrimary: brandingDraft.textOnPrimary,
+          sidebarBg: brandingDraft.sidebarBg,
+          navbarBg: brandingDraft.navbarBg,
+          contentBg: brandingDraft.contentBg,
         }),
       })
       const data = await res.json()
@@ -473,14 +482,25 @@ const SettingsModule = () => {
               </div>
 
               <div className="space-y-3">
-                <ColorRow label="Primario" hint="Fondo del sidebar, navbar, botones principales"
+                <ColorRow label="Primario" hint="Botones principales, items activos, acentos"
                   value={brandingDraft.primaryColor} onChange={(v) => handleBrandingChange('primaryColor', v)} />
-                <ColorRow label="Secundario" hint="Variante más clara para hovers y acentos sutiles"
+                <ColorRow label="Secundario" hint="Variante más clara para hovers"
                   value={brandingDraft.secondaryColor} onChange={(v) => handleBrandingChange('secondaryColor', v)} />
                 <ColorRow label="Acento" hint="Botones secundarios, links, badges"
                   value={brandingDraft.accentColor} onChange={(v) => handleBrandingChange('accentColor', v)} />
                 <ColorRow label="Texto sobre primario" hint="Contraste del texto encima del color primario"
                   value={brandingDraft.textOnPrimary} onChange={(v) => handleBrandingChange('textOnPrimary', v)} />
+
+                <div className="border-t border-slate-100 pt-3 mt-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Fondos</p>
+                </div>
+
+                <ColorRow label="Fondo del sidebar" hint="Color del menú lateral izquierdo"
+                  value={brandingDraft.sidebarBg} onChange={(v) => handleBrandingChange('sidebarBg', v)} />
+                <ColorRow label="Fondo del navbar" hint="Color de la barra superior con buscador"
+                  value={brandingDraft.navbarBg} onChange={(v) => handleBrandingChange('navbarBg', v)} />
+                <ColorRow label="Fondo del contenido" hint="Fondo del área principal donde se ven las páginas"
+                  value={brandingDraft.contentBg} onChange={(v) => handleBrandingChange('contentBg', v)} />
               </div>
             </div>
 
@@ -549,63 +569,82 @@ function BrandingPreview({ branding, orgFallback }) {
   return (
     <div className="sticky top-4 space-y-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Vista previa</p>
-      <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 shadow-sm">
-        {/* Mock sidebar header */}
+      <div
+        className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex"
+        style={{ height: 360, background: branding.contentBg }}
+      >
+        {/* ── Mock SIDEBAR ─────────────────────────────────── */}
         <div
-          className="flex items-center gap-2.5 px-4 py-3"
-          style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
+          className="w-32 flex flex-col border-r border-slate-200/50"
+          style={{ background: branding.sidebarBg }}
         >
+          {/* Logo + nombre */}
+          <div className="flex items-center gap-2 px-2.5 py-3">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+              style={{ background: branding.primaryColor }}
+            >
+              {branding.logoUrl ? (
+                <img src={branding.logoUrl} alt="logo" className="w-full h-full object-contain" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5" style={{ color: branding.textOnPrimary }} />
+              )}
+            </div>
+            <span className="text-[10px] font-bold text-slate-900 truncate">{name}</span>
+          </div>
+          {/* Nav items */}
+          <div className="px-2 space-y-1 mt-1">
+            <div
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-medium"
+              style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
+            >
+              <Save className="w-2.5 h-2.5" /> Inicio
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600">
+              <UserIcon /> Clientes
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600">
+              <UserIcon /> Equipo
+            </div>
+          </div>
+        </div>
+
+        {/* ── Mock right area: navbar + content ─────────────── */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Navbar */}
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-            style={{ background: branding.secondaryColor }}
+            className="h-10 flex items-center px-3 gap-2 border-b border-slate-200/50 flex-shrink-0"
+            style={{ background: branding.navbarBg }}
           >
-            {branding.logoUrl ? (
-              <img src={branding.logoUrl} alt="logo" className="w-full h-full object-contain" />
-            ) : (
-              <ShieldCheck className="w-4 h-4" style={{ color: branding.textOnPrimary }} />
-            )}
+            <div className="flex-1 h-5 rounded-md bg-slate-100/80" />
+            <div className="w-5 h-5 rounded-full bg-slate-200" />
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-bold leading-tight truncate">{name}</p>
-            <p className="text-[9px] uppercase tracking-[0.15em] opacity-60 leading-none mt-1">Plataforma B2B</p>
-          </div>
-        </div>
 
-        {/* Mock nav items */}
-        <div className="bg-white p-3 space-y-1.5">
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium" style={{ background: `${branding.primaryColor}12`, color: branding.primaryColor }}>
-            <div className="w-1 h-3.5 rounded-full" style={{ background: branding.primaryColor }} />
-            Inicio
-          </div>
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:bg-slate-50">
-            <div className="w-1 h-3.5 rounded-full opacity-0" />
-            Clientes
-          </div>
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:bg-slate-50">
-            <div className="w-1 h-3.5 rounded-full opacity-0" />
-            Documentos
-          </div>
-        </div>
-
-        {/* Mock content */}
-        <div className="bg-slate-50 p-3 space-y-2 border-t border-slate-200">
-          <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Componentes</p>
-          <button
-            type="button"
-            className="w-full text-xs font-semibold py-2 rounded-lg transition-opacity hover:opacity-90"
-            style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
-          >
-            Botón primario
-          </button>
-          <button
-            type="button"
-            className="w-full text-xs font-semibold py-2 rounded-lg border transition-all"
-            style={{ borderColor: branding.accentColor, color: branding.accentColor }}
-          >
-            Botón secundario
-          </button>
-          <div className="rounded-lg p-2.5 text-[11px]" style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>
-            <span className="font-semibold">Badge / Acento</span> — color terciario
+          {/* Content */}
+          <div className="flex-1 p-3 overflow-hidden" style={{ background: branding.contentBg }}>
+            <div className="bg-white rounded-md p-2 mb-2 border border-slate-200">
+              <div className="h-2 w-12 rounded bg-slate-200 mb-1.5" />
+              <div className="h-1.5 w-full rounded bg-slate-100" />
+              <div className="h-1.5 w-3/4 rounded bg-slate-100 mt-1" />
+            </div>
+            <button
+              type="button"
+              className="text-[10px] font-semibold px-2.5 py-1 rounded-md mr-1.5"
+              style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
+            >
+              Acción primaria
+            </button>
+            <button
+              type="button"
+              className="text-[10px] font-semibold px-2.5 py-1 rounded-md border"
+              style={{ borderColor: branding.accentColor, color: branding.accentColor }}
+            >
+              Acento
+            </button>
+            <div className="mt-2 inline-block rounded px-2 py-0.5 text-[9px]"
+                 style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>
+              Badge
+            </div>
           </div>
         </div>
       </div>
@@ -614,6 +653,16 @@ function BrandingPreview({ branding, orgFallback }) {
         Los cambios se previsualizan aquí en tiempo real. Al pulsar <b>Guardar diseño</b> se aplican a toda la plataforma de tu organización.
       </p>
     </div>
+  )
+}
+
+// Mini icono inline para mock del preview
+function UserIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-2.5 h-2.5">
+      <circle cx="12" cy="7" r="4" />
+      <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+    </svg>
   )
 }
 

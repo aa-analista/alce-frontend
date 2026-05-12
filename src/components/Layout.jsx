@@ -69,7 +69,7 @@ const Layout = ({ children, userModules = [] }) => {
   const filteredNotifs = notifTab === 'unread' ? notifs.filter(n => !n.is_read) : notifs
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-[var(--brand-content-bg)] overflow-hidden">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex relative">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} userModules={userModules} />
@@ -95,7 +95,7 @@ const Layout = ({ children, userModules = [] }) => {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="bg-white border-b border-slate-200 h-14 flex items-center px-4 sm:px-5 flex-shrink-0 gap-3">
+        <header className="bg-[var(--brand-navbar-bg)] border-b border-slate-200 h-14 flex items-center px-4 sm:px-5 flex-shrink-0 gap-3">
           {/* Mobile hamburger */}
           <button onClick={() => setMobileOpen(true)} className="lg:hidden p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">
             <Menu className="w-5 h-5" />

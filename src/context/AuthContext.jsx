@@ -14,6 +14,9 @@ const DEFAULT_BRANDING = {
   secondaryColor: '#2d5555',
   accentColor: '#3b82f6',
   textOnPrimary: '#ffffff',
+  sidebarBg: '#ffffff',
+  navbarBg: '#ffffff',
+  contentBg: '#f8fafc',
   logoUrl: null,
 }
 
@@ -26,6 +29,9 @@ export function applyBrandingToDOM(branding) {
   root.style.setProperty('--brand-secondary', b.secondaryColor)
   root.style.setProperty('--brand-accent', b.accentColor)
   root.style.setProperty('--brand-text-on-primary', b.textOnPrimary)
+  root.style.setProperty('--brand-sidebar-bg', b.sidebarBg)
+  root.style.setProperty('--brand-navbar-bg', b.navbarBg)
+  root.style.setProperty('--brand-content-bg', b.contentBg)
 }
 
 export const AuthProvider = ({ children }) => {

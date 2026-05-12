@@ -78,7 +78,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
 
   return (
     <aside className={cn(
-      "h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out relative",
+      "h-full bg-[var(--brand-sidebar-bg)] border-r border-slate-200 flex flex-col flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out relative",
       collapsed ? "w-[68px]" : "w-56"
     )}>
       {/* Logo */}

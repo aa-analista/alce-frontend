@@ -6,6 +6,9 @@
   --brand-secondary: #2d5555;
   --brand-accent: #3b82f6;
   --brand-text-on-primary: #ffffff;
+  --brand-sidebar-bg: #ffffff;
+  --brand-navbar-bg: #ffffff;
+  --brand-content-bg: #f8fafc;
 }
 
 /* Smooth scrolling */
