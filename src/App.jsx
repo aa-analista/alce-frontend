@@ -21,6 +21,11 @@ import LoginPage from './components/LoginPage'
 import RegisterPage from './components/RegisterPage'
 import ActivatePage from './components/ActivatePage'
 import HomeDashboard from './components/HomeDashboard'
+// ── Módulos integrados (Efra): Gestión equipo, Contratos, Empleados, ruta pública ──
+import GestionEquipoModule from './components/GestionEquipoModule'
+import AlceEmpleadoView from './components/AlceEmpleadoView'
+import ContratosModule from './components/ContratosModule'
+import PublicContratoView from './components/PublicContratoView'
 import { AssistantProvider } from './context/AssistantContext'
 
 function ProtectedRoute({ children }) {
@@ -109,11 +114,14 @@ function App() {
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
           <Route path="/activar" element={<ActivatePage />} />
+          {/* Ruta pública para clientes que reciben contratos — sin auth */}
+          <Route path="/p/:token" element={<PublicContratoView />} />
           <Route path="/" element={<ProtectedRoute><AssistantProvider><Dashboard /></AssistantProvider></ProtectedRoute>}>
             <Route index element={<Navigate to="/home" replace />} />
             <Route path="home" element={<HomeDashboard />} />
             <Route path="coach-ai" element={<CoachAIPage />} />
             <Route path="operacion" element={<OperacionPage />} />
+            <Route path="operacion/equipo/:id" element={<AlceEmpleadoView />} />
             <Route path="actividad" element={<PlaceholderPage title="Actividad" />} />
             {/* Renamed in sidebar but same routes */}
             <Route path="marketplace" element={<MarketplaceModule />} />
@@ -126,6 +134,10 @@ function App() {
             <Route path="documentos" element={<DocumentModule />} />
             <Route path="accountability" element={<AccountabilityModule />} />
             <Route path="conocimiento" element={<KnowledgeBaseModule />} />
+            {/* Módulos integrados (Efra) */}
+            <Route path="gestion-equipo" element={<GestionEquipoModule />} />
+            <Route path="gestion-equipo/equipo/:id" element={<AlceEmpleadoView />} />
+            <Route path="contratos" element={<ContratosModule />} />
             {/* Google Connector pages */}
             <Route path="google-drive" element={<ConnectorPage />} />
             <Route path="google-gmail" element={<GmailPage />} />
