@@ -114,7 +114,7 @@ const Layout = ({ children, userModules = [] }) => {
             {/* Org badge */}
             <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg">
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-xs font-medium text-slate-600">{user?.orgName || 'ALCE'}</span>
+              <span className="text-xs font-medium text-slate-600">{user?.branding?.displayName || user?.orgName || 'ALCE'}</span>
             </div>
 
             {/* Notifications */}

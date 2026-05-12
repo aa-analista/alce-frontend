@@ -254,7 +254,7 @@ const SettingsModule = () => {
               <span className="bg-white/15 text-white text-xs font-medium px-2 py-0.5 rounded-md">
                 {roleLabel[user?.role] || user?.role}
               </span>
-              <span className="text-white/40 text-xs">{user?.orgName}</span>
+              <span className="text-white/40 text-xs">{user?.branding?.displayName || user?.orgName}</span>
             </div>
           </div>
         </div>
