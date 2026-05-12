@@ -65,7 +65,55 @@ function buildOpenUIHtml(code, title = 'Respuesta') {
   }
   function openLink(url) { try { parent.window.open(url, '_blank'); } catch(e) { window.open(url, '_blank'); } }
 
-  // Cargar el bundle de OpenUI y renderizar
+  // Estado de render: lo guardamos a nivel window para que los message handlers
+  // pueden re-renderizar cuando llegan updates desde el parent.
+  window.__OUI_state = {
+    root: null,
+    OpenUI: null,
+    handleAction: null,
+    lastCode: ${codeJson},
+    lastStreaming: false
+  };
+
+  function renderOpenUI(code, isStreaming) {
+    var st = window.__OUI_state;
+    if (!st.OpenUI || !code) return;
+    // Lazy-create root al primer render real (deja visible el "Cargando..."
+    // hasta que llegue el primer chunk de código)
+    if (!st.root) {
+      var container = document.getElementById('openui-root');
+      container.innerHTML = '';
+      st.root = st.OpenUI.createRoot(container);
+    }
+    try {
+      st.root.render(st.OpenUI.React.createElement(st.OpenUI.Renderer, {
+        response: code,
+        library: st.OpenUI.openuiChatLibrary,
+        isStreaming: !!isStreaming,
+        onAction: st.handleAction
+      }));
+      reportHeight();
+    } catch(err) {
+      // En streaming es común tener sintaxis incompleta — no mostramos error
+      // hasta que termine de stream
+      if (!isStreaming) {
+        var el = document.getElementById('openui-root');
+        el.innerHTML = '<div class="openui-error"><strong>Error al renderizar OpenUI</strong>' + (err.message || String(err)) + '</div>';
+        reportHeight();
+      }
+    }
+  }
+
+  // Escuchar updates desde el parent (streaming)
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'openui:update' && typeof e.data.code === 'string') {
+      window.__OUI_state.lastCode = e.data.code;
+      window.__OUI_state.lastStreaming = !!e.data.streaming;
+      renderOpenUI(e.data.code, e.data.streaming);
+    }
+  });
+
+  // Cargar el bundle de OpenUI
   var s = document.createElement('script');
   s.src = '${OPENUI_CDN}/dist/openui-bundle.min.js';
   s.onload = function() {
@@ -74,10 +122,6 @@ function buildOpenUIHtml(code, title = 'Respuesta') {
       if (!OpenUI || !OpenUI.Renderer || !OpenUI.openuiChatLibrary) {
         throw new Error('OpenUI bundle cargado pero faltan exports');
       }
-      var code = ${codeJson};
-      var container = document.getElementById('openui-root');
-      container.innerHTML = '';
-      var root = OpenUI.createRoot(container);
       function handleAction(event) {
         if (event.type === 'open_url') {
           openLink(event.params && event.params.url ? event.params.url : '');
@@ -97,12 +141,16 @@ function buildOpenUIHtml(code, title = 'Respuesta') {
         }
         if (prompt) sendPrompt(prompt);
       }
-      root.render(OpenUI.React.createElement(OpenUI.Renderer, {
-        response: code,
-        library: OpenUI.openuiChatLibrary,
-        isStreaming: false,
-        onAction: handleAction
-      }));
+
+      window.__OUI_state.OpenUI = OpenUI;
+      window.__OUI_state.handleAction = handleAction;
+
+      // Render inicial solo si ya hay code (si está vacío, deja visible "Cargando...")
+      if (window.__OUI_state.lastCode) {
+        renderOpenUI(window.__OUI_state.lastCode, window.__OUI_state.lastStreaming);
+      }
+      // Avisar al parent que ya estamos listos para recibir updates
+      try { parent.postMessage({ type: 'openui:ready' }, '*'); } catch(e) {}
       setTimeout(reportHeight, 500);
     } catch(err) {
       var el = document.getElementById('openui-root');
@@ -122,27 +170,53 @@ function buildOpenUIHtml(code, title = 'Respuesta') {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Iframe que renderiza la respuesta de OpenUI y se autoajusta de alto
+// Iframe que renderiza la respuesta de OpenUI y se autoajusta de alto.
+// Soporta updates en vivo: si `streaming` es true, mandamos el `code` por
+// postMessage cuando el iframe esté ready (sin recargar srcDoc).
 // ─────────────────────────────────────────────────────────────────────────
-function OpenUIIframe({ code, title }) {
+function OpenUIIframe({ code, title, streaming }) {
   const iframeRef = useRef(null)
   const [height, setHeight] = useState(120)
+  const isReadyRef = useRef(false)
+  // Memorizamos el srcDoc inicial — solo se construye una vez por mensaje
+  const initialSrcDocRef = useRef(null)
+  if (initialSrcDocRef.current === null) {
+    initialSrcDocRef.current = buildOpenUIHtml(code || '', title)
+  }
 
   useEffect(() => {
     const handler = (e) => {
       if (e.source !== iframeRef.current?.contentWindow) return
       if (e.data?.type === 'iframe:height' && typeof e.data.height === 'number') {
-        setHeight(Math.min(Math.max(e.data.height + 8, 100), 1600))
+        setHeight(Math.min(Math.max(e.data.height + 8, 100), 2400))
+      }
+      if (e.data?.type === 'openui:ready') {
+        isReadyRef.current = true
+        // Empujar el code más reciente al iframe
+        iframeRef.current?.contentWindow?.postMessage(
+          { type: 'openui:update', code: code || '', streaming: !!streaming },
+          '*'
+        )
       }
     }
     window.addEventListener('message', handler)
     return () => window.removeEventListener('message', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Cuando `code` cambia (durante streaming), mandar al iframe ya ready
+  useEffect(() => {
+    if (!isReadyRef.current) return
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'openui:update', code: code || '', streaming: !!streaming },
+      '*'
+    )
+  }, [code, streaming])
 
   return (
     <iframe
       ref={iframeRef}
-      srcDoc={buildOpenUIHtml(code, title)}
+      srcDoc={initialSrcDocRef.current}
       title={title || 'OpenUI'}
       sandbox="allow-scripts allow-same-origin allow-popups"
       style={{ width: '100%', height: `${height}px`, border: 'none', background: 'transparent' }}
@@ -178,23 +252,120 @@ export default function OpenUIModule() {
     if (!trimmed || loading) return
 
     setError('')
-    const next = [...messages, { role: 'user', content: trimmed }]
-    setMessages(next)
+    const userMsg = { role: 'user', content: trimmed }
+    const next = [...messages, userMsg]
     setInput('')
     setLoading(true)
+
+    // Insertamos placeholder del assistant ya con `streaming: true`
+    // para que el iframe se monte y vaya recibiendo updates.
+    const placeholder = {
+      role: 'assistant',
+      content: '',
+      title: trimmed.slice(0, 60),
+      streaming: true,
+    }
+    setMessages([...next, placeholder])
 
     try {
       const res = await fetch('/api/openui/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'text/event-stream',
+        },
         body: JSON.stringify({ messages: next }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al generar respuesta')
-      setMessages([...next, { role: 'assistant', content: data.code, title: data.title }])
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || `Error ${res.status}`)
+      }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let accumulated = ''
+      let finalTitle = trimmed.slice(0, 60)
+      let errored = null
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n\n')
+        buffer = lines.pop() || ''
+
+        for (const block of lines) {
+          const line = block.trim()
+          if (!line.startsWith('data:')) continue
+          const payload = line.slice(5).trim()
+          if (!payload) continue
+          try {
+            const evt = JSON.parse(payload)
+            if (evt.type === 'delta' && typeof evt.text === 'string') {
+              accumulated += evt.text
+              // Update en vivo del último mensaje (assistant streaming)
+              setMessages((prev) => {
+                const copy = [...prev]
+                const last = copy[copy.length - 1]
+                if (last && last.role === 'assistant') {
+                  copy[copy.length - 1] = { ...last, content: accumulated, streaming: true }
+                }
+                return copy
+              })
+            } else if (evt.type === 'done') {
+              accumulated = evt.fullCode || accumulated
+              finalTitle = evt.title || finalTitle
+            } else if (evt.type === 'error') {
+              errored = evt.error || 'Error del servidor'
+            }
+          } catch {
+            /* ignora */
+          }
+        }
+      }
+
+      if (errored) {
+        setMessages((prev) => {
+          const copy = [...prev]
+          copy[copy.length - 1] = {
+            role: 'assistant',
+            content: '',
+            title: '',
+            error: errored,
+          }
+          return copy
+        })
+        setError(errored)
+      } else {
+        // Cerramos streaming
+        setMessages((prev) => {
+          const copy = [...prev]
+          const last = copy[copy.length - 1]
+          if (last && last.role === 'assistant') {
+            copy[copy.length - 1] = {
+              ...last,
+              content: accumulated,
+              title: finalTitle,
+              streaming: false,
+            }
+          }
+          return copy
+        })
+      }
     } catch (err) {
       setError(err.message)
-      setMessages([...next, { role: 'assistant', content: '', title: '', error: err.message }])
+      setMessages((prev) => {
+        const copy = [...prev]
+        copy[copy.length - 1] = {
+          role: 'assistant',
+          content: '',
+          title: '',
+          error: err.message,
+        }
+        return copy
+      })
     } finally {
       setLoading(false)
     }
@@ -290,7 +461,7 @@ export default function OpenUIModule() {
                       {m.title}
                     </div>
                   )}
-                  <OpenUIIframe code={m.content} title={m.title} />
+                  <OpenUIIframe code={m.content} title={m.title} streaming={m.streaming} />
                 </div>
               )}
             </div>
