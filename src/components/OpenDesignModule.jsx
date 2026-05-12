@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Palette, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react'
 
-const DESIGN_URL = 'https://design.alcealce.com'
+// Mientras no haya DNS, usamos IP+puerto directo. Cuando configures
+// design.alcealce.com → 5.78.149.23 cambia esto a 'https://design.alcealce.com'
+const DESIGN_URL = 'http://5.78.149.23:7456'
 
 export default function OpenDesignModule() {
   const iframeRef = useRef(null)
@@ -9,9 +11,20 @@ export default function OpenDesignModule() {
   const [reachable, setReachable] = useState(null) // null = probing, true/false = result
   const [loading, setLoading] = useState(true)
 
-  // Probe el endpoint /api/health (mismo origen del iframe) para detectar
-  // si el subdominio resuelve y devuelve 200 antes de pintar el iframe completo
+  // Detectar mixed content: si la página está en HTTPS y el target es HTTP,
+  // el browser bloqueará el iframe y el fetch — no intentamos siquiera.
+  const isMixedContent =
+    typeof window !== 'undefined' &&
+    window.location.protocol === 'https:' &&
+    DESIGN_URL.startsWith('http://')
+
+  // Probe el endpoint /api/health para detectar si el servicio responde
   useEffect(() => {
+    if (isMixedContent) {
+      setReachable(false)
+      setLoading(false)
+      return
+    }
     let cancelled = false
     const probe = async () => {
       try {
@@ -31,7 +44,7 @@ export default function OpenDesignModule() {
     }
     probe()
     return () => { cancelled = true }
-  }, [iframeKey])
+  }, [iframeKey, isMixedContent])
 
   const refresh = () => {
     setLoading(true)
@@ -69,7 +82,7 @@ export default function OpenDesignModule() {
       </div>
 
       {/* Estado */}
-      {loading && reachable === null && (
+      {!isMixedContent && loading && reachable === null && (
         <div className="flex-1 flex items-center justify-center bg-white border border-slate-200 rounded-xl">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--brand-primary)] border-t-transparent mx-auto mb-3" />
@@ -78,22 +91,48 @@ export default function OpenDesignModule() {
         </div>
       )}
 
-      {reachable === false && !loading && (
+      {isMixedContent && (
+        <div className="flex-1 flex items-center justify-center bg-white border border-slate-200 rounded-xl p-8">
+          <div className="max-w-lg text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--brand-primary)] flex items-center justify-center text-white mx-auto mb-4">
+              <Palette className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Open Design está listo
+            </h3>
+            <p className="text-sm text-slate-600 mb-5">
+              Tu dashboard está en HTTPS y Open Design todavía corre por HTTP (puerto directo), así que el browser no permite embeber el iframe. Ábrelo en una pestaña nueva mientras configuramos el dominio.
+            </p>
+            <a
+              href={DESIGN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--brand-primary)] text-white rounded-xl font-semibold text-sm hover:opacity-90 shadow-sm"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Abrir Open Design ({DESIGN_URL.replace(/^https?:\/\//, '')})
+            </a>
+            <div className="mt-6 text-left text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-3">
+              <p className="font-semibold mb-1">Cuando agregues el DNS:</p>
+              <code className="block font-mono">design.alcealce.com   A   5.78.149.23</code>
+              <p className="mt-2">Caddy auto-emite SSL y el iframe se carga embebido aquí mismo.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isMixedContent && reachable === false && !loading && (
         <div className="flex-1 flex items-center justify-center bg-white border border-slate-200 rounded-xl p-8">
           <div className="max-w-md text-center">
             <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mx-auto mb-4">
               <AlertCircle className="w-6 h-6" />
             </div>
             <h3 className="text-base font-semibold text-slate-900 mb-2">
-              No se pudo conectar con design.alcealce.com
+              No se pudo conectar con {DESIGN_URL.replace(/^https?:\/\//, '')}
             </h3>
             <p className="text-sm text-slate-600 mb-4">
-              Probablemente el DNS del subdominio aún no está apuntando al servidor, o el servicio está reiniciándose.
+              El servicio está reiniciándose o el DNS aún no está propagado.
             </p>
-            <div className="text-left text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-3 mb-4">
-              <p className="font-semibold mb-1">DNS requerido:</p>
-              <code className="block font-mono">design.alcealce.com   A   5.78.149.23</code>
-            </div>
             <button
               onClick={refresh}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:opacity-90"
@@ -104,7 +143,7 @@ export default function OpenDesignModule() {
         </div>
       )}
 
-      {reachable === true && (
+      {!isMixedContent && reachable === true && (
         <div className="flex-1 bg-white border border-slate-200 rounded-xl overflow-hidden">
           <iframe
             key={iframeKey}
