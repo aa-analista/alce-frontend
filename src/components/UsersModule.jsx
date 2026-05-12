@@ -128,7 +128,23 @@ const UsersModule = () => {
 
   const handleDeleteUser = async (userId, userName) => {
     if (!confirm(`Eliminar a "${userName}"? Esta accion no se puede deshacer.`)) return
-    try { await fetch(`/api/users/${userId}`, { method: 'DELETE', headers }); fetchUsers(); setExpandedUser(null) } catch (err) { console.error(err) }
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE', headers })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        const msg = data.error || `Error ${res.status} al eliminar`
+        setEditError(msg)
+        alert(msg)
+        return
+      }
+      fetchUsers()
+      setExpandedUser(null)
+      setEditModal(null)
+    } catch (err) {
+      console.error(err)
+      setEditError(err.message || 'Error de red')
+      alert(err.message || 'Error de red al eliminar')
+    }
   }
 
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
