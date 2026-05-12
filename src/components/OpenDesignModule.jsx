@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Palette, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react'
 
-// Mientras no haya DNS, usamos IP+puerto directo. Cuando configures
-// design.alcealce.com → 5.78.149.23 cambia esto a 'https://design.alcealce.com'
-const DESIGN_URL = 'http://5.78.149.23:7456'
+// Mientras no haya DNS propio, usamos nip.io que auto-resuelve a la IP del
+// server y permite a Caddy emitir SSL real (sin warnings). Mañana cuando
+// configures design.alcealce.com → 5.78.149.23 cambia esto.
+const DESIGN_URL = 'https://design.5-78-149-23.nip.io'
 
 export default function OpenDesignModule() {
   const iframeRef = useRef(null)
