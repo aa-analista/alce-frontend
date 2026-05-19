@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
 import {
-  ClipboardList, ExternalLink, Loader2, ArrowRight, Sparkles, FileText,
+  ClipboardList, ExternalLink, Sparkles, FileText,
   Globe, Mail, Shield, Layers, BarChart3
 } from 'lucide-react'
 
@@ -19,18 +18,8 @@ const NAVY = 'var(--brand-primary, #101C44)'
 const SKY  = 'var(--brand-secondary, #6DBBE8)'
 
 export default function PropuestasModule() {
-  const [stats, setStats] = useState(null)
-  const [loadingStats, setLoadingStats] = useState(false)
-
-  // Intenta obtener un resumen del backend de Propuestas (best effort, sin auth)
-  useEffect(() => {
-    setLoadingStats(true)
-    fetch(`${PROPUESTAS_URL}/api/health`, { mode: 'cors' })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => setStats({ healthy: !!d, ts: d?.now }))
-      .catch(() => setStats({ healthy: false }))
-      .finally(() => setLoadingStats(false))
-  }, [])
+  // Health check vía browser no es viable (mixed content HTTPS→HTTP).
+  // Cuando se monte HTTPS con Caddy en propuestas.alcealce.com lo reactivaremos.
 
   return (
     <div className="space-y-5">
@@ -69,29 +58,16 @@ export default function PropuestasModule() {
         </div>
       </div>
 
-      {/* Estado del servicio */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3">
-        {loadingStats ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
-            <span className="text-sm text-slate-500">Comprobando servicio…</span>
-          </>
-        ) : stats?.healthy ? (
-          <>
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-sm text-slate-700">
-              <strong className="text-emerald-700">Servicio en línea</strong> · Listo para usarse
-            </span>
-            <span className="ml-auto text-[10px] text-slate-400 font-mono">{PROPUESTAS_URL}</span>
-          </>
-        ) : (
-          <>
-            <div className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-sm text-red-700">
-              Servicio no responde. Si persiste, contacta soporte.
-            </span>
-          </>
-        )}
+      {/* Info del servicio (estático — health check vivo bloqueado por mixed content) */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3 flex-wrap">
+        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+        <span className="text-sm text-slate-700">
+          <strong className="text-emerald-700">Producto activo</strong> · Abre el dashboard con el botón de arriba
+        </span>
+        <a href={PROPUESTAS_URL} target="_blank" rel="noopener noreferrer"
+          className="ml-auto text-[11px] text-slate-500 hover:text-slate-900 font-mono inline-flex items-center gap-1">
+          {PROPUESTAS_URL} <ExternalLink className="w-3 h-3" />
+        </a>
       </div>
 
       {/* Features grid */}
