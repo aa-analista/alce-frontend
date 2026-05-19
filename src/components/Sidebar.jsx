@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Home, Sparkles, BarChart3, Users, Bot, Activity, Settings, LogOut,
   MessageSquare, FileText, Clock, Database, ChevronDown, Blocks, DollarSign,
-  UserPlus, CalendarCheck, FileSignature, Wand2, Palette
+  UserPlus, CalendarCheck, FileSignature, Wand2, Palette, ClipboardList
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -25,6 +25,7 @@ const MODULE_ICONS = {
   // ── Módulos integrados (Efra) ──
   'gestion-equipo': CalendarCheck,
   'contratos': FileSignature,
+  'propuestas': ClipboardList,
 }
 
 // Fixed nav items (always or admin-only)
@@ -35,9 +36,10 @@ const FIXED_ITEMS = [
   { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true },
   { id: 'openui', path: '/openui', label: 'OpenUI', icon: Wand2, alwaysShow: true },
   { id: 'design', path: '/design', label: 'Diseño', icon: Palette, alwaysShow: true },
+  { id: 'propuestas', path: '/propuestas', label: 'Propuestas', icon: ClipboardList, alwaysShow: true },
 ]
 
-const CORE_IDS = ['coach-ai', 'operacion', 'actividad', 'contratos']
+const CORE_IDS = ['coach-ai', 'operacion', 'actividad', 'contratos', 'propuestas']
 
 const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
   const { user, logout } = useAuth()

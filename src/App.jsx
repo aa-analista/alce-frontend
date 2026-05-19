@@ -28,6 +28,7 @@ import GestionEquipoModule from './components/GestionEquipoModule'
 import AlceEmpleadoView from './components/AlceEmpleadoView'
 import ContratosModule from './components/ContratosModule'
 import PublicContratoView from './components/PublicContratoView'
+import PropuestasModule from './components/PropuestasModule'
 import { AssistantProvider } from './context/AssistantContext'
 
 function ProtectedRoute({ children }) {
@@ -142,6 +143,7 @@ function App() {
             <Route path="gestion-equipo" element={<GestionEquipoModule />} />
             <Route path="gestion-equipo/equipo/:id" element={<AlceEmpleadoView />} />
             <Route path="contratos" element={<ContratosModule />} />
+            <Route path="propuestas" element={<PropuestasModule />} />
             {/* Google Connector pages */}
             <Route path="google-drive" element={<ConnectorPage />} />
             <Route path="google-gmail" element={<GmailPage />} />
