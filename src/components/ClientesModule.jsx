@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   UserPlus, Mail, Phone, Building2, Calendar, Clock, MessageSquare,
   Search, RefreshCw, Filter, X, ChevronRight, Globe, FileText, Save,
-  CheckCircle2, AlertCircle, Briefcase, Users, Shield, MapPin, Lock, Unlock
+  CheckCircle2, AlertCircle, Briefcase, Users, Shield, MapPin, Lock, Unlock, Video
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -351,7 +351,10 @@ const PotentialClientsTab = () => {
                   </div>
                   <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
                     <span className="text-xs text-slate-400">{formatDate(c.created_at)}</span>
-                    <ChevronRight className="w-4 h-4 text-slate-300" />
+                    <div className="flex items-center gap-1">
+                      {c.meet_link && <Video className="w-3.5 h-3.5 text-blue-400" />}
+                      <ChevronRight className="w-4 h-4 text-slate-300" />
+                    </div>
                   </div>
                 </button>
               </li>
@@ -439,6 +442,25 @@ const PotentialClientsTab = () => {
                   <div className="px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100 text-sm text-emerald-800 font-medium">
                     {SERVICE_LABELS[selected.service] || selected.service}
                   </div>
+                </div>
+              )}
+
+              {selected.meet_link && (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                    <Video className="w-3.5 h-3.5" />
+                    Google Meet
+                  </h3>
+                  <a
+                    href={selected.meet_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-colors"
+                  >
+                    <Video className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span className="text-sm text-blue-700 font-medium truncate">Unirse a la reunión</span>
+                    <span className="ml-auto text-xs text-blue-400 font-mono truncate max-w-[140px]">{selected.meet_link.replace('https://', '')}</span>
+                  </a>
                 </div>
               )}
 
