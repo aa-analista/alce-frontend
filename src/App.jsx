@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import AgenteModule from './components/AgenteModule'
@@ -29,6 +29,7 @@ import AlceEmpleadoView from './components/AlceEmpleadoView'
 import ContratosModule from './components/ContratosModule'
 import PublicContratoView from './components/PublicContratoView'
 import PropuestasModule from './components/PropuestasModule'
+import AgentesAdminModule from './components/AgentesAdminModule'
 import { AssistantProvider } from './context/AssistantContext'
 
 function ProtectedRoute({ children }) {
@@ -56,6 +57,59 @@ function GuestRoute({ children }) {
   if (loading) return null
   if (user) return <Navigate to="/" replace />
   return children
+}
+
+// Renders a custom iframe agent by looking up its config from the API
+function DynamicAgentModule() {
+  const { anyModule } = useParams()
+  const { token } = useAuth()
+  const [config, setConfig] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!token) return
+    fetch('/api/modules/agent-configs', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.agents) setConfig(data.agents.find(a => a.module_id === anyModule) || null)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [anyModule, token])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent" />
+      </div>
+    )
+  }
+  if (!config) return <Navigate to="/home" replace />
+
+  if (config.url) {
+    return (
+      <div className="h-[calc(100vh-56px)] -mx-4 -my-4">
+        <iframe
+          src={config.url}
+          className="w-full h-full border-0"
+          title={config.name}
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads allow-modals"
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <p className="text-4xl mb-3">{config.icon || '🤖'}</p>
+        <p className="text-lg font-semibold text-slate-900">{config.name}</p>
+        <p className="text-sm text-slate-400 mt-1">Módulo en construcción</p>
+      </div>
+    </div>
+  )
 }
 
 // Placeholder for future pages
@@ -149,6 +203,10 @@ function App() {
             <Route path="google-gmail" element={<GmailPage />} />
             <Route path="google-calendar" element={<GoogleCalendarPage />} />
             <Route path="google-maps" element={<ConnectorPage />} />
+            {/* Super-admin agent management */}
+            <Route path="agentes" element={<AgentesAdminModule />} />
+            {/* Catch-all for custom dynamic agents added via AgentesAdminModule */}
+            <Route path=":anyModule" element={<DynamicAgentModule />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

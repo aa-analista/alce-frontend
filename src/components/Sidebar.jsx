@@ -26,6 +26,9 @@ const MODULE_ICONS = {
   'gestion-equipo': CalendarCheck,
   'contratos': FileSignature,
   'propuestas': ClipboardList,
+  // ── Herramientas ──
+  'openui': Wand2,
+  'design': Palette,
 }
 
 // Fixed nav items (always or admin-only)
@@ -34,8 +37,6 @@ const FIXED_ITEMS = [
   { id: 'clientes', path: '/clientes', label: 'Clientes', icon: UserPlus, superAdminOnly: true },
   { id: 'usuarios', path: '/usuarios', label: 'Equipo', icon: Users, adminOnly: true },
   { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true },
-  { id: 'openui', path: '/openui', label: 'OpenUI', icon: Wand2, alwaysShow: true },
-  { id: 'design', path: '/design', label: 'Diseño', icon: Palette, alwaysShow: true },
   { id: 'propuestas', path: '/propuestas', label: 'Propuestas', icon: ClipboardList, alwaysShow: true },
 ]
 
@@ -64,15 +65,16 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
   })
 
   const visibleModules = userModules.filter(m => m.type === 'module' || !m.type)
-  const coreModuleItems = isSuperAdmin ? [] : visibleModules
-    .filter(m => CORE_IDS.includes(m.id))
+  const coreModuleItems = visibleModules
+    .filter(m => CORE_IDS.includes(m.id) && !isSuperAdmin)
     .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
-  const agentModuleItems = isSuperAdmin ? [] : visibleModules
+  const agentModuleItems = visibleModules
     .filter(m => !CORE_IDS.includes(m.id))
     .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
 
-  const showAgentsGroup = !isSuperAdmin && (isAdmin || agentModuleItems.length > 0)
-  const isMarketplaceActive = currentPath === '/marketplace'
+  const showAgentsGroup = isAdmin || agentModuleItems.length > 0
+  const agentesTarget = isSuperAdmin ? '/agentes' : '/marketplace'
+  const isAgentesActive = currentPath === agentesTarget
 
   const toggleAgents = () => {
     const next = !agentsOpen
@@ -134,14 +136,14 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
           <div className="pt-0.5">
             <div className={cn(
               "flex items-center rounded-lg group overflow-hidden whitespace-nowrap transition-colors",
-              isMarketplaceActive
+              isAgentesActive
                 ? "bg-[var(--brand-primary)] text-white font-medium"
                 : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
             )}>
               {isAdmin ? (
                 <NavLink
-                  to="/marketplace"
-                  id="nav-marketplace"
+                  to={agentesTarget}
+                  id="nav-agentes"
                   title="Agentes"
                   className={cn(
                     "flex-1 flex items-center gap-2.5 overflow-hidden whitespace-nowrap",
@@ -150,7 +152,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
                 >
                   <Bot className={cn(
                     "w-[18px] h-[18px] flex-shrink-0",
-                    isMarketplaceActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
+                    isAgentesActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
                   )} />
                   <span className={cn(
                     "transition-all duration-300 overflow-hidden",
@@ -179,7 +181,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
                   title={agentsOpen ? 'Contraer' : 'Expandir'}
                   className={cn(
                     "p-2 transition-colors",
-                    isMarketplaceActive ? "text-white/70 hover:text-white" : "text-slate-400 hover:text-slate-700"
+                    isAgentesActive ? "text-white/70 hover:text-white" : "text-slate-400 hover:text-slate-700"
                   )}
                 >
                   <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", agentsOpen ? "rotate-0" : "-rotate-90")} />
