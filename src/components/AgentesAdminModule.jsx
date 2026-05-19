@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Plus, Edit2, Trash2, X, Check, Lock } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Check } from 'lucide-react'
 
 function TypeBadge({ type }) {
   const map = {
@@ -14,17 +14,7 @@ function TypeBadge({ type }) {
   )
 }
 
-function Toggle({ on, disabled, onChange }) {
-  if (disabled) {
-    return (
-      <div
-        title="Módulo core — siempre activo"
-        className="inline-flex items-center justify-center h-6 w-10 rounded-full bg-slate-100 text-slate-400 flex-shrink-0"
-      >
-        <Lock className="w-3 h-3" />
-      </div>
-    )
-  }
+function Toggle({ on, onChange }) {
   return (
     <button
       type="button"
@@ -88,7 +78,6 @@ export default function AgentesAdminModule() {
   useEffect(() => { fetchAgents() }, [])
 
   const toggleActive = async (agent) => {
-    if (agent.is_core) return
     const next = !agent.active
     const prev = agents
     setAgents(a => a.map(x => x.module_id === agent.module_id ? { ...x, active: next } : x))
@@ -247,7 +236,7 @@ export default function AgentesAdminModule() {
 
               {/* Actions */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Toggle on={agent.active} disabled={agent.is_core} onChange={() => toggleActive(agent)} />
+                <Toggle on={agent.active} onChange={() => toggleActive(agent)} />
                 <button
                   onClick={() => { setEditingAgent({ ...agent }); setError(null) }}
                   className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
