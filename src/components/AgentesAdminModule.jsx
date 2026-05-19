@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Plus, Edit2, Trash2, X, Check } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Check, Lock } from 'lucide-react'
 
 function TypeBadge({ type }) {
   const map = {
@@ -15,18 +15,34 @@ function TypeBadge({ type }) {
 }
 
 function Toggle({ on, disabled, onChange }) {
+  if (disabled) {
+    return (
+      <div
+        title="Módulo core — siempre activo"
+        className="inline-flex items-center justify-center h-6 w-10 rounded-full bg-slate-100 text-slate-400 flex-shrink-0"
+      >
+        <Lock className="w-3 h-3" />
+      </div>
+    )
+  }
   return (
     <button
-      onClick={onChange}
-      disabled={disabled}
-      title={disabled ? 'Módulo core — siempre activo' : (on ? 'Apagar globalmente (todas las orgs)' : 'Encender globalmente (todas las orgs)')}
-      className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
-        on ? 'bg-emerald-400' : 'bg-slate-200'
-      } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={(e) => { e.stopPropagation(); onChange() }}
+      title={on ? 'Apagar globalmente (todas las orgs)' : 'Encender globalmente (todas las orgs)'}
+      className={`relative inline-flex items-center h-6 w-10 rounded-full transition-colors flex-shrink-0 cursor-pointer ${
+        on
+          ? 'bg-emerald-500 hover:bg-emerald-600'
+          : 'bg-slate-300 hover:bg-slate-400'
+      }`}
     >
-      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
-        on ? 'translate-x-4' : 'translate-x-0.5'
-      }`} />
+      <span
+        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+          on ? 'translate-x-[18px]' : 'translate-x-0.5'
+        }`}
+      />
     </button>
   )
 }

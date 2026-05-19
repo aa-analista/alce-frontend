@@ -68,7 +68,8 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
   const coreModuleItems = visibleModules
     .filter(m => CORE_IDS.includes(m.id) && !isSuperAdmin)
     .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
-  const agentModuleItems = visibleModules
+  // Super_admin manages agents from /agentes — doesn't navigate to them via sidebar
+  const agentModuleItems = isSuperAdmin ? [] : visibleModules
     .filter(m => !CORE_IDS.includes(m.id))
     .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
 
@@ -175,7 +176,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
                   )}>Agentes</span>
                 </button>
               )}
-              {!collapsed && (
+              {!collapsed && agentModuleItems.length > 0 && (
                 <button
                   onClick={toggleAgents}
                   title={agentsOpen ? 'Contraer' : 'Expandir'}
@@ -190,15 +191,11 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
             </div>
 
             {/* Submenu */}
-            {!collapsed && agentsOpen && (
+            {!collapsed && agentsOpen && agentModuleItems.length > 0 && (
               <div className="mt-0.5 ml-4 pl-3 border-l border-slate-100 space-y-0.5">
-                {agentModuleItems.length === 0 ? (
-                  <p className="px-3 py-1.5 text-[11px] text-slate-400 italic">Sin agentes activos</p>
-                ) : (
-                  agentModuleItems.map(item => (
-                    <SidebarLink key={item.id} item={item} isActive={currentPath === item.path} collapsed={false} submenu />
-                  ))
-                )}
+                {agentModuleItems.map(item => (
+                  <SidebarLink key={item.id} item={item} isActive={currentPath === item.path} collapsed={false} submenu />
+                ))}
               </div>
             )}
 
