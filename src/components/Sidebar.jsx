@@ -8,6 +8,7 @@ import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useNavigate, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { ICON_CATALOG } from '../lib/agentIcons.jsx'
 
 function cn(...inputs) {
   return twMerge(clsx(inputs))
@@ -64,14 +65,18 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
     return false
   })
 
+  // Pick a sidebar icon: override from agent config (lucide name) wins,
+  // otherwise the hardcoded MODULE_ICONS by id, otherwise Blocks fallback.
+  const iconFor = (m) => (m.icon && ICON_CATALOG[m.icon]) || MODULE_ICONS[m.id] || Blocks
+
   const visibleModules = userModules.filter(m => m.type === 'module' || !m.type)
   const coreModuleItems = visibleModules
     .filter(m => CORE_IDS.includes(m.id) && !isSuperAdmin)
-    .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
+    .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: iconFor(m) }))
   // Super_admin manages agents from /agentes — doesn't navigate to them via sidebar
   const agentModuleItems = isSuperAdmin ? [] : visibleModules
     .filter(m => !CORE_IDS.includes(m.id))
-    .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: MODULE_ICONS[m.id] || Blocks }))
+    .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: iconFor(m) }))
 
   const showAgentsGroup = isAdmin || agentModuleItems.length > 0
   const agentesTarget = isSuperAdmin ? '/agentes' : '/marketplace'

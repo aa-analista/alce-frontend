@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Plus, Edit2, Trash2, X, Check } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Check, ChevronDown, Smile } from 'lucide-react'
+import { ICON_CATALOG, renderAgentIcon } from '../lib/agentIcons.jsx'
 
 function TypeBadge({ type }) {
   const map = {
@@ -11,6 +12,107 @@ function TypeBadge({ type }) {
   const { label, cls } = map[type] || map.module
   return (
     <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border ${cls}`}>{label}</span>
+  )
+}
+
+function IconPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [emojiMode, setEmojiMode] = useState(() => value && !ICON_CATALOG[value])
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+
+  const entries = Object.entries(ICON_CATALOG)
+  const filtered = search
+    ? entries.filter(([name]) => name.toLowerCase().includes(search.toLowerCase()))
+    : entries
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full h-[38px] px-2 flex items-center justify-between gap-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+      >
+        <span className="flex items-center justify-center w-7 h-7 text-slate-700">
+          {renderAgentIcon(value, { className: 'w-4 h-4', emojiClassName: 'text-lg leading-none' })}
+        </span>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 top-full mt-1 left-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-3">
+          {/* Mode switch */}
+          <div className="flex items-center gap-1 mb-2 p-0.5 bg-slate-50 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setEmojiMode(false)}
+              className={`flex-1 px-2 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                !emojiMode ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Iconos
+            </button>
+            <button
+              type="button"
+              onClick={() => setEmojiMode(true)}
+              className={`flex-1 px-2 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                emojiMode ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <span className="inline-flex items-center gap-1"><Smile className="w-3 h-3" /> Emoji</span>
+            </button>
+          </div>
+
+          {emojiMode ? (
+            <div>
+              <input
+                autoFocus
+                value={ICON_CATALOG[value] ? '' : (value || '')}
+                onChange={e => onChange(e.target.value)}
+                placeholder="🤖"
+                maxLength={4}
+                className="w-full px-3 py-3 text-center text-2xl border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]"
+              />
+              <p className="text-[10px] text-slate-400 mt-1.5 text-center">Pega cualquier emoji</p>
+            </div>
+          ) : (
+            <>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar icono..."
+                className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]"
+              />
+              <div className="grid grid-cols-6 gap-1 max-h-52 overflow-y-auto">
+                {filtered.map(([name, Icon]) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => { onChange(name); setOpen(false); setSearch('') }}
+                    title={name}
+                    className={`w-9 h-9 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors ${
+                      value === name ? 'bg-[var(--brand-primary)]/10 ring-1 ring-[var(--brand-primary)]/30' : ''
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${value === name ? 'text-[var(--brand-primary)]' : 'text-slate-700'}`} />
+                  </button>
+                ))}
+                {filtered.length === 0 && (
+                  <p className="col-span-6 text-center py-4 text-xs text-slate-400">Sin resultados</p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -57,7 +159,7 @@ export default function AgentesAdminModule() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [newAgent, setNewAgent] = useState({
-    module_id: '', name: '', description: '', icon: '🤖', type: 'iframe', url: '',
+    module_id: '', name: '', description: '', icon: 'Bot', type: 'iframe', url: '',
   })
 
   const fetchAgents = async () => {
@@ -133,7 +235,7 @@ export default function AgentesAdminModule() {
       if (res.ok) {
         await fetchAgents()
         setShowNew(false)
-        setNewAgent({ module_id: '', name: '', description: '', icon: '🤖', type: 'iframe', url: '' })
+        setNewAgent({ module_id: '', name: '', description: '', icon: 'Bot', type: 'iframe', url: '' })
       } else {
         const d = await res.json()
         setError(d.error || 'Error al crear')
@@ -214,8 +316,8 @@ export default function AgentesAdminModule() {
           {agents.map(agent => (
             <div key={agent.module_id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50/50 transition-colors">
               {/* Icon */}
-              <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-lg flex-shrink-0 select-none">
-                {agent.icon || '🤖'}
+              <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 flex-shrink-0 select-none">
+                {renderAgentIcon(agent.icon, { className: 'w-4 h-4', emojiClassName: 'text-lg leading-none' })}
               </div>
 
               {/* Info */}
@@ -268,21 +370,23 @@ export default function AgentesAdminModule() {
         <Modal title="Editar Agente" onClose={() => setEditingAgent(null)}>
           <div className="space-y-4">
             <div className="flex gap-3">
-              <FieldGroup label="Icono">
-                <input
-                  value={editingAgent.icon || ''}
-                  onChange={e => setEditingAgent(a => ({ ...a, icon: e.target.value }))}
-                  className={`${INPUT} w-16 text-center text-xl`}
-                  placeholder="🤖"
-                />
-              </FieldGroup>
-              <FieldGroup label="Nombre">
-                <input
-                  value={editingAgent.name || ''}
-                  onChange={e => setEditingAgent(a => ({ ...a, name: e.target.value }))}
-                  className={INPUT}
-                />
-              </FieldGroup>
+              <div className="w-20">
+                <FieldGroup label="Icono">
+                  <IconPicker
+                    value={editingAgent.icon || ''}
+                    onChange={icon => setEditingAgent(a => ({ ...a, icon }))}
+                  />
+                </FieldGroup>
+              </div>
+              <div className="flex-1">
+                <FieldGroup label="Nombre">
+                  <input
+                    value={editingAgent.name || ''}
+                    onChange={e => setEditingAgent(a => ({ ...a, name: e.target.value }))}
+                    className={INPUT}
+                  />
+                </FieldGroup>
+              </div>
             </div>
             <FieldGroup label="Descripción">
               <textarea
@@ -327,22 +431,24 @@ export default function AgentesAdminModule() {
               )}
             </FieldGroup>
             <div className="flex gap-3">
-              <FieldGroup label="Icono">
-                <input
-                  value={newAgent.icon}
-                  onChange={e => setNewAgent(a => ({ ...a, icon: e.target.value }))}
-                  className={`${INPUT} w-16 text-center text-xl`}
-                  placeholder="🤖"
-                />
-              </FieldGroup>
-              <FieldGroup label="Nombre">
-                <input
-                  value={newAgent.name}
-                  onChange={e => setNewAgent(a => ({ ...a, name: e.target.value }))}
-                  className={INPUT}
-                  placeholder="Mi Herramienta"
-                />
-              </FieldGroup>
+              <div className="w-20">
+                <FieldGroup label="Icono">
+                  <IconPicker
+                    value={newAgent.icon}
+                    onChange={icon => setNewAgent(a => ({ ...a, icon }))}
+                  />
+                </FieldGroup>
+              </div>
+              <div className="flex-1">
+                <FieldGroup label="Nombre">
+                  <input
+                    value={newAgent.name}
+                    onChange={e => setNewAgent(a => ({ ...a, name: e.target.value }))}
+                    className={INPUT}
+                    placeholder="Mi Herramienta"
+                  />
+                </FieldGroup>
+              </div>
             </div>
             <FieldGroup label="Descripción">
               <textarea
