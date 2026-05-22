@@ -58,6 +58,7 @@ const SettingsModule = () => {
   const [aiVibe, setAiVibe] = useState('')
   const [aiLogoQuality, setAiLogoQuality] = useState('')
   const [aiLogoFeedback, setAiLogoFeedback] = useState('')
+  const [aiAccentReplaced, setAiAccentReplaced] = useState(false)
   const [aiError, setAiError] = useState('')
 
   // Re-sincronizar si el user cambia (login / refresh)
@@ -195,6 +196,7 @@ const SettingsModule = () => {
       setAiReasoning(data.reasoning || '')
       setAiLogoQuality(data.logoQuality || 'good')
       setAiLogoFeedback(data.logoFeedback || '')
+      setAiAccentReplaced(!!data.accentReplaced)
     } catch (err) {
       setAiError(err.message)
     } finally {
@@ -224,7 +226,7 @@ const SettingsModule = () => {
 
   const dismissAiPalette = () => {
     setAiPalette(null); setAiReasoning(''); setAiVibe('')
-    setAiLogoQuality(''); setAiLogoFeedback(''); setAiError('')
+    setAiLogoQuality(''); setAiLogoFeedback(''); setAiAccentReplaced(false); setAiError('')
   }
 
   // Fetch integrations when connectors tab is active
@@ -633,6 +635,14 @@ const SettingsModule = () => {
                       <XCircle className="w-4 h-4" />
                     </button>
                   </div>
+
+                  {/* Aviso si tuvimos que corregir el accent */}
+                  {aiAccentReplaced && (
+                    <div className="bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md px-2.5 py-2 flex items-start gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                      <span><b>Ajuste automático:</b> la IA propuso un acento muy claro que se confundía con los fondos. Lo cambié por uno con más color para que los badges y links se vean bien sobre el resto de la plataforma.</span>
+                    </div>
+                  )}
 
                   {/* Swatches */}
                   <div className="grid grid-cols-7 gap-1.5">
