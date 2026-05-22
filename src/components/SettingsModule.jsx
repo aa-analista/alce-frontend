@@ -82,8 +82,15 @@ const SettingsModule = () => {
     setBrandingDraft(prev => ({ ...prev, [key]: value }))
   }
 
+  // Restaurar colores predeterminados (mantiene el logo).
+  // También aplica en vivo al DOM para que el usuario vea el cambio inmediato.
   const handleResetBranding = () => {
-    setBrandingDraft({ ...DEFAULT_BRANDING, logoUrl: brandingDraft.logoUrl })
+    const defaults = { ...DEFAULT_BRANDING, logoUrl: brandingDraft.logoUrl, displayName: brandingDraft.displayName }
+    setBrandingDraft(defaults)
+    updateBranding(defaults)
+    // También limpiar sugerencia de IA si había
+    setAiPalette(null); setAiReasoning(''); setAiVibe('')
+    setAiLogoQuality(''); setAiLogoFeedback(''); setAiError('')
   }
 
   const handleSaveBranding = async () => {
@@ -468,6 +475,25 @@ const SettingsModule = () => {
 
       {/* Design Tab (solo admin / super_admin) */}
       {activeSection === 'design' && isAdmin && (
+        <>
+        {/* Header del tab Marca — botón restaurar siempre visible */}
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+          <div>
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Palette className="w-4 h-4 text-slate-500" /> Personalización de marca
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">Sube tu logo, ajusta colores y previsualiza cómo se verá tu plataforma.</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleResetBranding}
+            title="Vuelve a los colores predeterminados de la plataforma (Alce navy + sky)"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-300 rounded-lg transition-all"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Restaurar predeterminados
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
           {/* ── Form column (3/5) ─────────────────────────────────────── */}
           <div className="lg:col-span-3 space-y-4">
@@ -724,6 +750,7 @@ const SettingsModule = () => {
             <BrandingPreview branding={brandingDraft} orgFallback={user?.orgName} />
           </div>
         </div>
+        </>
       )}
 
       {/* ── Logo cropper modal ── */}
