@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
+import LogoCropper from './LogoCropper'
 import {
   User, Mail, Lock, ShieldCheck, Save, CheckCircle2, Eye, EyeOff, KeyRound,
   Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2,
@@ -47,12 +48,15 @@ const SettingsModule = () => {
   const [brandingDraft, setBrandingDraft] = useState(branding)
   const [savingBranding, setSavingBranding] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [cropperFile, setCropperFile] = useState(null) // archivo seleccionado pendiente de recortar
 
   // IA: paleta sugerida desde el logo
   const [analyzingLogo, setAnalyzingLogo] = useState(false)
   const [aiPalette, setAiPalette] = useState(null)       // { primaryColor, secondaryColor, accentColor, ... }
   const [aiReasoning, setAiReasoning] = useState('')
   const [aiVibe, setAiVibe] = useState('')
+  const [aiLogoQuality, setAiLogoQuality] = useState('')
+  const [aiLogoFeedback, setAiLogoFeedback] = useState('')
   const [aiError, setAiError] = useState('')
 
   // Re-sincronizar si el user cambia (login / refresh)
@@ -181,6 +185,8 @@ const SettingsModule = () => {
       setAiPalette(data.palette)
       setAiVibe(data.vibe || '')
       setAiReasoning(data.reasoning || '')
+      setAiLogoQuality(data.logoQuality || 'good')
+      setAiLogoFeedback(data.logoFeedback || '')
     } catch (err) {
       setAiError(err.message)
     } finally {
@@ -209,7 +215,8 @@ const SettingsModule = () => {
   }
 
   const dismissAiPalette = () => {
-    setAiPalette(null); setAiReasoning(''); setAiVibe(''); setAiError('')
+    setAiPalette(null); setAiReasoning(''); setAiVibe('')
+    setAiLogoQuality(''); setAiLogoFeedback(''); setAiError('')
   }
 
   // Fetch integrations when connectors tab is active
@@ -469,7 +476,7 @@ const SettingsModule = () => {
               <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-1">
                 <ImageIcon className="w-4 h-4 text-slate-500" /> Logo de la organización
               </h3>
-              <p className="text-xs text-slate-500 mb-4">PNG, JPG, WebP o SVG. Máx 2 MB. Cuadrado de preferencia.</p>
+              <p className="text-xs text-slate-500 mb-4">PNG, JPG, WebP o SVG. Máx 2 MB. Al subir, abriremos un recortador para que ajustes el encuadre como foto de perfil.</p>
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {brandingDraft.logoUrl ? (
@@ -487,7 +494,18 @@ const SettingsModule = () => {
                       accept="image/png,image/jpeg,image/webp,image/svg+xml"
                       className="hidden"
                       disabled={uploadingLogo}
-                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); e.target.value = '' }}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0]
+                        if (!f) return
+                        // SVG → subir directo (es vectorial, no se recorta).
+                        // Resto → abrir el cropper.
+                        if (f.type === 'image/svg+xml') {
+                          handleLogoUpload(f)
+                        } else {
+                          setCropperFile(f)
+                        }
+                        e.target.value = ''
+                      }}
                     />
                   </label>
                   {brandingDraft.logoUrl && (
@@ -544,6 +562,28 @@ const SettingsModule = () => {
                       )}
                       {aiReasoning && (
                         <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">{aiReasoning}</p>
+                      )}
+                      {aiLogoFeedback && (
+                        <div className={`mt-2.5 rounded-md px-2.5 py-2 text-xs leading-relaxed flex items-start gap-1.5 ${
+                          aiLogoQuality === 'good'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                        }`}>
+                          <span className="mt-0.5 flex-shrink-0">
+                            {aiLogoQuality === 'good' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ImageIcon className="w-3.5 h-3.5" />}
+                          </span>
+                          <span><b>Sobre tu logo:</b> {aiLogoFeedback}
+                            {aiLogoQuality !== 'good' && (
+                              <button
+                                type="button"
+                                onClick={() => brandingDraft.logoUrl && document.querySelector('input[type=file]')?.click()}
+                                className="ml-1 underline font-semibold hover:no-underline"
+                              >
+                                Re-subir y recortar
+                              </button>
+                            )}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <button
@@ -685,6 +725,18 @@ const SettingsModule = () => {
           </div>
         </div>
       )}
+
+      {/* ── Logo cropper modal ── */}
+      {cropperFile && (
+        <LogoCropper
+          file={cropperFile}
+          onCancel={() => setCropperFile(null)}
+          onConfirm={(croppedFile) => {
+            setCropperFile(null)
+            handleLogoUpload(croppedFile)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -780,18 +832,45 @@ function BrandingPreview({ branding, orgFallback }) {
             <span className="text-[10px] font-bold text-slate-900 truncate">{name}</span>
           </div>
           {/* Nav items */}
-          <div className="px-2 space-y-1 mt-1">
+          <div className="px-2 space-y-0.5 mt-1">
+            {/* Item activo */}
             <div
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-medium"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-semibold"
               style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
             >
               <Save className="w-2.5 h-2.5" /> Inicio
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600">
+            {/* Item inactivo */}
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600 hover:bg-slate-100">
               <UserIcon /> Clientes
+              <span className="ml-auto text-[8px] font-bold px-1 py-0.5 rounded"
+                style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>3</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600">
+            {/* Item con hover state simulado (fondo tenue del primary) */}
+            <div
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-medium text-slate-700"
+              style={{ background: `${branding.primaryColor}0d` }}
+            >
               <UserIcon /> Equipo
+            </div>
+            {/* Sub-item con borde primary */}
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600 border-l-2"
+              style={{ borderColor: branding.primaryColor, marginLeft: 8, paddingLeft: 8 }}>
+              <UserIcon /> Propuestas
+            </div>
+            {/* Otros items */}
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-500">
+              <UserIcon /> Gastos
+            </div>
+          </div>
+
+          {/* Footer del sidebar (avatar + nombre) */}
+          <div className="mt-auto px-2 py-2 border-t border-slate-200/50 flex items-center gap-1.5">
+            <div className="w-5 h-5 rounded-full flex-shrink-0"
+              style={{ background: branding.primaryColor }} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-semibold text-slate-700 truncate">Tú</p>
+              <p className="text-[8px] text-slate-400 truncate">admin</p>
             </div>
           </div>
         </div>
