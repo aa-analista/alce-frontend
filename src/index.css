@@ -27,17 +27,17 @@
 
 /* ── Dark mode: override de brand bgs + surface tokens ── */
 .dark {
-  --brand-sidebar-bg: #0f172a;
-  --brand-navbar-bg: #0f172a;
-  --brand-content-bg: #020617;
-  --surface: #1e293b;
-  --surface-elevated: #1e293b;
-  --surface-muted: #0f172a;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
+  --brand-sidebar-bg: #0a0f1e;     /* navy casi negro */
+  --brand-navbar-bg:  #0a0f1e;
+  --brand-content-bg: #050912;     /* casi negro absoluto - contrastE total */
+  --surface:           #131b2e;     /* cards */
+  --surface-elevated:  #1a2440;     /* modals */
+  --surface-muted:     #0a0f1e;     /* fondos terciarios */
+  --text:        #f8fafc;
+  --text-muted:  #94a3b8;
   --text-subtle: #64748b;
-  --border: #334155;
-  --border-muted: #1e293b;
+  --border:       #2a3550;
+  --border-muted: #1a2440;
   color-scheme: dark;
 }
 
@@ -62,13 +62,13 @@ html { transition: background-color 0.2s ease, color 0.2s ease; }
 
 /* Cards comunes — degradar bg-white a slate-800 si no tiene override */
 .dark .bg-white:not([class*="dark:bg-"]) {
-  background-color: #1e293b;
+  background-color: #131b2e;
 }
 .dark .bg-slate-50:not([class*="dark:bg-"]) {
-  background-color: #0f172a;
+  background-color: #0a0f1e;
 }
 .dark .bg-slate-100:not([class*="dark:bg-"]) {
-  background-color: #1e293b;
+  background-color: #1a2440;
 }
 
 /* Texto */

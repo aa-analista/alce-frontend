@@ -20,18 +20,46 @@ const DEFAULT_BRANDING = {
   logoUrl: null,
 }
 
-// Aplica el branding como CSS variables en :root para uso global
+// Aplica el branding como CSS variables en :root para uso global.
+//
+// Importante: en MODO OSCURO no aplicamos los fondos (sidebarBg, navbarBg,
+// contentBg) porque sobrescriben los oscuros del tema y rompen el contraste.
+// Los fondos oscuros vienen del CSS de .dark en index.css.
+// Solo aplicamos los colores DE MARCA (primary, secondary, accent, textOnPrimary)
+// que sí deben respetarse en ambos modos.
 export function applyBrandingToDOM(branding) {
   if (typeof document === 'undefined') return
   const b = { ...DEFAULT_BRANDING, ...(branding || {}) }
   const root = document.documentElement
+  const isDark = root.classList.contains('dark')
+
+  // Colores de marca — siempre se aplican
   root.style.setProperty('--brand-primary', b.primaryColor)
   root.style.setProperty('--brand-secondary', b.secondaryColor)
   root.style.setProperty('--brand-accent', b.accentColor)
   root.style.setProperty('--brand-text-on-primary', b.textOnPrimary)
-  root.style.setProperty('--brand-sidebar-bg', b.sidebarBg)
-  root.style.setProperty('--brand-navbar-bg', b.navbarBg)
-  root.style.setProperty('--brand-content-bg', b.contentBg)
+
+  // Fondos — solo en modo claro. En oscuro, removemos para que el CSS .dark
+  // tome control y los fondos sean oscuros con contraste real.
+  if (isDark) {
+    root.style.removeProperty('--brand-sidebar-bg')
+    root.style.removeProperty('--brand-navbar-bg')
+    root.style.removeProperty('--brand-content-bg')
+  } else {
+    root.style.setProperty('--brand-sidebar-bg', b.sidebarBg)
+    root.style.setProperty('--brand-navbar-bg', b.navbarBg)
+    root.style.setProperty('--brand-content-bg', b.contentBg)
+  }
+}
+
+// Re-aplicar el branding cuando cambie el modo (light <-> dark) para
+// recalcular qué vars de fondo se aplican.
+if (typeof window !== 'undefined') {
+  const observer = new MutationObserver(() => {
+    // Lee el branding actual del state global (lo expone window por simplicidad)
+    if (window.__alceBranding) applyBrandingToDOM(window.__alceBranding)
+  })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
 }
 
 export const AuthProvider = ({ children }) => {
@@ -56,6 +84,7 @@ export const AuthProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json()
         setUser(data.user)
+        if (typeof window !== 'undefined') window.__alceBranding = data.user?.branding
         applyBrandingToDOM(data.user?.branding)
       } else {
         // Invalid / expired token (o suspensión por org)
@@ -126,6 +155,7 @@ export const AuthProvider = ({ children }) => {
   const updateBranding = (partial) => {
     setUser(prev => {
       const merged = { ...(prev?.branding || {}), ...partial }
+      if (typeof window !== 'undefined') window.__alceBranding = merged
       applyBrandingToDOM(merged)
       return prev ? { ...prev, branding: merged } : prev
     })

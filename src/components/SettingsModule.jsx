@@ -663,38 +663,35 @@ const SettingsModule = () => {
                     </button>
                   </div>
 
-                  {/* Aviso si tuvimos que corregir el accent */}
-                  {aiAccentReplaced && (
-                    <div className="bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md px-2.5 py-2 flex items-start gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                      <span><b>Ajuste automático:</b> la IA propuso un acento muy claro que se confundía con los fondos. Lo cambié por uno con más color para que los badges y links se vean bien sobre el resto de la plataforma.</span>
-                    </div>
-                  )}
-
                   {/* Accents alternativos — el usuario elige con un click */}
                   {aiAccentOptions.length > 0 && (
                     <div className="bg-white/60 dark:bg-slate-900/40 border border-violet-100 dark:border-slate-700 rounded-md px-2.5 py-2">
                       <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" /> ¿No te convence el acento? Prueba otra opción curada para tu marca:
+                        <Sparkles className="w-3 h-3" /> Acentos profesionales sugeridos para tu marca
+                        <span className="font-normal text-slate-500">(elige el que más te guste)</span>
                       </p>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {aiAccentOptions.map((hex) => {
+                        {aiAccentOptions.map((hex, idx) => {
                           const isActive = aiPalette.accentColor.toLowerCase() === hex.toLowerCase()
                           return (
                             <button
                               key={hex}
                               type="button"
                               onClick={() => swapAccent(hex)}
-                              title={hex}
-                              className={`w-7 h-7 rounded-md border-2 transition-all hover:scale-110 ${
+                              title={`${hex} ${idx === 0 ? '(recomendado)' : ''}`}
+                              className={`relative w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
                                 isActive ? 'border-slate-900 dark:border-white ring-2 ring-violet-300' : 'border-white dark:border-slate-700 shadow-sm'
                               }`}
                               style={{ background: hex }}
-                            />
+                            >
+                              {idx === 0 && !isActive && (
+                                <span className="absolute -top-1 -right-1 text-[8px] bg-violet-600 text-white px-1 rounded-full font-bold">★</span>
+                              )}
+                            </button>
                           )
                         })}
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
-                          Click para probar — se aplica en vivo
+                          Click para aplicar en vivo
                         </span>
                       </div>
                     </div>
