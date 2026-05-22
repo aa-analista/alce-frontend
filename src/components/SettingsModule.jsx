@@ -477,21 +477,21 @@ const SettingsModule = () => {
       {/* Design Tab (solo admin / super_admin) */}
       {activeSection === 'design' && isAdmin && (
         <>
-        {/* Header del tab Marca — botón restaurar siempre visible */}
+        {/* Header del tab Marca — botón restaurar siempre visible y destacado */}
         <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
           <div>
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Palette className="w-4 h-4 text-slate-500" /> Personalización de marca
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">Sube tu logo, ajusta colores y previsualiza cómo se verá tu plataforma.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sube tu logo, ajusta colores y previsualiza cómo se verá tu plataforma.</p>
           </div>
           <button
             type="button"
             onClick={handleResetBranding}
             title="Vuelve a los colores predeterminados de la plataforma (Alce navy + sky)"
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-300 rounded-lg transition-all"
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800 rounded-lg transition-all shadow-sm"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Restaurar predeterminados
+            <RotateCcw className="w-3.5 h-3.5" /> Reiniciar colores
           </button>
         </div>
 
@@ -678,8 +678,16 @@ const SettingsModule = () => {
                     >
                       <RotateCcw className="w-3 h-3" /> Re-analizar
                     </button>
+                    <button
+                      type="button"
+                      onClick={handleResetBranding}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-all"
+                      title="Volver a los colores predeterminados de Alce"
+                    >
+                      Reiniciar a default
+                    </button>
                     <p className="text-[10px] text-slate-500 self-center ml-auto">
-                      Acuérdate de pulsar <b>Guardar diseño</b> para persistir los cambios.
+                      Acuérdate de pulsar <b>Guardar marca</b> para persistir.
                     </p>
                   </div>
                 </div>
@@ -921,34 +929,104 @@ function BrandingPreview({ branding, orgFallback }) {
             className="h-10 flex items-center px-3 gap-2 border-b border-slate-200/50 flex-shrink-0"
             style={{ background: branding.navbarBg }}
           >
-            <div className="flex-1 h-5 rounded-md bg-slate-100/80" />
-            <div className="w-5 h-5 rounded-full bg-slate-200" />
+            {/* Search bar mock */}
+            <div className="flex-1 max-w-[140px] h-5 rounded-md bg-slate-100/80 flex items-center px-1.5 gap-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-2.5 h-2.5 text-slate-400">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <span className="text-[8px] text-slate-400">Buscar…</span>
+            </div>
+            <div className="ml-auto flex items-center gap-1">
+              {/* Bell con badge accent */}
+              <div className="relative w-4 h-4 flex items-center justify-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3 text-slate-400">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
+                  style={{ background: branding.accentColor }} />
+              </div>
+              {/* Avatar */}
+              <div className="w-4 h-4 rounded-full" style={{ background: branding.primaryColor }} />
+            </div>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 p-3 overflow-hidden" style={{ background: branding.contentBg }}>
-            <div className="bg-white rounded-md p-2 mb-2 border border-slate-200">
-              <div className="h-2 w-12 rounded bg-slate-200 mb-1.5" />
-              <div className="h-1.5 w-full rounded bg-slate-100" />
-              <div className="h-1.5 w-3/4 rounded bg-slate-100 mt-1" />
+          {/* Content — Dashboard mock realista */}
+          <div className="flex-1 p-2.5 overflow-hidden space-y-2" style={{ background: branding.contentBg }}>
+            {/* Título */}
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold text-slate-800">Propuestas</p>
+              <button type="button"
+                className="text-[8px] font-bold px-1.5 py-0.5 rounded"
+                style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+                + Nueva
+              </button>
             </div>
-            <button
-              type="button"
-              className="text-[10px] font-semibold px-2.5 py-1 rounded-md mr-1.5"
-              style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
-            >
-              Acción primaria
-            </button>
-            <button
-              type="button"
-              className="text-[10px] font-semibold px-2.5 py-1 rounded-md border"
-              style={{ borderColor: branding.accentColor, color: branding.accentColor }}
-            >
-              Acento
-            </button>
-            <div className="mt-2 inline-block rounded px-2 py-0.5 text-[9px]"
-                 style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>
-              Badge
+
+            {/* KPIs row */}
+            <div className="grid grid-cols-3 gap-1.5">
+              <div className="bg-white rounded-md p-1.5 border border-slate-200">
+                <p className="text-[7px] text-slate-400 uppercase">Total</p>
+                <p className="text-[11px] font-bold text-slate-800 leading-none mt-0.5">24</p>
+              </div>
+              <div className="bg-white rounded-md p-1.5 border border-slate-200">
+                <p className="text-[7px] text-slate-400 uppercase">Activas</p>
+                <p className="text-[11px] font-bold leading-none mt-0.5" style={{ color: branding.primaryColor }}>8</p>
+              </div>
+              <div className="bg-white rounded-md p-1.5 border-2"
+                style={{ borderColor: `${branding.accentColor}66` }}>
+                <p className="text-[7px] uppercase font-semibold" style={{ color: branding.accentColor }}>Firmadas</p>
+                <p className="text-[11px] font-bold leading-none mt-0.5" style={{ color: branding.accentColor }}>5</p>
+              </div>
+            </div>
+
+            {/* Lista mock con items */}
+            <div className="bg-white rounded-md border border-slate-200 overflow-hidden">
+              <div className="px-2 py-1 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-[8px] font-semibold text-slate-600">Recientes</span>
+                <span className="text-[7px] text-slate-400">Hoy</span>
+              </div>
+              <div className="divide-y divide-slate-50">
+                {/* Item 1 con badge primary */}
+                <div className="px-2 py-1 flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: `${branding.primaryColor}33` }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[8px] font-semibold text-slate-700 truncate">Cliente Demo S.A.</p>
+                  </div>
+                  <span className="text-[7px] font-bold px-1 py-0.5 rounded"
+                    style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+                    Activa
+                  </span>
+                </div>
+                {/* Item 2 con badge accent */}
+                <div className="px-2 py-1 flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: `${branding.accentColor}33` }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[8px] font-semibold text-slate-700 truncate">Acme Industries</p>
+                  </div>
+                  <span className="text-[7px] font-bold px-1 py-0.5 rounded"
+                    style={{ background: `${branding.accentColor}1f`, color: branding.accentColor }}>
+                    Firmada
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex items-center gap-1.5 pt-1">
+              <button type="button"
+                className="text-[8px] font-bold px-2 py-1 rounded-md"
+                style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+                Primario
+              </button>
+              <button type="button"
+                className="text-[8px] font-semibold px-2 py-1 rounded-md border-2"
+                style={{ borderColor: branding.accentColor, color: branding.accentColor }}>
+                Acento
+              </button>
+              <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full ml-auto"
+                style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>
+                ★ Premium
+              </span>
             </div>
           </div>
         </div>
