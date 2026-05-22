@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
 import LogoCropper from './LogoCropper'
+import ThemeToggle from './ThemeToggle'
 import {
   User, Mail, Lock, ShieldCheck, Save, CheckCircle2, Eye, EyeOff, KeyRound,
   Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2,
@@ -497,6 +498,17 @@ const SettingsModule = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
           {/* ── Form column (3/5) ─────────────────────────────────────── */}
           <div className="lg:col-span-3 space-y-4">
+            {/* Modo de tema (claro/oscuro/auto) */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Modo de la plataforma</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Elige cómo se verá tu plataforma — la preferencia se guarda en este dispositivo.</p>
+                </div>
+                <ThemeToggle variant="full" />
+              </div>
+            </div>
+
             {/* Logo */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-1">

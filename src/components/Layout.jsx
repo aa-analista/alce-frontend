@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Sidebar from './Sidebar'
+import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from 'react-router-dom'
 import {
@@ -76,7 +77,7 @@ const Layout = ({ children, userModules = [] }) => {
         {/* Toggle button — rendered outside sidebar to avoid overflow clipping */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-12 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all shadow-sm z-50"
+          className="absolute -right-3 top-12 w-6 h-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm z-50"
         >
           <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
         </button>
@@ -95,9 +96,9 @@ const Layout = ({ children, userModules = [] }) => {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="bg-[var(--brand-navbar-bg)] border-b border-slate-200 h-14 flex items-center px-4 sm:px-5 flex-shrink-0 gap-3">
+        <header className="bg-[var(--brand-navbar-bg)] border-b border-slate-200 dark:border-slate-700 h-14 flex items-center px-4 sm:px-5 flex-shrink-0 gap-3">
           {/* Mobile hamburger */}
-          <button onClick={() => setMobileOpen(true)} className="lg:hidden p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">
+          <button onClick={() => setMobileOpen(true)} className="lg:hidden p-1.5 text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
             <Menu className="w-5 h-5" />
           </button>
 
@@ -105,21 +106,24 @@ const Layout = ({ children, userModules = [] }) => {
           <div id="tour-search" className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" placeholder="Buscar en el workspace..." className="w-full pl-10 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/10 focus:border-[var(--brand-primary)]/30 transition-all" />
+              <input type="text" placeholder="Buscar en el workspace..." className="w-full pl-10 pr-4 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/10 focus:border-[var(--brand-primary)]/30 transition-all" />
             </div>
           </div>
 
           {/* Right side */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* Org badge */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg">
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-xs font-medium text-slate-600">{user?.branding?.displayName || user?.orgName || 'ALCE'}</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{user?.branding?.displayName || user?.orgName || 'ALCE'}</span>
             </div>
+
+            {/* Theme toggle (sun/moon) */}
+            <ThemeToggle />
 
             {/* Notifications */}
             <div id="tour-notifications" className="relative" ref={notifRef}>
-              <button onClick={handleBellClick} className="relative p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+              <button onClick={handleBellClick} className="relative p-1.5 text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
@@ -130,18 +134,18 @@ const Layout = ({ children, userModules = [] }) => {
               </button>
 
               {showNotifs && (
-                <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-slate-900 text-sm">Notificaciones</h3>
+                      <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Notificaciones</h3>
                       {unreadCount > 0 && <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full">{unreadCount} nuevas</span>}
                     </div>
-                    {unreadCount > 0 && <button onClick={markAllRead} className="text-xs text-slate-500 hover:text-slate-700 font-medium">Marcar todas como leidas</button>}
+                    {unreadCount > 0 && <button onClick={markAllRead} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium">Marcar todas como leidas</button>}
                   </div>
-                  <div className="flex border-b border-slate-100">
+                  <div className="flex border-b border-slate-100 dark:border-slate-700">
                     {['all', 'unread'].map(tab => (
                       <button key={tab} onClick={() => setNotifTab(tab)}
-                        className={`flex-1 py-2 text-xs font-medium border-b-2 transition-all ${notifTab === tab ? 'border-[var(--brand-primary)] text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+                        className={`flex-1 py-2 text-xs font-medium border-b-2 transition-all ${notifTab === tab ? 'border-[var(--brand-primary)] text-slate-900 dark:text-white' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>
                         {tab === 'all' ? 'Todas' : 'No leidas'}
                       </button>
                     ))}
@@ -150,18 +154,18 @@ const Layout = ({ children, userModules = [] }) => {
                     {loadingNotifs ? (
                       <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 text-[var(--brand-primary)] animate-spin" /></div>
                     ) : filteredNotifs.length === 0 ? (
-                      <div className="py-10 text-center"><Bell className="w-6 h-6 text-slate-200 mx-auto mb-2" /><p className="text-xs text-slate-400">No hay notificaciones</p></div>
+                      <div className="py-10 text-center"><Bell className="w-6 h-6 text-slate-200 dark:text-slate-600 mx-auto mb-2" /><p className="text-xs text-slate-400 dark:text-slate-500">No hay notificaciones</p></div>
                     ) : (
-                      <div className="divide-y divide-slate-50">
+                      <div className="divide-y divide-slate-50 dark:divide-slate-700">
                         {filteredNotifs.map((n) => {
                           const Icon = NOTIF_ICONS[n.category] || Bell
                           return (
-                            <div key={n.id} className="px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50 transition-colors">
-                              <div className="w-8 h-8 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0 mt-0.5"><Icon className="w-4 h-4 text-[var(--brand-primary)]" /></div>
+                            <div key={n.id} className="px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
+                              <div className="w-8 h-8 rounded-lg bg-[#e8f0f0] dark:bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5"><Icon className="w-4 h-4 text-[var(--brand-primary)] dark:text-[var(--brand-secondary)]" /></div>
                               <div className="flex-1 min-w-0">
-                                <p className={`text-sm ${n.is_read ? 'text-slate-600' : 'font-semibold text-slate-900'}`}>{n.title}</p>
-                                <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{n.message}</p>
-                                <p className="text-[10px] text-slate-300 mt-1">{formatTime(n.created_at)}{n.category && <span> · <span className="capitalize">{n.category}</span></span>}</p>
+                                <p className={`text-sm ${n.is_read ? 'text-slate-600 dark:text-slate-300' : 'font-semibold text-slate-900 dark:text-white'}`}>{n.title}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-2">{n.message}</p>
+                                <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-1">{formatTime(n.created_at)}{n.category && <span> · <span className="capitalize">{n.category}</span></span>}</p>
                               </div>
                               {!n.is_read && <div className="w-2 h-2 rounded-full bg-[var(--brand-primary)] flex-shrink-0 mt-2" />}
                             </div>
@@ -170,23 +174,23 @@ const Layout = ({ children, userModules = [] }) => {
                       </div>
                     )}
                   </div>
-                  <div className="border-t border-slate-100 px-4 py-2.5 text-center">
-                    <button className="text-xs font-medium text-slate-500 hover:text-slate-700">Ver todas las notificaciones</button>
+                  <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-2.5 text-center">
+                    <button className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Ver todas las notificaciones</button>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Help */}
-            <button className="hidden sm:block p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+            <button className="hidden sm:block p-1.5 text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
               <HelpCircle className="w-4 h-4" />
             </button>
 
             {/* User */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
               <div className="text-right hidden sm:block">
-                <p className="text-xs font-medium text-slate-700 leading-tight">{user?.name || 'Usuario'}</p>
-                <p className="text-[10px] text-slate-400 leading-tight">{roleLabel[user?.role] || user?.role}</p>
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-200 leading-tight">{user?.name || 'Usuario'}</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">{roleLabel[user?.role] || user?.role}</p>
               </div>
               <div className="h-8 w-8 rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center font-semibold text-[10px]">{initials}</div>
             </div>

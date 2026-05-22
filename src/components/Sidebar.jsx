@@ -98,7 +98,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
 
   return (
     <aside className={cn(
-      "h-full bg-[var(--brand-sidebar-bg)] border-r border-slate-200 flex flex-col flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out relative",
+      "h-full bg-[var(--brand-sidebar-bg)] border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out relative",
       collapsed ? "w-[68px]" : "w-56"
     )}>
       {/* Logo */}
@@ -124,12 +124,12 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
           collapsed ? "w-0 opacity-0" : "flex-1 opacity-100"
         )}>
           <span
-            className="text-sm font-bold text-slate-900 tracking-tight block truncate"
+            className="text-sm font-bold text-slate-900 dark:text-white tracking-tight block truncate"
             title={user?.branding?.displayName || user?.orgName || 'Alce AI'}
           >
             {user?.branding?.displayName || user?.orgName || 'Alce AI'}
           </span>
-          <p className="text-[9px] text-slate-400 font-medium uppercase tracking-[0.15em] leading-none">Plataforma B2B</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-[0.15em] leading-none">Plataforma B2B</p>
         </div>
       </div>
 
@@ -152,7 +152,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
               "flex items-center rounded-lg group overflow-hidden whitespace-nowrap transition-colors",
               isAgentesActive
                 ? "bg-[var(--brand-primary)] text-white font-medium"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/40 hover:text-slate-900 dark:hover:text-white"
             )}>
               {isAdmin ? (
                 <NavLink
@@ -205,7 +205,7 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
 
             {/* Submenu */}
             {!collapsed && agentsOpen && agentModuleItems.length > 0 && (
-              <div className="mt-0.5 ml-4 pl-3 border-l border-slate-100 space-y-0.5">
+              <div className="mt-0.5 ml-4 pl-3 border-l border-slate-100 dark:border-slate-700 space-y-0.5">
                 {agentModuleItems.map(item => (
                   <SidebarLink key={item.id} item={item} isActive={currentPath === item.path} collapsed={false} submenu />
                 ))}
@@ -226,24 +226,24 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
       </nav>
 
       {/* Bottom */}
-      <div className="p-2 border-t border-slate-100">
+      <div className="p-2 border-t border-slate-100 dark:border-slate-700">
         <NavLink
           to="/ajustes"
           title="Configuracion"
           className={({ isActive }) => cn(
             "flex items-center gap-2.5 w-full rounded-lg group transition-colors duration-150 overflow-hidden whitespace-nowrap",
             collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2 text-[13px]",
-            isActive ? "text-slate-900 bg-slate-50 font-medium" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+            isActive ? "text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-700/40 font-medium" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700/40"
           )}
         >
-          <Settings className="w-[18px] h-[18px] text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
+          <Settings className="w-[18px] h-[18px] text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-200 flex-shrink-0" />
           <span className={cn("transition-all duration-300 overflow-hidden", collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>Configuracion</span>
         </NavLink>
         <button
           onClick={handleLogout}
           title="Cerrar Sesion"
           className={cn(
-            "flex items-center gap-2.5 text-slate-400 hover:text-red-500 transition-colors w-full rounded-lg hover:bg-red-50 mt-0.5 overflow-hidden whitespace-nowrap",
+            "flex items-center gap-2.5 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors w-full rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 mt-0.5 overflow-hidden whitespace-nowrap",
             collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2 text-[13px]"
           )}
         >
@@ -267,13 +267,13 @@ const SidebarLink = ({ item, isActive, collapsed, submenu = false }) => {
         collapsed ? "justify-center px-2 py-2.5" : (submenu ? "px-2.5 py-1.5 text-[12.5px]" : "px-3 py-2 text-[13px]"),
         isActive
           ? "bg-[var(--brand-primary)] text-white font-medium"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/40 hover:text-slate-900 dark:hover:text-white"
       )}
     >
       <Icon className={cn(
         "flex-shrink-0",
         submenu ? "w-4 h-4" : "w-[18px] h-[18px]",
-        isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
+        isActive ? "text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-200"
       )} />
       <span className={cn(
         "transition-all duration-300 overflow-hidden",

@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* ── Dark mode variant (Tailwind 4 class strategy) ─────────────────── */
+/* Activa el prefijo `dark:` en utilidades cuando <html class="dark"> */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── Brand CSS variables (defaults; AuthContext las sobreescribe por org) ── */
 :root {
   --brand-primary: #1a3a3a;
@@ -9,7 +13,91 @@
   --brand-sidebar-bg: #ffffff;
   --brand-navbar-bg: #ffffff;
   --brand-content-bg: #f8fafc;
+
+  /* Surface tokens semánticos — usados para dark mode automático en componentes que adopten estas vars */
+  --surface: #ffffff;           /* fondo de cards */
+  --surface-elevated: #ffffff;  /* modals, dropdowns */
+  --surface-muted: #f8fafc;     /* fondos terciarios (inputs, badges) */
+  --text: #0f172a;              /* texto principal */
+  --text-muted: #64748b;        /* texto secundario */
+  --text-subtle: #94a3b8;       /* texto terciario / placeholders */
+  --border: #e2e8f0;            /* bordes */
+  --border-muted: #f1f5f9;      /* bordes tenues */
 }
+
+/* ── Dark mode: override de brand bgs + surface tokens ── */
+.dark {
+  --brand-sidebar-bg: #0f172a;
+  --brand-navbar-bg: #0f172a;
+  --brand-content-bg: #020617;
+  --surface: #1e293b;
+  --surface-elevated: #1e293b;
+  --surface-muted: #0f172a;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --border: #334155;
+  --border-muted: #1e293b;
+  color-scheme: dark;
+}
+
+/* Color scheme nativo del browser (scrollbars, inputs, etc.) */
+:root { color-scheme: light; }
+
+/* Transición suave al cambiar de tema */
+html { transition: background-color 0.2s ease, color 0.2s ease; }
+
+/* ──────────────────────────────────────────────────────────────────
+ * Fallback automático para dark mode: muchos componentes usan
+ * bg-white / bg-slate-50 hardcoded. En vez de tocar cada uno, los
+ * adaptamos via selector global. Componentes que ya tengan `dark:`
+ * explícito ganan por especificidad/orden (Tailwind genera vars
+ * y class queries — verificar que esto NO sobrescriba dark:bg-*).
+ * Aplicamos solo cuando NO hay ninguna class dark:* en el elemento.
+ * ────────────────────────────────────────────────────────────────── */
+.dark body {
+  background-color: var(--brand-content-bg);
+  color: var(--text);
+}
+
+/* Cards comunes — degradar bg-white a slate-800 si no tiene override */
+.dark .bg-white:not([class*="dark:bg-"]) {
+  background-color: #1e293b;
+}
+.dark .bg-slate-50:not([class*="dark:bg-"]) {
+  background-color: #0f172a;
+}
+.dark .bg-slate-100:not([class*="dark:bg-"]) {
+  background-color: #1e293b;
+}
+
+/* Texto */
+.dark .text-slate-900:not([class*="dark:text-"]) { color: #f1f5f9; }
+.dark .text-slate-800:not([class*="dark:text-"]) { color: #e2e8f0; }
+.dark .text-slate-700:not([class*="dark:text-"]) { color: #cbd5e1; }
+.dark .text-slate-600:not([class*="dark:text-"]) { color: #94a3b8; }
+.dark .text-slate-500:not([class*="dark:text-"]) { color: #94a3b8; }
+
+/* Bordes */
+.dark .border-slate-200:not([class*="dark:border-"]) { border-color: #334155; }
+.dark .border-slate-100:not([class*="dark:border-"]) { border-color: #1e293b; }
+.dark .divide-slate-100 > * + *:not([class*="dark:"]) { border-color: #1e293b; }
+.dark .divide-slate-50 > * + *:not([class*="dark:"]) { border-color: #1e293b; }
+
+/* Inputs: forzar fondo oscuro y texto claro si no se especifica */
+.dark input[type="text"]:not([class*="dark:bg-"]),
+.dark input[type="email"]:not([class*="dark:bg-"]),
+.dark input[type="password"]:not([class*="dark:bg-"]),
+.dark input[type="number"]:not([class*="dark:bg-"]),
+.dark input[type="search"]:not([class*="dark:bg-"]),
+.dark input[type="tel"]:not([class*="dark:bg-"]),
+.dark textarea:not([class*="dark:bg-"]),
+.dark select:not([class*="dark:bg-"]) {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+.dark ::placeholder { color: #64748b; }
 
 /* Smooth scrolling */
 html {
