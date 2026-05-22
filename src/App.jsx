@@ -30,6 +30,7 @@ import ContratosModule from './components/ContratosModule'
 import PublicContratoView from './components/PublicContratoView'
 import PropuestasModule from './components/PropuestasModule'
 import AgentesAdminModule from './components/AgentesAdminModule'
+import PublicPropuestaView from './components/PublicPropuestaView'
 import { AssistantProvider } from './context/AssistantContext'
 
 function ProtectedRoute({ children }) {
@@ -171,8 +172,9 @@ function App() {
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
           <Route path="/activar" element={<ActivatePage />} />
-          {/* Ruta pública para clientes que reciben contratos — sin auth */}
+          {/* Rutas públicas (clientes sin auth) */}
           <Route path="/p/:token" element={<PublicContratoView />} />
+          <Route path="/propuestas/p/:token" element={<PublicPropuestaView />} />
           <Route path="/" element={<ProtectedRoute><AssistantProvider><Dashboard /></AssistantProvider></ProtectedRoute>}>
             <Route index element={<Navigate to="/home" replace />} />
             <Route path="home" element={<HomeDashboard />} />

@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate, Link, Routes, Route, useOutlet, useLocation } from 'react-router-dom'
 import {
   ClipboardList, Plus, RefreshCw, FileText, Eye, Send, CheckCircle2, FileX,
-  Loader2, Search, X, ChevronLeft, ChevronRight, Settings, Layers, XCircle, Clock
+  Loader2, Search, X, ChevronLeft, ChevronRight, Settings, Layers, XCircle, Clock,
+  Edit3, Copy, Trash2, Calendar, User
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -30,12 +30,40 @@ const fmt = (d) => d ? new Date(d).toLocaleString('es-MX', { day: '2-digit', mon
 const fmtMoney = (a, m='MXN') => a == null || a === 0 ? '—' : new Intl.NumberFormat('es-MX', { style:'currency', currency: m }).format(a)
 const fmtCompact = (a) => a == null || a === 0 ? '—' : new Intl.NumberFormat('es-MX', { notation: 'compact', maximumFractionDigits: 1 }).format(a)
 
+// Period helpers
+const PERIOD_OPTIONS = [
+  { value: 'all', label: 'Todo' },
+  { value: 'month', label: 'Este mes' },
+  { value: 'last_month', label: 'Mes pasado' },
+  { value: '3months', label: 'Últimos 3 meses' },
+  { value: 'year', label: 'Este año' },
+]
+function filterByPeriod(list, period) {
+  if (period === 'all') return list
+  const now = new Date()
+  const y = now.getFullYear(), m = now.getMonth()
+  let from
+  if (period === 'month') from = new Date(y, m, 1)
+  else if (period === 'last_month') from = new Date(y, m - 1, 1)
+  else if (period === '3months') from = new Date(y, m - 3, 1)
+  else if (period === 'year') from = new Date(y, 0, 1)
+  const to = period === 'last_month' ? new Date(y, m, 1) : new Date()
+  return list.filter(p => {
+    const d = new Date(p.created_at)
+    return d >= from && d <= to
+  })
+}
+
 // API helpers
 const api = {
   list:   (token) => fetch('/api/propuestas',           { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
   one:    (token, id) => fetch(`/api/propuestas/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
   create: (token, body) => fetch('/api/propuestas', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
+  update: (token, id, body) => fetch(`/api/propuestas/${id}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
   }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
   patch: (token, id, body) => fetch(`/api/propuestas/${id}`, {
@@ -53,6 +81,13 @@ const api = {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
   }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
+  patchServicio: (token, id, body) => fetch(`/api/propuestas/servicios/${id}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
+  deleteServicio: (token, id) => fetch(`/api/propuestas/servicios/${id}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -61,14 +96,13 @@ const api = {
 
 export default function PropuestasModule() {
   const { token, user } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [view, setView] = useState('dashboard') // dashboard|nueva|preview|servicios
+  const [view, setView] = useState('dashboard') // dashboard|nueva|edit|preview|servicios
   const [selectedId, setSelectedId] = useState(null)
   const [propuestas, setPropuestas] = useState([])
   const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterEstado, setFilterEstado] = useState('todas')
+  const [filterPeriod, setFilterPeriod] = useState('all')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 15
@@ -90,22 +124,24 @@ export default function PropuestasModule() {
   useEffect(() => { load() }, [load])
 
   const stats = useMemo(() => {
-    const total = propuestas.length
-    const borradores = propuestas.filter(p => p.estado === 'borrador').length
-    const activas   = propuestas.filter(p => ['enviada', 'vista'].includes(p.estado)).length
-    const firmadas  = propuestas.filter(p => p.estado === 'firmada').length
-    const cerradoMxn = propuestas.filter(p => p.estado === 'firmada').reduce((s, p) => s + (parseFloat(p.total_mxn) || 0), 0)
-    const cerradoUsd = propuestas.filter(p => p.estado === 'firmada').reduce((s, p) => s + (parseFloat(p.total_usd) || 0), 0)
-    const considered = activas + firmadas
+    const periodList = filterByPeriod(propuestas, filterPeriod)
+    const total = periodList.length
+    const borradores = periodList.filter(p => p.estado === 'borrador').length
+    const activas   = periodList.filter(p => ['enviada', 'vista'].includes(p.estado)).length
+    const firmadas  = periodList.filter(p => p.estado === 'firmada').length
+    const rechazadas = periodList.filter(p => p.estado === 'rechazada').length
+    const cerradoMxn = periodList.filter(p => p.estado === 'firmada').reduce((s, p) => s + (parseFloat(p.total_mxn) || 0), 0)
+    const cerradoUsd = periodList.filter(p => p.estado === 'firmada').reduce((s, p) => s + (parseFloat(p.total_usd) || 0), 0)
+    const considered = activas + firmadas + rechazadas
     const conversion = considered > 0 ? Math.round((firmadas / considered) * 100) : 0
-    return { total, borradores, activas, firmadas, cerradoMxn, cerradoUsd, conversion }
-  }, [propuestas])
+    return { total, borradores, activas, firmadas, rechazadas, cerradoMxn, cerradoUsd, conversion }
+  }, [propuestas, filterPeriod])
 
   const filtradas = useMemo(() => {
-    let list = propuestas
-    if (filterEstado === 'borrador')  list = list.filter(p => p.estado === 'borrador')
-    if (filterEstado === 'activas')   list = list.filter(p => ['enviada', 'vista'].includes(p.estado))
-    if (filterEstado === 'firmadas')  list = list.filter(p => p.estado === 'firmada')
+    let list = filterByPeriod(propuestas, filterPeriod)
+    if (filterEstado === 'borrador')   list = list.filter(p => p.estado === 'borrador')
+    if (filterEstado === 'activas')    list = list.filter(p => ['enviada', 'vista'].includes(p.estado))
+    if (filterEstado === 'firmadas')   list = list.filter(p => p.estado === 'firmada')
     if (filterEstado === 'rechazadas') list = list.filter(p => p.estado === 'rechazada')
     if (search.trim()) {
       const q = search.trim().toLowerCase()
@@ -118,19 +154,25 @@ export default function PropuestasModule() {
       )
     }
     return list
-  }, [propuestas, filterEstado, search])
+  }, [propuestas, filterEstado, filterPeriod, search])
 
   const totalPages = Math.max(1, Math.ceil(filtradas.length / PAGE_SIZE))
   const pageSafe = Math.min(page, totalPages)
   const filtradasPag = filtradas.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE)
-  useEffect(() => { setPage(1) }, [filterEstado, search])
+  useEffect(() => { setPage(1) }, [filterEstado, filterPeriod, search])
 
   // ─── Sub-vistas ───
   if (view === 'nueva') {
-    return <NuevaPropuestaForm servicios={servicios} onClose={() => { setView('dashboard'); load() }} />
+    return <PropuestaForm servicios={servicios} onClose={() => { setView('dashboard'); load() }} />
+  }
+  if (view === 'edit' && selectedId) {
+    return <PropuestaForm servicios={servicios} editId={selectedId}
+      onClose={() => { setView('dashboard'); setSelectedId(null); load() }} />
   }
   if (view === 'preview' && selectedId) {
-    return <PreviewPropuesta id={selectedId} onClose={() => { setView('dashboard'); setSelectedId(null); load() }} />
+    return <PreviewPropuesta id={selectedId}
+      onEdit={() => setView('edit')}
+      onClose={() => { setView('dashboard'); setSelectedId(null); load() }} />
   }
   if (view === 'servicios') {
     return <ServiciosCatalog isAdmin={isAdmin} onClose={() => { setView('dashboard'); load() }} />
@@ -164,6 +206,21 @@ export default function PropuestasModule() {
             <Plus className="w-4 h-4" /> Nueva propuesta
           </button>
         </div>
+      </div>
+
+      {/* Period filter */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+        {PERIOD_OPTIONS.map(o => (
+          <button key={o.value} onClick={() => setFilterPeriod(o.value)}
+            className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors ${
+              filterPeriod === o.value
+                ? 'text-white' : 'text-slate-500 bg-slate-100 hover:bg-slate-200'
+            }`}
+            style={filterPeriod === o.value ? { background: NAVY } : {}}>
+            {o.label}
+          </button>
+        ))}
       </div>
 
       {/* KPIs */}
@@ -236,7 +293,7 @@ export default function PropuestasModule() {
             )}
             {propuestas.length === 0 && servicios.length === 0 && (
               <p className="text-[11px] text-slate-400 mt-3 max-w-sm mx-auto">
-                💡 Empieza creando tu <button onClick={() => setView('servicios')} className="underline hover:text-slate-700">catálogo de servicios</button> con
+                Empieza creando tu <button onClick={() => setView('servicios')} className="underline hover:text-slate-700">catálogo de servicios</button> con
                 lo que ofrece tu empresa (objeto, requisitos, precios). Después podrás usarlos para generar propuestas en segundos.
               </p>
             )}
@@ -260,7 +317,9 @@ export default function PropuestasModule() {
                             {ESTADO_LABEL[p.estado] || p.estado}
                           </span>
                           {isAdmin && (p.vendedor_user_name || p.vendedor_nombre) && (
-                            <span className="text-[10px] text-slate-400">· 👤 {p.vendedor_user_name || p.vendedor_nombre}</span>
+                            <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
+                              <User className="w-2.5 h-2.5" /> {p.vendedor_user_name || p.vendedor_nombre}
+                            </span>
                           )}
                         </div>
                         <p className="text-sm font-medium text-slate-800 truncate">{p.cliente_nombre}</p>
@@ -332,11 +391,13 @@ function KpiCard({ icon: Icon, label, value, sub, accent = 'slate', onClick, act
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Nueva Propuesta
+//  Formulario de Propuesta (Nueva + Edición)
 // ─────────────────────────────────────────────────────────────
 
-function NuevaPropuestaForm({ servicios, onClose }) {
+function PropuestaForm({ servicios, onClose, editId }) {
   const { token, user } = useAuth()
+  const isEdit = !!editId
+  const [loadingEdit, setLoadingEdit] = useState(!!editId)
   const [form, setForm] = useState({
     servicio_id: '',
     cliente_nombre: '', cliente_correo: '', cliente_ciudad: '', cliente_telefono: '',
@@ -349,11 +410,39 @@ function NuevaPropuestaForm({ servicios, onClose }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Load existing data for edit
+  useEffect(() => {
+    if (!editId) return
+    api.one(token, editId).then(p => {
+      setForm({
+        servicio_id: p.servicio_id || '',
+        cliente_nombre: p.cliente_nombre || '',
+        cliente_correo: p.cliente_correo || '',
+        cliente_ciudad: p.cliente_ciudad || '',
+        cliente_telefono: p.cliente_telefono || '',
+        vendedor_nombre: p.vendedor_nombre || '',
+        vendedor_correo: p.vendedor_correo || '',
+        vendedor_puesto: p.vendedor_puesto || '',
+        vendedor_telefono: p.vendedor_telefono || '',
+        notas: p.notas || '',
+        vigencia_dias: p.vigencia_dias || 30,
+      })
+      if (p.conceptos?.length) {
+        setConceptos(p.conceptos.map(c => ({
+          concepto: c.concepto || '',
+          precio: c.precio ?? 0,
+          moneda: c.moneda || 'MXN',
+          cantidad: c.cantidad ?? 1,
+        })))
+      }
+    }).catch(console.error).finally(() => setLoadingEdit(false))
+  }, [editId, token])
+
   const servicioSel = servicios.find(s => String(s.id) === String(form.servicio_id))
 
-  // Cuando cambia el servicio, sugiere precio del catálogo
+  // Cuando cambia el servicio, sugiere precio del catálogo (solo en nueva)
   useEffect(() => {
-    if (!servicioSel) return
+    if (isEdit || !servicioSel) return
     if (conceptos.length === 1 && !conceptos[0].concepto && servicioSel.precio_default) {
       setConceptos([{
         concepto: servicioSel.nombre,
@@ -382,17 +471,19 @@ function NuevaPropuestaForm({ servicios, onClose }) {
       if (conceptosLimpios.length === 0) throw new Error('Agrega al menos un concepto con nombre')
       if (!form.cliente_nombre.trim()) throw new Error('El nombre del cliente es obligatorio')
 
-      const created = await api.create(token, {
-        ...form,
-        servicio_id: form.servicio_id || null,
-        conceptos: conceptosLimpios,
-      })
-      onClose() // vuelve al dashboard, refresca
+      if (isEdit) {
+        await api.update(token, editId, { ...form, servicio_id: form.servicio_id || null, conceptos: conceptosLimpios })
+      } else {
+        await api.create(token, { ...form, servicio_id: form.servicio_id || null, conceptos: conceptosLimpios })
+      }
+      onClose()
     } catch (err) { setError(err.message) }
     finally { setSaving(false) }
   }
 
   const inputCls = "w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary,#101C44)]/15"
+
+  if (loadingEdit) return <div className="py-16 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
 
   return (
     <div className="space-y-4 max-w-3xl">
@@ -400,7 +491,7 @@ function NuevaPropuestaForm({ servicios, onClose }) {
         <button onClick={onClose} className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-1">
           <ChevronLeft className="w-4 h-4" /> Volver
         </button>
-        <h2 className="text-xl font-bold text-slate-900">Nueva propuesta</h2>
+        <h2 className="text-xl font-bold text-slate-900">{isEdit ? 'Editar propuesta' : 'Nueva propuesta'}</h2>
       </div>
 
       <form onSubmit={submit} className="space-y-4">
@@ -421,16 +512,54 @@ function NuevaPropuestaForm({ servicios, onClose }) {
         </Card>
 
         {/* Datos del cliente */}
-        <Card title="Datos del cliente" icon={ClipboardList}>
+        <Card title="Datos del cliente" icon={User}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input className={inputCls} placeholder="Nombre completo *" required
-              value={form.cliente_nombre} onChange={e => setForm({ ...form, cliente_nombre: e.target.value })} />
-            <input className={inputCls} placeholder="Correo" type="email"
-              value={form.cliente_correo} onChange={e => setForm({ ...form, cliente_correo: e.target.value })} />
-            <input className={inputCls} placeholder="Ciudad"
-              value={form.cliente_ciudad} onChange={e => setForm({ ...form, cliente_ciudad: e.target.value })} />
-            <input className={inputCls} placeholder="Teléfono"
-              value={form.cliente_telefono} onChange={e => setForm({ ...form, cliente_telefono: e.target.value })} />
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Nombre completo *</label>
+              <input className={inputCls} required
+                value={form.cliente_nombre} onChange={e => setForm({ ...form, cliente_nombre: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Correo</label>
+              <input className={inputCls} type="email"
+                value={form.cliente_correo} onChange={e => setForm({ ...form, cliente_correo: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Ciudad</label>
+              <input className={inputCls}
+                value={form.cliente_ciudad} onChange={e => setForm({ ...form, cliente_ciudad: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Teléfono</label>
+              <input className={inputCls}
+                value={form.cliente_telefono} onChange={e => setForm({ ...form, cliente_telefono: e.target.value })} />
+            </div>
+          </div>
+        </Card>
+
+        {/* Datos del asesor/vendedor */}
+        <Card title="Datos del asesor" icon={User}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Nombre</label>
+              <input className={inputCls}
+                value={form.vendedor_nombre} onChange={e => setForm({ ...form, vendedor_nombre: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Puesto</label>
+              <input className={inputCls} placeholder="Ej: Consultor senior"
+                value={form.vendedor_puesto} onChange={e => setForm({ ...form, vendedor_puesto: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Correo</label>
+              <input className={inputCls} type="email"
+                value={form.vendedor_correo} onChange={e => setForm({ ...form, vendedor_correo: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Teléfono</label>
+              <input className={inputCls}
+                value={form.vendedor_telefono} onChange={e => setForm({ ...form, vendedor_telefono: e.target.value })} />
+            </div>
           </div>
         </Card>
 
@@ -439,24 +568,26 @@ function NuevaPropuestaForm({ servicios, onClose }) {
           <div className="space-y-2">
             {conceptos.map((c, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                <input className={`${inputCls} col-span-6`} placeholder="Descripción del concepto"
+                <input className={`${inputCls} col-span-5`} placeholder="Descripción del concepto"
                   value={c.concepto} onChange={e => {
-                    const next = [...conceptos]; next[idx].concepto = e.target.value; setConceptos(next)
+                    const next = [...conceptos]; next[idx] = { ...next[idx], concepto: e.target.value }; setConceptos(next)
                   }} />
                 <input className={`${inputCls} col-span-2 text-right`} type="number" min="0" step="0.01"
+                  placeholder="Precio"
                   value={c.precio} onChange={e => {
-                    const next = [...conceptos]; next[idx].precio = e.target.value; setConceptos(next)
+                    const next = [...conceptos]; next[idx] = { ...next[idx], precio: e.target.value }; setConceptos(next)
                   }} />
                 <select className={`${inputCls} col-span-2`}
                   value={c.moneda} onChange={e => {
-                    const next = [...conceptos]; next[idx].moneda = e.target.value; setConceptos(next)
+                    const next = [...conceptos]; next[idx] = { ...next[idx], moneda: e.target.value }; setConceptos(next)
                   }}>
                   <option value="MXN">MXN</option>
                   <option value="USD">USD</option>
                 </select>
-                <input className={`${inputCls} col-span-1 text-center`} type="number" min="1"
+                <input className={`${inputCls} col-span-2 text-center`} type="number" min="1"
+                  placeholder="Cant"
                   value={c.cantidad} onChange={e => {
-                    const next = [...conceptos]; next[idx].cantidad = e.target.value; setConceptos(next)
+                    const next = [...conceptos]; next[idx] = { ...next[idx], cantidad: e.target.value }; setConceptos(next)
                   }} />
                 <button type="button" onClick={() => setConceptos(conceptos.filter((_, i) => i !== idx))}
                   className="col-span-1 text-slate-400 hover:text-red-500 flex items-center justify-center"
@@ -479,7 +610,7 @@ function NuevaPropuestaForm({ servicios, onClose }) {
 
         {/* Notas + vigencia */}
         <Card title="Notas y vigencia">
-          <textarea className={inputCls} rows={3} placeholder="Notas opcionales"
+          <textarea className={inputCls} rows={3} placeholder="Notas opcionales para el cliente"
             value={form.notas} onChange={e => setForm({ ...form, notas: e.target.value })} />
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div>
@@ -501,7 +632,7 @@ function NuevaPropuestaForm({ servicios, onClose }) {
             className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
             style={{ background: NAVY }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            Crear propuesta
+            {isEdit ? 'Guardar cambios' : 'Crear propuesta'}
           </button>
         </div>
       </form>
@@ -513,7 +644,7 @@ function NuevaPropuestaForm({ servicios, onClose }) {
 //  Preview de la propuesta (vista del consultor)
 // ─────────────────────────────────────────────────────────────
 
-function PreviewPropuesta({ id, onClose }) {
+function PreviewPropuesta({ id, onClose, onEdit }) {
   const { token } = useAuth()
   const [p, setP] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -536,16 +667,18 @@ function PreviewPropuesta({ id, onClose }) {
   const markSent = async () => {
     try {
       await api.markSent(token, id)
-      setSentMsg('✅ Marcada como enviada. Comparte el link público al cliente.')
+      setSentMsg('Marcada como enviada. Comparte el link público al cliente.')
       const updated = await api.one(token, id)
       setP(updated)
-    } catch (e) { setSentMsg('❌ ' + e.message) }
+    } catch (e) { setSentMsg('Error: ' + e.message) }
   }
 
   const eliminar = async () => {
-    if (!confirm('¿Eliminar esta propuesta?')) return
+    if (!confirm('¿Eliminar esta propuesta? Esta acción no se puede deshacer.')) return
     try { await api.remove(token, id); onClose() } catch (e) { alert(e.message) }
   }
+
+  const canEdit = p.estado === 'borrador'
 
   return (
     <div className="space-y-4 max-w-4xl">
@@ -554,10 +687,16 @@ function PreviewPropuesta({ id, onClose }) {
           <ChevronLeft className="w-4 h-4" /> Volver
         </button>
         <div className="flex gap-2 flex-wrap">
+          {canEdit && (
+            <button onClick={onEdit}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg">
+              <Edit3 className="w-3.5 h-3.5" /> Editar
+            </button>
+          )}
           <button onClick={copyLink}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg">
-            {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : null}
-            {copied ? '¡Copiado!' : 'Copiar link público'}
+            {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? 'Copiado' : 'Copiar link'}
           </button>
           {p.estado === 'borrador' && (
             <button onClick={markSent}
@@ -570,22 +709,25 @@ function PreviewPropuesta({ id, onClose }) {
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg">
             Imprimir/PDF
           </button>
-          <button onClick={eliminar} className="p-1.5 text-slate-400 hover:text-red-500 rounded">
-            <X className="w-4 h-4" />
+          <button onClick={eliminar} className="p-1.5 text-slate-400 hover:text-red-500 rounded" title="Eliminar">
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {sentMsg && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-lg px-3 py-2">{sentMsg}</div>
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-lg px-3 py-2 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" /> {sentMsg}
+        </div>
       )}
 
-      <div className="bg-[var(--brand-primary-soft,#f0f4f9)] border-l-4 rounded-r-lg px-4 py-2.5 text-xs flex items-center gap-3"
+      <div className="bg-[var(--brand-primary-soft,#f0f4f9)] border-l-4 rounded-r-lg px-4 py-2.5 text-xs flex items-center gap-3 flex-wrap"
         style={{ borderColor: NAVY }}>
-        <span className="font-mono text-slate-700">{publicLink}</span>
+        <span className="font-mono text-slate-700 break-all">{publicLink}</span>
         <span className="ml-auto text-[10px] text-slate-500">Link público para el cliente</span>
-        {p.vista_at && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px]">👁 Vista</span>}
-        {p.firmada_at && <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px]">✍ Firmada</span>}
+        {p.vista_at && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px]">Vista {fmt(p.vista_at)}</span>}
+        {p.firmada_at && <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px]">Firmada {fmt(p.firmada_at)}</span>}
+        {p.estado === 'rechazada' && <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[10px]">Rechazada</span>}
       </div>
 
       {/* Documento */}
@@ -599,7 +741,8 @@ function PreviewPropuesta({ id, onClose }) {
 // ─────────────────────────────────────────────────────────────
 
 export function PropuestaDoc({ p }) {
-  const requisitos = Array.isArray(p.requisitos) ? p.requisitos : (typeof p.requisitos === 'string' ? JSON.parse(p.requisitos || '[]') : [])
+  const requisitos = Array.isArray(p.requisitos) ? p.requisitos
+    : (typeof p.requisitos === 'string' ? (() => { try { return JSON.parse(p.requisitos) } catch { return [] } })() : [])
   const conceptos = p.conceptos || []
   const fechaEmision = new Date(p.created_at)
   const fechaVencimiento = new Date(fechaEmision.getTime() + (p.vigencia_dias || 30) * 86400000)
@@ -609,8 +752,9 @@ export function PropuestaDoc({ p }) {
       <div className="px-8 py-6 border-b-4" style={{ borderColor: NAVY }}>
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400">{p.org_name || 'Alce Alce'}</p>
+            <p className="text-[10px] uppercase tracking-widest text-slate-400">{p.org_name || 'Alce'}</p>
             <h1 className="text-xl font-bold mt-1" style={{ color: NAVY }}>Propuesta de servicio</h1>
+            {p.servicio_nombre && <p className="text-sm text-slate-600 mt-0.5">{p.servicio_nombre}</p>}
           </div>
           <div className="text-right">
             <p className="text-[10px] text-slate-400 uppercase tracking-widest">Folio</p>
@@ -705,6 +849,12 @@ export function PropuestaDoc({ p }) {
           </div>
         )}
 
+        {p.notas_extra && (
+          <Section title="Información adicional">
+            <p className="whitespace-pre-wrap">{p.notas_extra}</p>
+          </Section>
+        )}
+
         {p.notas && (
           <Section title="Notas">
             <p className="whitespace-pre-wrap">{p.notas}</p>
@@ -765,6 +915,7 @@ function ServiciosCatalog({ isAdmin, onClose }) {
   const [servicios, setServicios] = useState([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
+  const [editServicio, setEditServicio] = useState(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -772,6 +923,11 @@ function ServiciosCatalog({ isAdmin, onClose }) {
   }, [token])
 
   useEffect(() => { load() }, [load])
+
+  const handleDelete = async (s) => {
+    if (!confirm(`¿Desactivar el servicio "${s.nombre}"? Las propuestas existentes no se verán afectadas.`)) return
+    try { await api.deleteServicio(token, s.id); load() } catch (e) { alert(e.message) }
+  }
 
   return (
     <div className="space-y-4 max-w-4xl">
@@ -820,18 +976,34 @@ function ServiciosCatalog({ isAdmin, onClose }) {
                 <th className="text-left px-4 py-2 font-medium">Idioma</th>
                 <th className="text-right px-4 py-2 font-medium">Precio default</th>
                 <th className="text-center px-4 py-2 font-medium">Usos</th>
+                {isAdmin && <th className="text-center px-4 py-2 font-medium w-20">Acciones</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {servicios.map(s => (
                 <tr key={s.id} className="hover:bg-slate-50/50">
-                  <td className="px-4 py-3 font-medium text-slate-800">{s.nombre}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-slate-800">{s.nombre}</p>
+                    {s.objeto && <p className="text-[11px] text-slate-400 truncate max-w-xs">{s.objeto}</p>}
+                  </td>
                   <td className="px-4 py-3 text-slate-500 capitalize">{s.categoria || '—'}</td>
-                  <td className="px-4 py-3 text-slate-500">{s.idioma === 'ingles' ? '🇺🇸 EN' : '🇲🇽 ES'}</td>
+                  <td className="px-4 py-3 text-slate-500">{s.idioma === 'ingles' ? 'EN' : 'ES'}</td>
                   <td className="px-4 py-3 text-right text-slate-700">
                     {s.precio_default ? `${fmtMoney(s.precio_default, s.moneda_default)} ${s.moneda_default}` : '—'}
                   </td>
                   <td className="px-4 py-3 text-center text-slate-500">{s.uso_count || 0}</td>
+                  {isAdmin && (
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => setEditServicio(s)} className="p-1 text-slate-400 hover:text-slate-700 rounded" title="Editar">
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDelete(s)} className="p-1 text-slate-400 hover:text-red-500 rounded" title="Desactivar">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -839,19 +1011,32 @@ function ServiciosCatalog({ isAdmin, onClose }) {
         </div>
       )}
 
-      {showNew && <NuevoServicioModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); load() }} />}
+      {showNew && <ServicioModal onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); load() }} />}
+      {editServicio && <ServicioModal servicio={editServicio} onClose={() => setEditServicio(null)} onSaved={() => { setEditServicio(null); load() }} />}
     </div>
   )
 }
 
-function NuevoServicioModal({ onClose, onCreated }) {
+function ServicioModal({ servicio, onClose, onSaved }) {
   const { token } = useAuth()
+  const isEdit = !!servicio
   const [form, setForm] = useState({
-    nombre: '', nombre_en: '', categoria: '', idioma: 'español',
-    objeto: '', descripcion_servicio: '', tiempos_estimados: '',
-    precio_default: '', moneda_default: 'MXN',
+    nombre: servicio?.nombre || '',
+    nombre_en: servicio?.nombre_en || '',
+    categoria: servicio?.categoria || '',
+    idioma: servicio?.idioma || 'español',
+    objeto: servicio?.objeto || '',
+    descripcion_servicio: servicio?.descripcion_servicio || '',
+    tiempos_estimados: servicio?.tiempos_estimados || '',
+    precio_default: servicio?.precio_default || '',
+    moneda_default: servicio?.moneda_default || 'MXN',
   })
-  const [requisitos, setRequisitos] = useState([''])
+  const [requisitos, setRequisitos] = useState(() => {
+    if (!servicio?.requisitos) return ['']
+    const parsed = Array.isArray(servicio.requisitos) ? servicio.requisitos
+      : (() => { try { return JSON.parse(servicio.requisitos) } catch { return [] } })()
+    return parsed.length > 0 ? parsed : ['']
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -860,12 +1045,13 @@ function NuevoServicioModal({ onClose, onCreated }) {
     setError(''); setSaving(true)
     try {
       const reqs = requisitos.filter(r => r.trim()).map(r => r.trim())
-      await api.createServicio(token, {
-        ...form,
-        requisitos: reqs,
-        precio_default: parseFloat(form.precio_default) || null,
-      })
-      onCreated()
+      const payload = { ...form, requisitos: reqs, precio_default: parseFloat(form.precio_default) || null }
+      if (isEdit) {
+        await api.patchServicio(token, servicio.id, payload)
+      } else {
+        await api.createServicio(token, payload)
+      }
+      onSaved()
     } catch (err) { setError(err.message) }
     finally { setSaving(false) }
   }
@@ -876,7 +1062,7 @@ function NuevoServicioModal({ onClose, onCreated }) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-2xl w-full my-8 p-6">
         <div className="flex items-start justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Nuevo servicio del catálogo</h3>
+          <h3 className="text-lg font-semibold text-slate-900">{isEdit ? 'Editar servicio' : 'Nuevo servicio del catálogo'}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X className="w-4 h-4" /></button>
         </div>
 
@@ -949,8 +1135,8 @@ function NuevoServicioModal({ onClose, onCreated }) {
             <div>
               <label className="text-xs text-slate-600 mb-1 block">Idioma</label>
               <select className={inputCls} value={form.idioma} onChange={e => setForm({ ...form, idioma: e.target.value })}>
-                <option value="español">🇲🇽 Español</option>
-                <option value="ingles">🇺🇸 Inglés</option>
+                <option value="español">Español</option>
+                <option value="ingles">Inglés</option>
               </select>
             </div>
           </div>
@@ -966,7 +1152,7 @@ function NuevoServicioModal({ onClose, onCreated }) {
               className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
               style={{ background: NAVY }}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Crear servicio
+              {isEdit ? 'Guardar cambios' : 'Crear servicio'}
             </button>
           </div>
         </form>
