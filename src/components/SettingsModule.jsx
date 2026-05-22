@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
 import {
   User, Mail, Lock, ShieldCheck, Save, CheckCircle2, Eye, EyeOff, KeyRound,
-  Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2
+  Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2,
+  Sparkles, Wand2, Loader2
 } from 'lucide-react'
 
 const GOOGLE_CONNECTORS = [
@@ -46,6 +47,13 @@ const SettingsModule = () => {
   const [brandingDraft, setBrandingDraft] = useState(branding)
   const [savingBranding, setSavingBranding] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+
+  // IA: paleta sugerida desde el logo
+  const [analyzingLogo, setAnalyzingLogo] = useState(false)
+  const [aiPalette, setAiPalette] = useState(null)       // { primaryColor, secondaryColor, accentColor, ... }
+  const [aiReasoning, setAiReasoning] = useState('')
+  const [aiVibe, setAiVibe] = useState('')
+  const [aiError, setAiError] = useState('')
 
   // Re-sincronizar si el user cambia (login / refresh)
   useEffect(() => {
@@ -98,7 +106,7 @@ const SettingsModule = () => {
       setBranding(next)
       setBrandingDraft(next)
       updateBranding(next) // aplica CSS vars en vivo
-      setSuccess('Diseño actualizado correctamente')
+      setSuccess('Marca actualizada correctamente')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -128,7 +136,9 @@ const SettingsModule = () => {
       setBranding(next)
       setBrandingDraft(next)
       updateBranding({ logoUrl: data.logoUrl })
-      setSuccess('Logo actualizado')
+      setSuccess('Logo actualizado · analizando colores con IA…')
+      // Dispara análisis IA automáticamente — el usuario verá la paleta sugerida en segundos
+      handleAnalyzeLogo()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -155,6 +165,51 @@ const SettingsModule = () => {
     } finally {
       setUploadingLogo(false)
     }
+  }
+
+  // ── IA: analizar logo y proponer paleta ──
+  const handleAnalyzeLogo = async () => {
+    setAnalyzingLogo(true)
+    setAiError(''); setError(''); setSuccess('')
+    try {
+      const res = await fetch('/api/organizations/me/analyze-logo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al analizar logo')
+      setAiPalette(data.palette)
+      setAiVibe(data.vibe || '')
+      setAiReasoning(data.reasoning || '')
+    } catch (err) {
+      setAiError(err.message)
+    } finally {
+      setAnalyzingLogo(false)
+    }
+  }
+
+  const applyAiPalette = (scope) => {
+    if (!aiPalette) return
+    let next
+    if (scope === 'principales') {
+      // Solo primary + secondary + textOnPrimary
+      next = {
+        ...brandingDraft,
+        primaryColor: aiPalette.primaryColor,
+        secondaryColor: aiPalette.secondaryColor,
+        textOnPrimary: aiPalette.textOnPrimary,
+      }
+    } else {
+      // Todo
+      next = { ...brandingDraft, ...aiPalette }
+    }
+    setBrandingDraft(next)
+    // Aplica al DOM en vivo para que la previsualización se sienta inmediata
+    updateBranding(next)
+  }
+
+  const dismissAiPalette = () => {
+    setAiPalette(null); setAiReasoning(''); setAiVibe(''); setAiError('')
   }
 
   // Fetch integrations when connectors tab is active
@@ -233,7 +288,7 @@ const SettingsModule = () => {
     { id: 'profile', label: 'Datos Personales', icon: User },
     { id: 'password', label: 'Contrasena', icon: KeyRound },
     ...(isSuperAdmin ? [] : [{ id: 'connectors', label: 'Conectores', icon: Plug }]),
-    ...(isAdmin ? [{ id: 'design', label: 'Diseño', icon: Palette }] : []),
+    ...(isAdmin ? [{ id: 'design', label: 'Marca', icon: Palette }] : []),
   ]
 
   // Diseño tab es más amplio por el preview en vivo
@@ -445,8 +500,112 @@ const SettingsModule = () => {
                       <Trash2 className="w-3.5 h-3.5" /> Quitar logo
                     </button>
                   )}
+                  {brandingDraft.logoUrl && !analyzingLogo && !aiPalette && (
+                    <button
+                      type="button"
+                      onClick={handleAnalyzeLogo}
+                      className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg border transition-all"
+                      style={{ borderColor: 'var(--brand-primary)', color: 'var(--brand-primary)' }}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Analizar colores con IA
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* ── Panel IA: análisis del logo ── */}
+              {analyzingLogo && (
+                <div className="mt-4 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-xl p-4 flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-slate-900">Analizando tu logo con IA…</p>
+                    <p className="text-xs text-slate-600">gpt-4o-mini está identificando colores y proponiendo una paleta para tu plataforma. Tarda 2-4 segundos.</p>
+                  </div>
+                </div>
+              )}
+
+              {aiError && (
+                <div className="mt-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 flex items-start gap-2">
+                  <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{aiError}</span>
+                </div>
+              )}
+
+              {aiPalette && !analyzingLogo && (
+                <div className="mt-4 bg-gradient-to-br from-violet-50 via-indigo-50 to-blue-50 border-2 border-violet-200 rounded-xl p-5 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-4.5 h-4.5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-slate-900">Paleta propuesta por IA</h4>
+                      {aiVibe && (
+                        <p className="text-[11px] font-medium text-violet-700 mt-0.5 uppercase tracking-wide">{aiVibe}</p>
+                      )}
+                      {aiReasoning && (
+                        <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">{aiReasoning}</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={dismissAiPalette}
+                      className="text-slate-400 hover:text-slate-700"
+                      title="Descartar sugerencia"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Swatches */}
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {[
+                      ['primaryColor', 'Primario'],
+                      ['secondaryColor', 'Secundario'],
+                      ['accentColor', 'Acento'],
+                      ['textOnPrimary', 'Texto'],
+                      ['sidebarBg', 'Sidebar'],
+                      ['navbarBg', 'Navbar'],
+                      ['contentBg', 'Contenido'],
+                    ].map(([key, label]) => (
+                      <div key={key} className="flex flex-col items-center">
+                        <div className="w-full aspect-square rounded-lg border-2 border-white shadow-sm" style={{ background: aiPalette[key] }} />
+                        <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-wide">{label}</p>
+                        <p className="text-[9px] font-mono text-slate-700">{aiPalette[key]}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => applyAiPalette('completo')}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white rounded-lg shadow-sm hover:opacity-90 transition-all"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+                    >
+                      <Wand2 className="w-3.5 h-3.5" /> Aplicar paleta completa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyAiPalette('principales')}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-violet-700 bg-white border border-violet-200 rounded-lg hover:bg-violet-50 transition-all"
+                    >
+                      Solo principales
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAnalyzeLogo}
+                      disabled={analyzingLogo}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3 h-3" /> Re-analizar
+                    </button>
+                    <p className="text-[10px] text-slate-500 self-center ml-auto">
+                      Acuérdate de pulsar <b>Guardar diseño</b> para persistir los cambios.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Display name */}
@@ -515,7 +674,7 @@ const SettingsModule = () => {
                 disabled={!brandingDirty || savingBranding}
                 className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm"
               >
-                {savingBranding ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <><Save className="w-4 h-4" /><span>Guardar diseño</span></>}
+                {savingBranding ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" /> : <><Save className="w-4 h-4" /><span>Guardar marca</span></>}
               </button>
             </div>
           </div>
@@ -566,9 +725,37 @@ function ColorRow({ label, hint, value, onChange }) {
 
 function BrandingPreview({ branding, orgFallback }) {
   const name = branding.displayName?.trim() || orgFallback || 'Mi Empresa'
+  const [tab, setTab] = useState('app') // app | propuesta
+
   return (
     <div className="sticky top-4 space-y-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Vista previa</p>
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Vista previa</p>
+        <div className="inline-flex bg-slate-100 rounded-lg p-0.5 gap-0.5">
+          <button
+            type="button"
+            onClick={() => setTab('app')}
+            className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+              tab === 'app' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            App
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('propuesta')}
+            className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+              tab === 'propuesta' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Propuesta
+          </button>
+        </div>
+      </div>
+
+      {tab === 'propuesta' ? (
+        <PropuestaPreviewMock branding={branding} orgName={name} />
+      ) : (
       <div
         className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex"
         style={{ height: 360, background: branding.contentBg }}
@@ -648,10 +835,108 @@ function BrandingPreview({ branding, orgFallback }) {
           </div>
         </div>
       </div>
+      )}
 
       <p className="text-[11px] text-slate-500 leading-relaxed">
-        Los cambios se previsualizan aquí en tiempo real. Al pulsar <b>Guardar diseño</b> se aplican a toda la plataforma de tu organización.
+        Los cambios se previsualizan aquí en tiempo real. Al pulsar <b>Guardar marca</b> se aplican a toda la plataforma de tu organización.
       </p>
+    </div>
+  )
+}
+
+// Vista previa de cómo se ve una propuesta con los colores aplicados
+function PropuestaPreviewMock({ branding, orgName }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm bg-white" style={{ minHeight: 360 }}>
+      {/* Membrete */}
+      <div className="px-5 py-4 border-b-4" style={{ borderColor: branding.primaryColor }}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+              style={{ background: branding.primaryColor }}
+            >
+              {branding.logoUrl ? (
+                <img src={branding.logoUrl} alt="logo" className="w-full h-full object-contain" />
+              ) : (
+                <ShieldCheck className="w-5 h-5" style={{ color: branding.textOnPrimary }} />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase tracking-widest text-slate-400 truncate">{orgName}</p>
+              <p className="text-sm font-bold leading-tight truncate" style={{ color: branding.primaryColor }}>
+                Propuesta de servicio
+              </p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-[9px] text-slate-400 uppercase tracking-widest">Folio</p>
+            <p className="text-xs font-mono font-bold" style={{ color: branding.primaryColor }}>AL-2026-001</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="px-5 py-4 space-y-3 text-xs text-slate-700">
+        <p>Estimado(a) <strong>Cliente Demo</strong>:</p>
+        <p className="text-[11px] leading-relaxed text-slate-600">
+          Esta es una vista previa de cómo se verá tu propuesta con la marca aplicada.
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-slate-50 rounded-lg p-2.5">
+            <p className="text-[8px] uppercase tracking-widest mb-1" style={{ color: branding.primaryColor }}>Cliente</p>
+            <p className="text-[10px] font-medium text-slate-700">Cliente Demo</p>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-2.5">
+            <p className="text-[8px] uppercase tracking-widest mb-1" style={{ color: branding.primaryColor }}>Asesor</p>
+            <p className="text-[10px] font-medium text-slate-700">Tú</p>
+          </div>
+        </div>
+
+        {/* Tabla mock */}
+        <div className="rounded-lg overflow-hidden border-2" style={{ borderColor: branding.primaryColor }}>
+          <div className="px-3 py-1.5 text-white text-[9px] font-semibold uppercase tracking-widest"
+            style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+            Honorarios y costos
+          </div>
+          <table className="w-full text-[10px]">
+            <tbody className="divide-y divide-slate-100">
+              <tr>
+                <td className="px-3 py-1.5 text-slate-700">Servicio principal</td>
+                <td className="px-3 py-1.5 text-right font-semibold text-slate-800">$25,000.00</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-1.5 text-slate-700">Acompañamiento</td>
+                <td className="px-3 py-1.5 text-right font-semibold text-slate-800">$5,000.00</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2" style={{ borderColor: branding.primaryColor }}>
+                <td className="px-3 py-1.5 text-right text-[9px] font-semibold uppercase" style={{ color: branding.primaryColor }}>Total</td>
+                <td className="px-3 py-1.5 text-right font-bold text-xs" style={{ color: branding.primaryColor }}>$30,000.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* CTA */}
+        <div className="flex gap-2 pt-1">
+          <button
+            type="button"
+            className="flex-1 text-[10px] font-bold px-2 py-1.5 rounded-md"
+            style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
+          >
+            Aceptar propuesta
+          </button>
+          <button
+            type="button"
+            className="text-[10px] font-medium px-2 py-1.5 rounded-md border border-slate-200 text-slate-600"
+          >
+            No, gracias
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

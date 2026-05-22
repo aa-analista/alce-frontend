@@ -14,6 +14,13 @@ function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
+// Label overrides — usamos esto para renombrar módulos sin tocar la DB.
+// Útil para evitar nombres confusos (ej: hay un tab "Diseño" en Ajustes
+// que NO es lo mismo que el módulo "Diseño" de Open Design).
+const MODULE_LABEL_OVERRIDES = {
+  'design': 'Estudio Creativo',
+}
+
 // Icon map for all module IDs
 const MODULE_ICONS = {
   'coach-ai': Sparkles,
@@ -70,13 +77,14 @@ const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
   const iconFor = (m) => (m.icon && ICON_CATALOG[m.icon]) || MODULE_ICONS[m.id] || Blocks
 
   const visibleModules = userModules.filter(m => m.type === 'module' || !m.type)
+  const labelFor = (m) => MODULE_LABEL_OVERRIDES[m.id] || m.name
   const coreModuleItems = visibleModules
     .filter(m => CORE_IDS.includes(m.id) && !isSuperAdmin)
-    .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: iconFor(m) }))
+    .map(m => ({ id: m.id, path: `/${m.id}`, label: labelFor(m), icon: iconFor(m) }))
   // Super_admin manages agents from /agentes — doesn't navigate to them via sidebar
   const agentModuleItems = isSuperAdmin ? [] : visibleModules
     .filter(m => !CORE_IDS.includes(m.id))
-    .map(m => ({ id: m.id, path: `/${m.id}`, label: m.name, icon: iconFor(m) }))
+    .map(m => ({ id: m.id, path: `/${m.id}`, label: labelFor(m), icon: iconFor(m) }))
 
   const showAgentsGroup = isAdmin || agentModuleItems.length > 0
   const agentesTarget = isSuperAdmin ? '/agentes' : '/marketplace'

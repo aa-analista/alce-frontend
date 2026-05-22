@@ -27,7 +27,7 @@ export default function OpenDesignModule() {
           <Palette className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-slate-900">Diseño</h2>
+          <h2 className="text-lg font-bold text-slate-900">Estudio Creativo</h2>
           <p className="text-xs text-slate-500">
             Generador de prototipos, landings, decks e imágenes con IA — powered by open-design
           </p>

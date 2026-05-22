@@ -119,10 +119,16 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => prev ? { ...prev, ...updates } : prev)
   }
 
-  // Update branding y aplica al DOM en vivo (sin esperar refresh del /me)
-  const updateBranding = (branding) => {
-    setUser(prev => prev ? { ...prev, branding: { ...(prev.branding || {}), ...branding } } : prev)
-    applyBrandingToDOM(branding)
+  // Update branding y aplica al DOM en vivo (sin esperar refresh del /me).
+  // Importante: cuando llega un parcial (ej. solo logoUrl), aplicamos la
+  // versión MERGEADA al DOM — si no, applyBrandingToDOM resetea los demás
+  // colores a default (bug: subir logo borraba los colores custom en vivo).
+  const updateBranding = (partial) => {
+    setUser(prev => {
+      const merged = { ...(prev?.branding || {}), ...partial }
+      applyBrandingToDOM(merged)
+      return prev ? { ...prev, branding: merged } : prev
+    })
   }
 
   return (
