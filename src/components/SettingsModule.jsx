@@ -328,32 +328,40 @@ const SettingsModule = () => {
 
   return (
     <div className={wrapperCls}>
-      {/* Profile Header — usa textOnPrimary (que la IA o el branding calculan) en vez de white forzado */}
+      {/* Profile Header — adapta a modo claro/oscuro:
+          - Light: fondo de color de marca (primary) — identidad visual fuerte
+          - Dark: fondo neutro oscuro con avatar/badge en color de marca (sutil) */}
       <div
-        className="p-6 rounded-xl"
-        style={{
-          background: 'var(--brand-primary)',
-          color: 'var(--brand-text-on-primary)',
-        }}
+        className="p-6 rounded-xl bg-[var(--brand-primary)] dark:bg-slate-800 border dark:border-slate-700"
+        style={{ color: 'var(--brand-text-on-primary)' }}
       >
         <div className="flex items-center space-x-4">
+          {/* Avatar — usa primary en dark, transparencia en light */}
           <div
-            className="w-14 h-14 rounded-xl backdrop-blur flex items-center justify-center text-xl font-bold"
+            className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold dark:text-white"
             style={{ background: 'color-mix(in srgb, var(--brand-text-on-primary) 15%, transparent)' }}
           >
-            {initials}
+            <span className="dark:hidden">{initials}</span>
+            <span className="hidden dark:flex w-full h-full rounded-xl items-center justify-center"
+              style={{ background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)' }}>
+              {initials}
+            </span>
           </div>
-          <div>
+          <div className="dark:text-white">
             <h2 className="text-xl font-semibold">{user?.name}</h2>
-            <p className="text-sm" style={{ opacity: 0.7 }}>{user?.email}</p>
+            <p className="text-sm dark:text-slate-300" style={{ opacity: 0.7 }}>{user?.email}</p>
             <div className="flex items-center gap-2 mt-1.5">
               <span
-                className="text-xs font-medium px-2 py-0.5 rounded-md"
+                className="text-xs font-medium px-2 py-0.5 rounded-md dark:text-white"
                 style={{ background: 'color-mix(in srgb, var(--brand-text-on-primary) 15%, transparent)' }}
               >
-                {roleLabel[user?.role] || user?.role}
+                <span className="dark:hidden">{roleLabel[user?.role] || user?.role}</span>
+                <span className="hidden dark:inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--brand-primary)' }} />
+                  {roleLabel[user?.role] || user?.role}
+                </span>
               </span>
-              <span className="text-xs" style={{ opacity: 0.5 }}>{user?.branding?.displayName || user?.orgName}</span>
+              <span className="text-xs dark:text-slate-400" style={{ opacity: 0.5 }}>{user?.branding?.displayName || user?.orgName}</span>
             </div>
           </div>
         </div>
@@ -799,8 +807,11 @@ const SettingsModule = () => {
                 <ColorRow label="Texto sobre primario" hint="Contraste del texto encima del color primario"
                   value={brandingDraft.textOnPrimary} onChange={(v) => handleBrandingChange('textOnPrimary', v)} />
 
-                <div className="border-t border-slate-100 pt-3 mt-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Fondos</p>
+                <div className="border-t border-slate-100 dark:border-slate-700 pt-3 mt-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Fondos</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-2 italic">
+                    Solo aplican en <b>modo claro</b>. En oscuro la plataforma usa tonos oscuros automáticos para garantizar contraste.
+                  </p>
                 </div>
 
                 <ColorRow label="Fondo del sidebar" hint="Color del menú lateral izquierdo"
@@ -888,30 +899,63 @@ function ColorRow({ label, hint, value, onChange }) {
 function BrandingPreview({ branding, orgFallback }) {
   const name = branding.displayName?.trim() || orgFallback || 'Mi Empresa'
   const [tab, setTab] = useState('app') // app | propuesta
+  const [previewMode, setPreviewMode] = useState('auto') // auto | light | dark
+
+  // Determinar el modo efectivo: si auto, leer el modo real del documento
+  const effectiveMode = previewMode === 'auto'
+    ? (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+    : previewMode
+  const isDarkPreview = effectiveMode === 'dark'
+
+  // En oscuro, sobrescribimos los fondos por neutros oscuros (los fondos
+  // personalizados solo aplican en modo claro)
+  const previewBranding = isDarkPreview
+    ? {
+        ...branding,
+        sidebarBg: '#0a0f1e',
+        navbarBg: '#0a0f1e',
+        contentBg: '#050912',
+      }
+    : branding
 
   return (
     <div className="sticky top-4 space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Vista previa</p>
-        <div className="inline-flex bg-slate-100 rounded-lg p-0.5 gap-0.5">
-          <button
-            type="button"
-            onClick={() => setTab('app')}
-            className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
-              tab === 'app' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            App
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('propuesta')}
-            className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
-              tab === 'propuesta' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Propuesta
-          </button>
+        <div className="flex items-center gap-1.5">
+          {/* Toggle modo de la PREVIEW (independiente del modo de la app) */}
+          {tab === 'app' && (
+            <div className="inline-flex bg-slate-100 dark:bg-slate-700 rounded-lg p-0.5 gap-0.5">
+              <button type="button" onClick={() => setPreviewMode('light')}
+                className={`px-2 py-1 text-[9px] font-semibold rounded-md transition-colors ${effectiveMode === 'light' && previewMode !== 'auto' ? 'bg-white dark:bg-slate-900 shadow-sm' : 'text-slate-500'}`}>
+                ☀
+              </button>
+              <button type="button" onClick={() => setPreviewMode('dark')}
+                className={`px-2 py-1 text-[9px] font-semibold rounded-md transition-colors ${effectiveMode === 'dark' && previewMode !== 'auto' ? 'bg-white dark:bg-slate-900 shadow-sm' : 'text-slate-500'}`}>
+                ☾
+              </button>
+            </div>
+          )}
+          <div className="inline-flex bg-slate-100 dark:bg-slate-700 rounded-lg p-0.5 gap-0.5">
+            <button
+              type="button"
+              onClick={() => setTab('app')}
+              className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+                tab === 'app' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              App
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('propuesta')}
+              className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+                tab === 'propuesta' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Propuesta
+            </button>
+          </div>
         </div>
       </div>
 
@@ -919,13 +963,13 @@ function BrandingPreview({ branding, orgFallback }) {
         <PropuestaPreviewMock branding={branding} orgName={name} />
       ) : (
       <div
-        className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex"
-        style={{ height: 360, background: branding.contentBg }}
+        className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm flex"
+        style={{ height: 360, background: previewBranding.contentBg }}
       >
         {/* ── Mock SIDEBAR ─────────────────────────────────── */}
         <div
-          className="w-32 flex flex-col border-r border-slate-200/50"
-          style={{ background: branding.sidebarBg }}
+          className={`w-32 flex flex-col ${isDarkPreview ? 'border-r border-slate-700/50' : 'border-r border-slate-200/50'}`}
+          style={{ background: previewBranding.sidebarBg }}
         >
           {/* Logo + nombre */}
           <div className="flex items-center gap-2 px-2.5 py-3">
@@ -939,7 +983,7 @@ function BrandingPreview({ branding, orgFallback }) {
                 <ShieldCheck className="w-3.5 h-3.5" style={{ color: branding.textOnPrimary }} />
               )}
             </div>
-            <span className="text-[10px] font-bold text-slate-900 truncate">{name}</span>
+            <span className={`text-[10px] font-bold truncate ${isDarkPreview ? 'text-white' : 'text-slate-900'}`}>{name}</span>
           </div>
           {/* Nav items */}
           <div className="px-2 space-y-0.5 mt-1">
@@ -951,36 +995,36 @@ function BrandingPreview({ branding, orgFallback }) {
               <Save className="w-2.5 h-2.5" /> Inicio
             </div>
             {/* Item inactivo */}
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600 hover:bg-slate-100">
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}>
               <UserIcon /> Clientes
               <span className="ml-auto text-[8px] font-bold px-1 py-0.5 rounded"
                 style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>3</span>
             </div>
-            {/* Item con hover state simulado (fondo tenue del primary) */}
+            {/* Item con hover state simulado */}
             <div
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-medium text-slate-700"
-              style={{ background: `${branding.primaryColor}0d` }}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-medium ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}
+              style={{ background: isDarkPreview ? `${branding.primaryColor}26` : `${branding.primaryColor}0d` }}
             >
               <UserIcon /> Equipo
             </div>
             {/* Sub-item con borde primary */}
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-600 border-l-2"
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] border-l-2 ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}
               style={{ borderColor: branding.primaryColor, marginLeft: 8, paddingLeft: 8 }}>
               <UserIcon /> Propuestas
             </div>
             {/* Otros items */}
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] text-slate-500">
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] ${isDarkPreview ? 'text-slate-400' : 'text-slate-500'}`}>
               <UserIcon /> Gastos
             </div>
           </div>
 
           {/* Footer del sidebar (avatar + nombre) */}
-          <div className="mt-auto px-2 py-2 border-t border-slate-200/50 flex items-center gap-1.5">
+          <div className={`mt-auto px-2 py-2 border-t flex items-center gap-1.5 ${isDarkPreview ? 'border-slate-700/50' : 'border-slate-200/50'}`}>
             <div className="w-5 h-5 rounded-full flex-shrink-0"
               style={{ background: branding.primaryColor }} />
             <div className="min-w-0 flex-1">
-              <p className="text-[9px] font-semibold text-slate-700 truncate">Tú</p>
-              <p className="text-[8px] text-slate-400 truncate">admin</p>
+              <p className={`text-[9px] font-semibold truncate ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}>Tú</p>
+              <p className={`text-[8px] truncate ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>admin</p>
             </div>
           </div>
         </div>
@@ -989,15 +1033,15 @@ function BrandingPreview({ branding, orgFallback }) {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Navbar */}
           <div
-            className="h-10 flex items-center px-3 gap-2 border-b border-slate-200/50 flex-shrink-0"
-            style={{ background: branding.navbarBg }}
+            className={`h-10 flex items-center px-3 gap-2 border-b flex-shrink-0 ${isDarkPreview ? 'border-slate-700/50' : 'border-slate-200/50'}`}
+            style={{ background: previewBranding.navbarBg }}
           >
             {/* Search bar mock */}
-            <div className="flex-1 max-w-[140px] h-5 rounded-md bg-slate-100/80 flex items-center px-1.5 gap-1">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-2.5 h-2.5 text-slate-400">
+            <div className={`flex-1 max-w-[140px] h-5 rounded-md flex items-center px-1.5 gap-1 ${isDarkPreview ? 'bg-slate-700/50' : 'bg-slate-100/80'}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-2.5 h-2.5 ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3"/>
               </svg>
-              <span className="text-[8px] text-slate-400">Buscar…</span>
+              <span className={`text-[8px] ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Buscar…</span>
             </div>
             <div className="ml-auto flex items-center gap-1">
               {/* Bell con badge accent */}
@@ -1014,10 +1058,10 @@ function BrandingPreview({ branding, orgFallback }) {
           </div>
 
           {/* Content — Dashboard mock realista */}
-          <div className="flex-1 p-2.5 overflow-hidden space-y-2" style={{ background: branding.contentBg }}>
+          <div className="flex-1 p-2.5 overflow-hidden space-y-2" style={{ background: previewBranding.contentBg }}>
             {/* Título */}
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-bold text-slate-800">Propuestas</p>
+              <p className={`text-[10px] font-bold ${isDarkPreview ? 'text-white' : 'text-slate-800'}`}>Propuestas</p>
               <button type="button"
                 className="text-[8px] font-bold px-1.5 py-0.5 rounded"
                 style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
@@ -1027,15 +1071,15 @@ function BrandingPreview({ branding, orgFallback }) {
 
             {/* KPIs row */}
             <div className="grid grid-cols-3 gap-1.5">
-              <div className="bg-white rounded-md p-1.5 border border-slate-200">
-                <p className="text-[7px] text-slate-400 uppercase">Total</p>
-                <p className="text-[11px] font-bold text-slate-800 leading-none mt-0.5">24</p>
+              <div className={`rounded-md p-1.5 border ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <p className={`text-[7px] uppercase ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                <p className={`text-[11px] font-bold leading-none mt-0.5 ${isDarkPreview ? 'text-white' : 'text-slate-800'}`}>24</p>
               </div>
-              <div className="bg-white rounded-md p-1.5 border border-slate-200">
-                <p className="text-[7px] text-slate-400 uppercase">Activas</p>
+              <div className={`rounded-md p-1.5 border ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <p className={`text-[7px] uppercase ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Activas</p>
                 <p className="text-[11px] font-bold leading-none mt-0.5" style={{ color: branding.primaryColor }}>8</p>
               </div>
-              <div className="bg-white rounded-md p-1.5 border-2"
+              <div className={`rounded-md p-1.5 border-2 ${isDarkPreview ? 'bg-slate-800' : 'bg-white'}`}
                 style={{ borderColor: `${branding.accentColor}66` }}>
                 <p className="text-[7px] uppercase font-semibold" style={{ color: branding.accentColor }}>Firmadas</p>
                 <p className="text-[11px] font-bold leading-none mt-0.5" style={{ color: branding.accentColor }}>5</p>
@@ -1043,17 +1087,17 @@ function BrandingPreview({ branding, orgFallback }) {
             </div>
 
             {/* Lista mock con items */}
-            <div className="bg-white rounded-md border border-slate-200 overflow-hidden">
-              <div className="px-2 py-1 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-[8px] font-semibold text-slate-600">Recientes</span>
-                <span className="text-[7px] text-slate-400">Hoy</span>
+            <div className={`rounded-md border overflow-hidden ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+              <div className={`px-2 py-1 border-b flex items-center justify-between ${isDarkPreview ? 'border-slate-700' : 'border-slate-100'}`}>
+                <span className={`text-[8px] font-semibold ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}>Recientes</span>
+                <span className={`text-[7px] ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Hoy</span>
               </div>
-              <div className="divide-y divide-slate-50">
+              <div className={`divide-y ${isDarkPreview ? 'divide-slate-700' : 'divide-slate-50'}`}>
                 {/* Item 1 con badge primary */}
                 <div className="px-2 py-1 flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: `${branding.primaryColor}33` }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[8px] font-semibold text-slate-700 truncate">Cliente Demo S.A.</p>
+                    <p className={`text-[8px] font-semibold truncate ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}>Cliente Demo S.A.</p>
                   </div>
                   <span className="text-[7px] font-bold px-1 py-0.5 rounded"
                     style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
@@ -1064,7 +1108,7 @@ function BrandingPreview({ branding, orgFallback }) {
                 <div className="px-2 py-1 flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: `${branding.accentColor}33` }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[8px] font-semibold text-slate-700 truncate">Acme Industries</p>
+                    <p className={`text-[8px] font-semibold truncate ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}>Acme Industries</p>
                   </div>
                   <span className="text-[7px] font-bold px-1 py-0.5 rounded"
                     style={{ background: `${branding.accentColor}1f`, color: branding.accentColor }}>
