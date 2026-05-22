@@ -59,6 +59,7 @@ const SettingsModule = () => {
   const [aiLogoQuality, setAiLogoQuality] = useState('')
   const [aiLogoFeedback, setAiLogoFeedback] = useState('')
   const [aiAccentReplaced, setAiAccentReplaced] = useState(false)
+  const [aiAccentOptions, setAiAccentOptions] = useState([])
   const [aiError, setAiError] = useState('')
 
   // Re-sincronizar si el user cambia (login / refresh)
@@ -197,6 +198,7 @@ const SettingsModule = () => {
       setAiLogoQuality(data.logoQuality || 'good')
       setAiLogoFeedback(data.logoFeedback || '')
       setAiAccentReplaced(!!data.accentReplaced)
+      setAiAccentOptions(Array.isArray(data.accentOptions) ? data.accentOptions : [])
     } catch (err) {
       setAiError(err.message)
     } finally {
@@ -224,9 +226,22 @@ const SettingsModule = () => {
     updateBranding(next)
   }
 
+  // Cambia solo el accent (desde los swatches de alternativas)
+  const swapAccent = (newAccentHex) => {
+    if (!aiPalette) return
+    const nextPalette = { ...aiPalette, accentColor: newAccentHex }
+    setAiPalette(nextPalette)
+    // Si el usuario ya había aplicado la paleta, actualiza también el draft
+    if (brandingDraft.accentColor === aiPalette.accentColor) {
+      const nextDraft = { ...brandingDraft, accentColor: newAccentHex }
+      setBrandingDraft(nextDraft)
+      updateBranding(nextDraft)
+    }
+  }
+
   const dismissAiPalette = () => {
     setAiPalette(null); setAiReasoning(''); setAiVibe('')
-    setAiLogoQuality(''); setAiLogoFeedback(''); setAiAccentReplaced(false); setAiError('')
+    setAiLogoQuality(''); setAiLogoFeedback(''); setAiAccentReplaced(false); setAiAccentOptions([]); setAiError('')
   }
 
   // Fetch integrations when connectors tab is active
@@ -313,27 +328,39 @@ const SettingsModule = () => {
 
   return (
     <div className={wrapperCls}>
-      {/* Profile Header */}
-      <div className="bg-[var(--brand-primary)] p-6 rounded-xl text-white">
+      {/* Profile Header — usa textOnPrimary (que la IA o el branding calculan) en vez de white forzado */}
+      <div
+        className="p-6 rounded-xl"
+        style={{
+          background: 'var(--brand-primary)',
+          color: 'var(--brand-text-on-primary)',
+        }}
+      >
         <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-xl font-bold">
+          <div
+            className="w-14 h-14 rounded-xl backdrop-blur flex items-center justify-center text-xl font-bold"
+            style={{ background: 'color-mix(in srgb, var(--brand-text-on-primary) 15%, transparent)' }}
+          >
             {initials}
           </div>
           <div>
             <h2 className="text-xl font-semibold">{user?.name}</h2>
-            <p className="text-white/60 text-sm">{user?.email}</p>
+            <p className="text-sm" style={{ opacity: 0.7 }}>{user?.email}</p>
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="bg-white/15 text-white text-xs font-medium px-2 py-0.5 rounded-md">
+              <span
+                className="text-xs font-medium px-2 py-0.5 rounded-md"
+                style={{ background: 'color-mix(in srgb, var(--brand-text-on-primary) 15%, transparent)' }}
+              >
                 {roleLabel[user?.role] || user?.role}
               </span>
-              <span className="text-white/40 text-xs">{user?.branding?.displayName || user?.orgName}</span>
+              <span className="text-xs" style={{ opacity: 0.5 }}>{user?.branding?.displayName || user?.orgName}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-slate-200 dark:border-slate-700">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
@@ -342,8 +369,8 @@ const SettingsModule = () => {
               onClick={() => { setActiveSection(tab.id); setError(''); setSuccess('') }}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
                 activeSection === tab.id
-                  ? 'border-[var(--brand-primary)] text-slate-900'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                  ? 'border-[var(--brand-primary)] text-slate-900 dark:text-white'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -512,7 +539,7 @@ const SettingsModule = () => {
             </div>
 
             {/* Logo */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
               <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-1">
                 <ImageIcon className="w-4 h-4 text-slate-500" /> Logo de la organización
               </h3>
@@ -644,6 +671,35 @@ const SettingsModule = () => {
                     </div>
                   )}
 
+                  {/* Accents alternativos — el usuario elige con un click */}
+                  {aiAccentOptions.length > 0 && (
+                    <div className="bg-white/60 dark:bg-slate-900/40 border border-violet-100 dark:border-slate-700 rounded-md px-2.5 py-2">
+                      <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> ¿No te convence el acento? Prueba otra opción curada para tu marca:
+                      </p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {aiAccentOptions.map((hex) => {
+                          const isActive = aiPalette.accentColor.toLowerCase() === hex.toLowerCase()
+                          return (
+                            <button
+                              key={hex}
+                              type="button"
+                              onClick={() => swapAccent(hex)}
+                              title={hex}
+                              className={`w-7 h-7 rounded-md border-2 transition-all hover:scale-110 ${
+                                isActive ? 'border-slate-900 dark:border-white ring-2 ring-violet-300' : 'border-white dark:border-slate-700 shadow-sm'
+                              }`}
+                              style={{ background: hex }}
+                            />
+                          )
+                        })}
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                          Click para probar — se aplica en vivo
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Swatches */}
                   <div className="grid grid-cols-7 gap-1.5">
                     {[
@@ -705,7 +761,7 @@ const SettingsModule = () => {
             </div>
 
             {/* Display name */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
               <h3 className="font-semibold text-slate-900 text-sm mb-1">Nombre a mostrar</h3>
               <p className="text-xs text-slate-500 mb-4">El que aparece en el sidebar y headers. Si lo dejas vacío, se usa "{user?.orgName}".</p>
               <input
@@ -719,7 +775,7 @@ const SettingsModule = () => {
             </div>
 
             {/* Colors */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
