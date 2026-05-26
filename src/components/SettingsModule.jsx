@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle'
 import {
   User, Mail, Lock, ShieldCheck, Save, CheckCircle2, Eye, EyeOff, KeyRound,
   Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2,
-  Sparkles, Wand2, Loader2, Sun, Moon, Bookmark
+  Sparkles, Wand2, Loader2, Sun, Moon, Bookmark, X
 } from 'lucide-react'
 
 const GOOGLE_CONNECTORS = [
