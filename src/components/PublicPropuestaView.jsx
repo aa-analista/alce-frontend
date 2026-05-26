@@ -40,7 +40,20 @@ export default function PublicPropuestaView() {
       .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
       .then(({ ok, data }) => {
         if (!ok) setError(data.error || 'Error al cargar la propuesta')
-        else setP(data)
+        else {
+          setP(data)
+          // ── Aplicar branding de la organización al DOM ──
+          // La vista pública NO está autenticada, así que AuthContext no
+          // aplica los CSS vars. Lo hacemos aquí con los colores que vienen
+          // del endpoint (snapshot actual de la marca de la org).
+          if (typeof document !== 'undefined') {
+            const root = document.documentElement
+            if (data.brand_primary_color)    root.style.setProperty('--brand-primary',         data.brand_primary_color)
+            if (data.brand_secondary_color)  root.style.setProperty('--brand-secondary',       data.brand_secondary_color)
+            if (data.brand_accent_color)     root.style.setProperty('--brand-accent',          data.brand_accent_color)
+            if (data.brand_text_on_primary)  root.style.setProperty('--brand-text-on-primary', data.brand_text_on_primary)
+          }
+        }
       })
       .catch(() => setError('Error de conexión'))
       .finally(() => setLoading(false))
@@ -125,7 +138,8 @@ export default function PublicPropuestaView() {
   const yaVencida = p.estado === 'vencida'
   const yaRechazada = p.estado === 'rechazada'
   const puedeFirmar = !yaFirmada && !yaVencida && !yaRechazada
-  const orgName = p.org_name || 'Alce'
+  const orgName = p.brand_display_name || p.org_name || 'Alce'
+  const orgLogoUrl = p.brand_logo_url || null
   const conceptos = p.conceptos || []
   const requisitos = Array.isArray(p.requisitos) ? p.requisitos
     : (typeof p.requisitos === 'string' ? (() => { try { return JSON.parse(p.requisitos) } catch { return [] } })() : [])
@@ -190,10 +204,14 @@ export default function PublicPropuestaView() {
         <div className="px-12 py-8 border-b-4" style={{ borderColor: BRAND }}>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: BRAND }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden" style={{ background: BRAND }}>
+                {orgLogoUrl ? (
+                  <img src={orgLogoUrl} alt={orgName} className="w-full h-full object-contain" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight" style={{ color: BRAND }}>{orgName}</h1>
