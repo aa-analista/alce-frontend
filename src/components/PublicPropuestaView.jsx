@@ -42,16 +42,20 @@ export default function PublicPropuestaView() {
         if (!ok) setError(data.error || 'Error al cargar la propuesta')
         else {
           setP(data)
-          // ── Aplicar branding de la organización al DOM ──
-          // La vista pública NO está autenticada, así que AuthContext no
-          // aplica los CSS vars. Lo hacemos aquí con los colores que vienen
-          // del endpoint (snapshot actual de la marca de la org).
+          // ── Aplicar branding al DOM ──
+          // Prioridad: paleta de la propuesta > marca de la org > defaults
+          // Permite que distintas propuestas tengan branding distinto sin tocar
+          // la marca general de la organización (presets por cliente).
           if (typeof document !== 'undefined') {
             const root = document.documentElement
-            if (data.brand_primary_color)    root.style.setProperty('--brand-primary',         data.brand_primary_color)
-            if (data.brand_secondary_color)  root.style.setProperty('--brand-secondary',       data.brand_secondary_color)
-            if (data.brand_accent_color)     root.style.setProperty('--brand-accent',          data.brand_accent_color)
-            if (data.brand_text_on_primary)  root.style.setProperty('--brand-text-on-primary', data.brand_text_on_primary)
+            const primary = data.paleta_primary || data.brand_primary_color
+            const secondary = data.paleta_secondary || data.brand_secondary_color
+            const accent = data.paleta_accent || data.brand_accent_color
+            const textOnPrimary = data.paleta_text_on_primary || data.brand_text_on_primary
+            if (primary)        root.style.setProperty('--brand-primary',         primary)
+            if (secondary)      root.style.setProperty('--brand-secondary',       secondary)
+            if (accent)         root.style.setProperty('--brand-accent',          accent)
+            if (textOnPrimary)  root.style.setProperty('--brand-text-on-primary', textOnPrimary)
           }
         }
       })
