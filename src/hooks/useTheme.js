@@ -56,6 +56,25 @@ export function useTheme() {
     return () => mql.removeEventListener('change', handler)
   }, [theme])
 
+  // Sincronizar entre instancias del hook: si OTRA instancia (ej. el toggle
+  // del navbar) cambia el modo y aplica la clase `dark` al <html>, esta
+  // instancia debe enterarse para que componentes consumidores se re-rendericen.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const observer = new MutationObserver(() => {
+      const isDark = document.documentElement.classList.contains('dark')
+      const externalEffective = isDark ? 'dark' : 'light'
+      // Sincronizar el estado local con la verdad del DOM
+      setEffective(prev => (prev !== externalEffective ? externalEffective : prev))
+      // Si también cambió el localStorage (otra instancia llamó setTheme),
+      // releemos el theme para mantener todo coherente.
+      const storedTheme = localStorage.getItem(STORAGE_KEY) || 'light'
+      setThemeState(prev => (prev !== storedTheme ? storedTheme : prev))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
   const setTheme = useCallback((next) => {
     if (!['light', 'dark', 'auto'].includes(next)) return
     localStorage.setItem(STORAGE_KEY, next)

@@ -1066,33 +1066,49 @@ function BrandingPreview({ branding, orgFallback }) {
             <span className={`text-[10px] font-bold truncate ${isDarkPreview ? 'text-white' : 'text-slate-900'}`}>{name}</span>
           </div>
           {/* Nav items */}
-          <div className="px-2 space-y-0.5 mt-1">
-            {/* Item activo */}
-            <div
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-semibold"
-              style={{ background: branding.primaryColor, color: branding.textOnPrimary }}
-            >
+          <div className="px-2 space-y-0.5 mt-2">
+            {/* Sección label */}
+            <p className={`px-2 text-[7px] font-bold uppercase tracking-widest mb-1 ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>
+              Workspace
+            </p>
+
+            {/* Item activo — con indicador lateral */}
+            <div className="relative flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-semibold"
+              style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+              <div className="absolute -left-2 top-1 bottom-1 w-0.5 rounded-r-full" style={{ background: branding.textOnPrimary }} />
               <Save className="w-2.5 h-2.5" /> Inicio
             </div>
-            {/* Item inactivo */}
-            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}>
+
+            {/* Item inactivo con badge accent */}
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] cursor-pointer ${isDarkPreview ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-600 hover:bg-slate-50'}`}>
               <UserIcon /> Clientes
-              <span className="ml-auto text-[8px] font-bold px-1 py-0.5 rounded"
+              <span className="ml-auto text-[8px] font-bold px-1 py-0.5 rounded-full"
                 style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>3</span>
             </div>
-            {/* Item con hover state simulado */}
-            <div
-              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-medium ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}
-              style={{ background: isDarkPreview ? `${branding.primaryColor}26` : `${branding.primaryColor}0d` }}
-            >
+
+            {/* Equipo con hover state simulado y micro-dot */}
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-medium ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}
+              style={{ background: isDarkPreview ? `${branding.primaryColor}26` : `${branding.primaryColor}0d` }}>
               <UserIcon /> Equipo
+              <span className="ml-auto w-1 h-1 rounded-full" style={{ background: branding.accentColor }} />
             </div>
-            {/* Sub-item con borde primary */}
+
+            {/* Sub-sección "Trabajo" */}
+            <p className={`px-2 text-[7px] font-bold uppercase tracking-widest mt-3 mb-1 ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>
+              Trabajo
+            </p>
+
+            {/* Propuestas con sub-item indicado */}
             <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] border-l-2 ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}
               style={{ borderColor: branding.primaryColor, marginLeft: 8, paddingLeft: 8 }}>
               <UserIcon /> Propuestas
+              <span className={`ml-auto text-[8px] font-bold ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>8</span>
             </div>
-            {/* Otros items */}
+
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] ${isDarkPreview ? 'text-slate-400' : 'text-slate-500'}`}>
+              <UserIcon /> Contratos
+            </div>
+
             <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] ${isDarkPreview ? 'text-slate-400' : 'text-slate-500'}`}>
               <UserIcon /> Gastos
             </div>

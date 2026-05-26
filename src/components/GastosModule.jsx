@@ -17,9 +17,10 @@ const FEATURE_META = {
 }
 
 const RANGES = [
-  { id: '7d', label: '7 dias' },
-  { id: '30d', label: '30 dias' },
-  { id: '90d', label: '90 dias' },
+  { id: '1d', label: 'Hoy' },
+  { id: '7d', label: '7 días' },
+  { id: '30d', label: '30 días' },
+  { id: '90d', label: '90 días' },
   { id: 'ytd', label: 'Este año' },
 ]
 
@@ -69,22 +70,27 @@ const GastosModule = () => {
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <DollarSign className="w-6 h-6 text-[var(--brand-primary)]" />
             Gastos
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {isSuperAdmin
               ? 'Consumo de tokens, audio y costo estimado de OpenAI agregando todas las organizaciones.'
               : 'Consumo de tokens, audio y costo estimado de OpenAI por tu organizacion.'}
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
           {RANGES.map(r => (
             <button
               key={r.id}
               onClick={() => setRange(r.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${range === r.id ? 'bg-[var(--brand-primary)] text-white' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                range === r.id
+                  ? 'text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              style={range === r.id ? { background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)' } : {}}
             >
               {r.label}
             </button>
@@ -113,8 +119,8 @@ const GastosModule = () => {
           </div>
 
           {/* Timeline chart */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5">
-            <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+            <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2 mb-4">
               <TrendingUp className="w-4 h-4 text-[var(--brand-primary)]" /> Gasto diario
             </h3>
             {data.timeline.length === 0 ? (
@@ -142,8 +148,8 @@ const GastosModule = () => {
 
           {/* Por organización (solo super_admin) */}
           {isSuperAdmin && (
-            <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+              <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2 mb-4">
                 <Building2 className="w-4 h-4 text-[var(--brand-primary)]" /> Gasto por organizacion
               </h3>
               {(!data.byOrg || data.byOrg.length === 0) ? (
@@ -185,8 +191,8 @@ const GastosModule = () => {
           {/* Breakdown grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* By feature */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+              <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2 mb-4">
                 <ArrowUpDown className="w-4 h-4 text-[var(--brand-primary)]" /> Gasto por feature
               </h3>
               {data.byFeature.length === 0 ? (
@@ -220,8 +226,8 @@ const GastosModule = () => {
             </div>
 
             {/* By user */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5">
-              <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2 mb-4">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+              <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2 mb-4">
                 <UsersIcon className="w-4 h-4 text-[var(--brand-primary)]" /> Top usuarios por gasto
               </h3>
               {data.byUser.length === 0 ? (
@@ -249,7 +255,7 @@ const GastosModule = () => {
           </div>
 
           {/* Recent entries */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
               <h3 className="font-semibold text-slate-900 text-sm">Ultimas llamadas</h3>
@@ -298,13 +304,13 @@ const GastosModule = () => {
 }
 
 const KpiBig = ({ icon: Icon, color, label, value, sub }) => (
-  <div className="bg-white border border-slate-200 rounded-xl p-5">
+  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
     <div className={`w-9 h-9 rounded-lg ${color} flex items-center justify-center mb-2`}>
       <Icon className="w-4 h-4" />
     </div>
-    <p className="text-xs text-slate-500">{label}</p>
-    <p className="text-2xl font-bold text-slate-900 mt-1 tabular-nums">{value}</p>
-    {sub && <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>}
+    <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+    <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">{value}</p>
+    {sub && <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{sub}</p>}
   </div>
 )
 
