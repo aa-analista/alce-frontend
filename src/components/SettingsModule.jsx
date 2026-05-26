@@ -1064,15 +1064,26 @@ const SettingsModule = () => {
         />
       )}
 
-      {/* ── Modal: guardar paleta actual como preset de propuestas ── */}
+      {/* ── Modal: guardar paleta como preset ── */}
+      {/* Si la sugerencia IA está activa, guarda esos colores (lo que el usuario ve en el panel violeta).
+          Si no, guarda los colores del draft actual (los de la "Paleta de colores" manual). */}
       {showSavePresetModal && (
         <SavePresetModal
-          colors={{
-            primary_color: brandingDraft.primaryColor,
-            secondary_color: brandingDraft.secondaryColor,
-            accent_color: brandingDraft.accentColor,
-            text_on_primary: brandingDraft.textOnPrimary,
-          }}
+          colors={
+            aiPalette
+              ? {
+                  primary_color: aiPalette.primaryColor,
+                  secondary_color: aiPalette.secondaryColor,
+                  accent_color: aiPalette.accentColor,
+                  text_on_primary: aiPalette.textOnPrimary,
+                }
+              : {
+                  primary_color: brandingDraft.primaryColor,
+                  secondary_color: brandingDraft.secondaryColor,
+                  accent_color: brandingDraft.accentColor,
+                  text_on_primary: brandingDraft.textOnPrimary,
+                }
+          }
           token={token}
           onClose={() => setShowSavePresetModal(false)}
           onSaved={() => {
