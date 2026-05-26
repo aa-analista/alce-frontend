@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
+import { useTheme } from '../hooks/useTheme'
 import LogoCropper from './LogoCropper'
 import ThemeToggle from './ThemeToggle'
 import {
@@ -973,13 +974,17 @@ function ColorRow({ label, hint, value, onChange }) {
 
 function BrandingPreview({ branding, orgFallback }) {
   const name = branding.displayName?.trim() || orgFallback || 'Mi Empresa'
+  const initials = (name || 'AA').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   const [tab, setTab] = useState('app') // app | propuesta
   const [previewMode, setPreviewMode] = useState('auto') // auto | light | dark
 
-  // Determinar el modo efectivo: si auto, leer el modo real del documento
-  const effectiveMode = previewMode === 'auto'
-    ? (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light')
-    : previewMode
+  // useTheme expone effective='light'|'dark' y es reactivo (se actualiza al
+  // cambiar el modo de la app o las preferencias del sistema).
+  const { effective: appTheme } = useTheme()
+
+  // Si previewMode === 'auto', sigue al modo real de la app (reactivo).
+  // Si previewMode es 'light' o 'dark', overridea para previsualizar.
+  const effectiveMode = previewMode === 'auto' ? appTheme : previewMode
   const isDarkPreview = effectiveMode === 'dark'
 
   // En oscuro, sobrescribimos los fondos por neutros oscuros (los fondos
@@ -1039,7 +1044,7 @@ function BrandingPreview({ branding, orgFallback }) {
       ) : (
       <div
         className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm flex"
-        style={{ height: 360, background: previewBranding.contentBg }}
+        style={{ height: 420, background: previewBranding.contentBg }}
       >
         {/* ── Mock SIDEBAR ─────────────────────────────────── */}
         <div
@@ -1093,13 +1098,18 @@ function BrandingPreview({ branding, orgFallback }) {
             </div>
           </div>
 
-          {/* Footer del sidebar (avatar + nombre) */}
+          {/* Footer del sidebar — avatar con iniciales + status dot */}
           <div className={`mt-auto px-2 py-2 border-t flex items-center gap-1.5 ${isDarkPreview ? 'border-slate-700/50' : 'border-slate-200/50'}`}>
-            <div className="w-5 h-5 rounded-full flex-shrink-0"
-              style={{ background: branding.primaryColor }} />
+            <div className="relative flex-shrink-0">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold"
+                style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+                {initials}
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-1 ring-white dark:ring-slate-800" />
+            </div>
             <div className="min-w-0 flex-1">
               <p className={`text-[9px] font-semibold truncate ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}>Tú</p>
-              <p className={`text-[8px] truncate ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>admin</p>
+              <p className={`text-[8px] truncate ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>admin · activo</p>
             </div>
           </div>
         </div>
@@ -1118,97 +1128,126 @@ function BrandingPreview({ branding, orgFallback }) {
               </svg>
               <span className={`text-[8px] ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Buscar…</span>
             </div>
-            <div className="ml-auto flex items-center gap-1">
-              {/* Bell con badge accent */}
+            <div className="ml-auto flex items-center gap-1.5">
+              {/* Bell con badge accent y ping */}
               <div className="relative w-4 h-4 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3 text-slate-400">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-3 h-3 ${isDarkPreview ? 'text-slate-400' : 'text-slate-500'}`}>
                   <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
                 </svg>
-                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
-                  style={{ background: branding.accentColor }} />
+                <span className="absolute -top-0.5 -right-0.5 flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: branding.accentColor }} />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: branding.accentColor }} />
+                </span>
               </div>
-              {/* Avatar */}
-              <div className="w-4 h-4 rounded-full" style={{ background: branding.primaryColor }} />
+              {/* Avatar con iniciales */}
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold"
+                style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+                {initials}
+              </div>
             </div>
           </div>
 
           {/* Content — Dashboard mock realista */}
           <div className="flex-1 p-2.5 overflow-hidden space-y-2" style={{ background: previewBranding.contentBg }}>
-            {/* Título */}
-            <div className="flex items-center justify-between">
-              <p className={`text-[10px] font-bold ${isDarkPreview ? 'text-white' : 'text-slate-800'}`}>Propuestas</p>
-              <button type="button"
-                className="text-[8px] font-bold px-1.5 py-0.5 rounded"
-                style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
-                + Nueva
-              </button>
+            {/* Header con título + pill de período + botón */}
+            <div className="flex items-center justify-between flex-wrap gap-1">
+              <div>
+                <p className={`text-[10px] font-bold leading-none ${isDarkPreview ? 'text-white' : 'text-slate-800'}`}>Propuestas</p>
+                <p className={`text-[7px] mt-0.5 ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Este mes · {name}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className={`text-[7px] font-medium px-1.5 py-0.5 rounded-full border ${isDarkPreview ? 'border-slate-600 text-slate-300' : 'border-slate-200 text-slate-500'}`}>
+                  Mes
+                </span>
+                <button type="button"
+                  className="text-[8px] font-bold px-2 py-0.5 rounded-md shadow-sm"
+                  style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+                  + Nueva
+                </button>
+              </div>
             </div>
 
-            {/* KPIs row */}
+            {/* KPIs con sparkline */}
             <div className="grid grid-cols-3 gap-1.5">
-              <div className={`rounded-md p-1.5 border ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                <p className={`text-[7px] uppercase ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+              <div className={`rounded-md p-1.5 border ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm`}>
+                <p className={`text-[7px] uppercase tracking-wide ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
                 <p className={`text-[11px] font-bold leading-none mt-0.5 ${isDarkPreview ? 'text-white' : 'text-slate-800'}`}>24</p>
+                <p className="text-[6px] text-emerald-500 mt-0.5">↑ 12%</p>
               </div>
-              <div className={`rounded-md p-1.5 border ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                <p className={`text-[7px] uppercase ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Activas</p>
+              <div className={`rounded-md p-1.5 border ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} shadow-sm`}>
+                <p className={`text-[7px] uppercase tracking-wide ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Activas</p>
                 <p className="text-[11px] font-bold leading-none mt-0.5" style={{ color: branding.primaryColor }}>8</p>
+                {/* Mini sparkline barras */}
+                <div className="flex items-end gap-px h-1.5 mt-0.5">
+                  {[3, 5, 4, 7, 6, 8, 7].map((v, i) => (
+                    <div key={i} style={{ background: branding.primaryColor, height: `${v * 12}%`, opacity: 0.4 + (i / 14) }} className="flex-1 rounded-sm" />
+                  ))}
+                </div>
               </div>
-              <div className={`rounded-md p-1.5 border-2 ${isDarkPreview ? 'bg-slate-800' : 'bg-white'}`}
+              <div className={`rounded-md p-1.5 border-2 shadow-sm relative overflow-hidden ${isDarkPreview ? 'bg-slate-800' : 'bg-white'}`}
                 style={{ borderColor: `${branding.accentColor}66` }}>
-                <p className="text-[7px] uppercase font-semibold" style={{ color: branding.accentColor }}>Firmadas</p>
+                <p className="text-[7px] uppercase font-semibold tracking-wide" style={{ color: branding.accentColor }}>Firmadas</p>
                 <p className="text-[11px] font-bold leading-none mt-0.5" style={{ color: branding.accentColor }}>5</p>
+                <p className="text-[6px] mt-0.5" style={{ color: branding.accentColor, opacity: 0.7 }}>62% conv.</p>
+                {/* Glow sutil de accent */}
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full blur-md opacity-30" style={{ background: branding.accentColor }} />
               </div>
             </div>
 
-            {/* Lista mock con items */}
-            <div className={`rounded-md border overflow-hidden ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+            {/* Lista con avatares circulares */}
+            <div className={`rounded-md border overflow-hidden shadow-sm ${isDarkPreview ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
               <div className={`px-2 py-1 border-b flex items-center justify-between ${isDarkPreview ? 'border-slate-700' : 'border-slate-100'}`}>
-                <span className={`text-[8px] font-semibold ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}>Recientes</span>
-                <span className={`text-[7px] ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Hoy</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full animate-pulse" style={{ background: branding.accentColor }} />
+                  <span className={`text-[8px] font-semibold ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}>Actividad reciente</span>
+                </div>
+                <span className={`text-[7px] ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Ver todo →</span>
               </div>
               <div className={`divide-y ${isDarkPreview ? 'divide-slate-700' : 'divide-slate-50'}`}>
-                {/* Item 1 con badge primary */}
-                <div className="px-2 py-1 flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: `${branding.primaryColor}33` }} />
+                {/* Item 1 — avatar circular con iniciales en primary */}
+                <div className="px-2 py-1.5 flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[7px] font-bold"
+                    style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
+                    CD
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-[8px] font-semibold truncate ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}>Cliente Demo S.A.</p>
+                    <p className={`text-[6px] truncate ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Hace 2 horas · $25,000</p>
                   </div>
                   <span className="text-[7px] font-bold px-1 py-0.5 rounded"
                     style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
                     Activa
                   </span>
                 </div>
-                {/* Item 2 con badge accent */}
-                <div className="px-2 py-1 flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: `${branding.accentColor}33` }} />
+                {/* Item 2 — accent */}
+                <div className="px-2 py-1.5 flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[7px] font-bold text-white"
+                    style={{ background: branding.accentColor }}>
+                    AI
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-[8px] font-semibold truncate ${isDarkPreview ? 'text-slate-200' : 'text-slate-700'}`}>Acme Industries</p>
+                    <p className={`text-[6px] truncate ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Hace 1 día · $48,500</p>
                   </div>
                   <span className="text-[7px] font-bold px-1 py-0.5 rounded"
                     style={{ background: `${branding.accentColor}1f`, color: branding.accentColor }}>
                     Firmada
                   </span>
                 </div>
+                {/* Item 3 — gris (terminado) */}
+                <div className="px-2 py-1.5 flex items-center gap-1.5 opacity-70">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[7px] font-bold ${isDarkPreview ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
+                    OM
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[8px] font-semibold truncate ${isDarkPreview ? 'text-slate-300' : 'text-slate-600'}`}>Otra Marca</p>
+                    <p className={`text-[6px] truncate ${isDarkPreview ? 'text-slate-500' : 'text-slate-400'}`}>Hace 3 días · $15,000</p>
+                  </div>
+                  <span className={`text-[7px] font-bold px-1 py-0.5 rounded ${isDarkPreview ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                    Vista
+                  </span>
+                </div>
               </div>
-            </div>
-
-            {/* CTAs */}
-            <div className="flex items-center gap-1.5 pt-1">
-              <button type="button"
-                className="text-[8px] font-bold px-2 py-1 rounded-md"
-                style={{ background: branding.primaryColor, color: branding.textOnPrimary }}>
-                Primario
-              </button>
-              <button type="button"
-                className="text-[8px] font-semibold px-2 py-1 rounded-md border-2"
-                style={{ borderColor: branding.accentColor, color: branding.accentColor }}>
-                Acento
-              </button>
-              <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full ml-auto"
-                style={{ background: `${branding.accentColor}1a`, color: branding.accentColor }}>
-                ★ Premium
-              </span>
             </div>
           </div>
         </div>
