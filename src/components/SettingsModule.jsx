@@ -349,6 +349,155 @@ const SettingsModule = () => {
     setSaving(false)
   }
 
+  // Helper: panel IA (loading + error + paleta + acciones) — se renderiza en
+  // el card del logo o en el card "Paleta desde otra fuente" según aiSource.
+  const renderAiPanel = () => {
+    const isAnalyzing = analyzingLogo || analyzingImage
+    if (!isAnalyzing && !aiPalette && !aiError) return null
+
+    const fromImage = aiSource === 'reference-image'
+    const loadingTitle = fromImage ? 'Analizando tu imagen de referencia…' : 'Analizando tu logo con IA…'
+    const loadingDesc = fromImage
+      ? 'gpt-4o-mini está extrayendo los colores principales de tu imagen. Tarda 2-4 segundos.'
+      : 'gpt-4o-mini está identificando colores y proponiendo una paleta para tu plataforma. Tarda 2-4 segundos.'
+
+    return (
+      <>
+        {isAnalyzing && (
+          <div className="mt-4 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-4 flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{loadingTitle}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300">{loadingDesc}</p>
+            </div>
+          </div>
+        )}
+
+        {aiError && (
+          <div className="mt-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 flex items-start gap-2">
+            <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{aiError}</span>
+          </div>
+        )}
+
+        {aiPalette && !isAnalyzing && (
+          <div className="mt-4 bg-gradient-to-br from-violet-50 via-indigo-50 to-blue-50 dark:from-violet-900/20 dark:via-indigo-900/20 dark:to-blue-900/20 border-2 border-violet-200 dark:border-violet-800 rounded-xl p-5 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4.5 h-4.5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Paleta propuesta por IA</h4>
+                {aiVibe && <p className="text-[11px] font-medium text-violet-700 dark:text-violet-300 mt-0.5 uppercase tracking-wide">{aiVibe}</p>}
+                {aiReasoning && <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">{aiReasoning}</p>}
+                {aiLogoFeedback && (
+                  <div className={`mt-2.5 rounded-md px-2.5 py-2 text-xs leading-relaxed flex items-start gap-1.5 ${
+                    aiLogoQuality === 'good'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-amber-50 text-amber-800 border border-amber-200'
+                  }`}>
+                    <span className="mt-0.5 flex-shrink-0">
+                      {aiLogoQuality === 'good' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ImageIcon className="w-3.5 h-3.5" />}
+                    </span>
+                    <span><b>Sobre tu logo:</b> {aiLogoFeedback}
+                      {aiLogoQuality !== 'good' && (
+                        <button
+                          type="button"
+                          onClick={() => brandingDraft.logoUrl && document.querySelector('input[type=file]')?.click()}
+                          className="ml-1 underline font-semibold hover:no-underline"
+                        >
+                          Re-subir y recortar
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <button type="button" onClick={dismissAiPalette}
+                className="text-slate-400 hover:text-slate-700" title="Descartar sugerencia">
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Accents alternativos */}
+            {aiAccentOptions.length > 0 && (
+              <div className="bg-white/60 dark:bg-slate-900/40 border border-violet-100 dark:border-slate-700 rounded-md px-2.5 py-2">
+                <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Acentos sugeridos (de la familia de tu marca)
+                  <span className="font-normal text-slate-500">— ordenados de más afín a más contrastante</span>
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {aiAccentOptions.map((hex, idx) => {
+                    const isActive = aiPalette.accentColor.toLowerCase() === hex.toLowerCase()
+                    return (
+                      <button key={hex} type="button" onClick={() => swapAccent(hex)}
+                        title={`${hex} ${idx === 0 ? '(recomendado)' : ''}`}
+                        className={`relative w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
+                          isActive ? 'border-slate-900 dark:border-white ring-2 ring-violet-300' : 'border-white dark:border-slate-700 shadow-sm'
+                        }`}
+                        style={{ background: hex }}>
+                        {idx === 0 && !isActive && (
+                          <span className="absolute -top-1 -right-1 text-[8px] bg-violet-600 text-white px-1 rounded-full font-bold">★</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">Click para aplicar en vivo</span>
+                </div>
+              </div>
+            )}
+
+            {/* Swatches */}
+            <div className="grid grid-cols-7 gap-1.5">
+              {[
+                ['primaryColor', 'Primario'],
+                ['secondaryColor', 'Secundario'],
+                ['accentColor', 'Acento'],
+                ['textOnPrimary', 'Texto'],
+                ['sidebarBg', 'Sidebar'],
+                ['navbarBg', 'Navbar'],
+                ['contentBg', 'Contenido'],
+              ].map(([key, label]) => (
+                <div key={key} className="flex flex-col items-center">
+                  <div className="w-full aspect-square rounded-lg border-2 border-white shadow-sm" style={{ background: aiPalette[key] }} />
+                  <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-wide">{label}</p>
+                  <p className="text-[9px] font-mono text-slate-700 dark:text-slate-300">{aiPalette[key]}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Acciones */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <button type="button" onClick={() => applyAiPalette('completo')}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white rounded-lg shadow-sm hover:opacity-90 transition-all"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+                <Wand2 className="w-3.5 h-3.5" /> Aplicar paleta completa
+              </button>
+              <button type="button" onClick={() => applyAiPalette('principales')}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-violet-700 bg-white border border-violet-200 rounded-lg hover:bg-violet-50 transition-all">
+                Solo principales
+              </button>
+              <button type="button"
+                onClick={fromImage ? () => document.querySelector('input[type=file][accept*="image"]:not([data-logo])')?.click() : handleAnalyzeLogo}
+                disabled={isAnalyzing}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all disabled:opacity-50">
+                <RotateCcw className="w-3 h-3" /> Re-analizar
+              </button>
+              <button type="button" onClick={handleResetBranding}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-all"
+                title="Volver a los colores predeterminados de Alce">
+                Reiniciar a default
+              </button>
+              <p className="text-[10px] text-slate-500 self-center ml-auto">
+                Acuérdate de pulsar <b>Guardar marca</b> para persistir.
+              </p>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
+
   const roleLabel = { super_admin: 'Super Admin', admin: 'Administrador', user: 'Usuario' }
   const initials = user?.name ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?'
   const inputCls = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/40 transition-all"
@@ -645,163 +794,9 @@ const SettingsModule = () => {
                 </div>
               </div>
 
-              {/* ── Panel IA: análisis del logo ── */}
-              {analyzingLogo && (
-                <div className="mt-4 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-xl p-4 flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900">Analizando tu logo con IA…</p>
-                    <p className="text-xs text-slate-600">gpt-4o-mini está identificando colores y proponiendo una paleta para tu plataforma. Tarda 2-4 segundos.</p>
-                  </div>
-                </div>
-              )}
+              {/* Panel IA solo si el origen es el logo */}
+              {aiSource === 'logo' && renderAiPanel()}
 
-              {aiError && (
-                <div className="mt-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 flex items-start gap-2">
-                  <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>{aiError}</span>
-                </div>
-              )}
-
-              {aiPalette && !analyzingLogo && (
-                <div className="mt-4 bg-gradient-to-br from-violet-50 via-indigo-50 to-blue-50 border-2 border-violet-200 rounded-xl p-5 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-4.5 h-4.5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-slate-900">Paleta propuesta por IA</h4>
-                      {aiVibe && (
-                        <p className="text-[11px] font-medium text-violet-700 mt-0.5 uppercase tracking-wide">{aiVibe}</p>
-                      )}
-                      {aiReasoning && (
-                        <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">{aiReasoning}</p>
-                      )}
-                      {aiLogoFeedback && (
-                        <div className={`mt-2.5 rounded-md px-2.5 py-2 text-xs leading-relaxed flex items-start gap-1.5 ${
-                          aiLogoQuality === 'good'
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                            : 'bg-amber-50 text-amber-800 border border-amber-200'
-                        }`}>
-                          <span className="mt-0.5 flex-shrink-0">
-                            {aiLogoQuality === 'good' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ImageIcon className="w-3.5 h-3.5" />}
-                          </span>
-                          <span><b>Sobre tu logo:</b> {aiLogoFeedback}
-                            {aiLogoQuality !== 'good' && (
-                              <button
-                                type="button"
-                                onClick={() => brandingDraft.logoUrl && document.querySelector('input[type=file]')?.click()}
-                                className="ml-1 underline font-semibold hover:no-underline"
-                              >
-                                Re-subir y recortar
-                              </button>
-                            )}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={dismissAiPalette}
-                      className="text-slate-400 hover:text-slate-700"
-                      title="Descartar sugerencia"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Accents alternativos — el usuario elige con un click */}
-                  {aiAccentOptions.length > 0 && (
-                    <div className="bg-white/60 dark:bg-slate-900/40 border border-violet-100 dark:border-slate-700 rounded-md px-2.5 py-2">
-                      <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" /> Acentos profesionales sugeridos para tu marca
-                        <span className="font-normal text-slate-500">(elige el que más te guste)</span>
-                      </p>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {aiAccentOptions.map((hex, idx) => {
-                          const isActive = aiPalette.accentColor.toLowerCase() === hex.toLowerCase()
-                          return (
-                            <button
-                              key={hex}
-                              type="button"
-                              onClick={() => swapAccent(hex)}
-                              title={`${hex} ${idx === 0 ? '(recomendado)' : ''}`}
-                              className={`relative w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
-                                isActive ? 'border-slate-900 dark:border-white ring-2 ring-violet-300' : 'border-white dark:border-slate-700 shadow-sm'
-                              }`}
-                              style={{ background: hex }}
-                            >
-                              {idx === 0 && !isActive && (
-                                <span className="absolute -top-1 -right-1 text-[8px] bg-violet-600 text-white px-1 rounded-full font-bold">★</span>
-                              )}
-                            </button>
-                          )
-                        })}
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
-                          Click para aplicar en vivo
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Swatches */}
-                  <div className="grid grid-cols-7 gap-1.5">
-                    {[
-                      ['primaryColor', 'Primario'],
-                      ['secondaryColor', 'Secundario'],
-                      ['accentColor', 'Acento'],
-                      ['textOnPrimary', 'Texto'],
-                      ['sidebarBg', 'Sidebar'],
-                      ['navbarBg', 'Navbar'],
-                      ['contentBg', 'Contenido'],
-                    ].map(([key, label]) => (
-                      <div key={key} className="flex flex-col items-center">
-                        <div className="w-full aspect-square rounded-lg border-2 border-white shadow-sm" style={{ background: aiPalette[key] }} />
-                        <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-wide">{label}</p>
-                        <p className="text-[9px] font-mono text-slate-700">{aiPalette[key]}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Acciones */}
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => applyAiPalette('completo')}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white rounded-lg shadow-sm hover:opacity-90 transition-all"
-                      style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
-                    >
-                      <Wand2 className="w-3.5 h-3.5" /> Aplicar paleta completa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyAiPalette('principales')}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-violet-700 bg-white border border-violet-200 rounded-lg hover:bg-violet-50 transition-all"
-                    >
-                      Solo principales
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAnalyzeLogo}
-                      disabled={analyzingLogo}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all disabled:opacity-50"
-                    >
-                      <RotateCcw className="w-3 h-3" /> Re-analizar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleResetBranding}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-all"
-                      title="Volver a los colores predeterminados de Alce"
-                    >
-                      Reiniciar a default
-                    </button>
-                    <p className="text-[10px] text-slate-500 self-center ml-auto">
-                      Acuérdate de pulsar <b>Guardar marca</b> para persistir.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* ── Paleta desde imagen de referencia ── */}
@@ -841,11 +836,8 @@ const SettingsModule = () => {
                   PNG, JPG, WebP o SVG · máx 5 MB · no se guarda
                 </p>
               </div>
-              {aiSource === 'reference-image' && aiPalette && (
-                <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-2 font-semibold flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> La paleta de arriba viene de tu imagen de referencia, no del logo
-                </p>
-              )}
+              {/* Panel IA aquí cuando el origen es imagen de referencia */}
+              {aiSource === 'reference-image' && renderAiPanel()}
             </div>
 
             {/* Display name */}
