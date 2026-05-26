@@ -67,6 +67,30 @@ const SettingsModule = () => {
   const [showSavePresetModal, setShowSavePresetModal] = useState(false)
   const [savePresetMsg, setSavePresetMsg] = useState('')
 
+  // Presets de paletas guardados — se cargan una vez para mostrar como cards seleccionables
+  const [presets, setPresets] = useState([])
+  const reloadPresets = async () => {
+    try {
+      const res = await fetch('/api/propuestas/paletas', { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      setPresets(Array.isArray(data.paletas) ? data.paletas : [])
+    } catch { /* silencio */ }
+  }
+  useEffect(() => { if (activeSection === 'design') reloadPresets() }, [activeSection])
+
+  // Aplicar un preset al draft + DOM (no persiste hasta "Guardar marca")
+  const applyPresetToDraft = (paleta) => {
+    const next = {
+      ...brandingDraft,
+      primaryColor: paleta.primary_color,
+      secondaryColor: paleta.secondary_color,
+      accentColor: paleta.accent_color,
+      textOnPrimary: paleta.text_on_primary,
+    }
+    setBrandingDraft(next)
+    applyBrandingToDOM(next)
+  }
+
   // Re-sincronizar si el user cambia (login / refresh)
   useEffect(() => {
     if (user?.branding) {
@@ -851,6 +875,60 @@ const SettingsModule = () => {
               {aiSource === 'reference-image' && renderAiPanel()}
             </div>
 
+            {/* ── Mis paletas guardadas (presets) ── */}
+            {presets.length > 0 && (
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+                <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                      <Bookmark className="w-4 h-4 text-emerald-600" /> Mis paletas guardadas
+                      <span className="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">{presets.length}</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Click en una para aplicarla a tu marca. No se guarda hasta que presiones <b>Guardar marca</b>.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2">
+                  {presets.map(p => {
+                    // Detectar si esta paleta es la activa actualmente en el draft
+                    const isActive =
+                      brandingDraft.primaryColor?.toLowerCase() === p.primary_color?.toLowerCase() &&
+                      brandingDraft.secondaryColor?.toLowerCase() === p.secondary_color?.toLowerCase() &&
+                      brandingDraft.accentColor?.toLowerCase() === p.accent_color?.toLowerCase()
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => applyPresetToDraft(p)}
+                        title={p.descripcion || p.nombre}
+                        className={`text-left p-2.5 rounded-lg border-2 transition-all hover:shadow-md ${
+                          isActive
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
+                      >
+                        {/* Swatches grandes en barra horizontal */}
+                        <div className="flex h-7 rounded overflow-hidden border border-white shadow-sm">
+                          <div className="flex-1" style={{ background: p.primary_color }} />
+                          <div className="flex-1" style={{ background: p.secondary_color }} />
+                          <div className="flex-1" style={{ background: p.accent_color }} />
+                          <div className="flex-1" style={{ background: p.text_on_primary }} />
+                        </div>
+                        <p className="text-xs font-semibold text-slate-800 dark:text-white mt-1.5 truncate flex items-center gap-1">
+                          {isActive && <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />}
+                          {p.nombre}
+                        </p>
+                        {p.descripcion && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{p.descripcion}</p>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Display name */}
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
               <h3 className="font-semibold text-slate-900 text-sm mb-1">Nombre a mostrar</h3>
@@ -958,8 +1036,9 @@ const SettingsModule = () => {
           onClose={() => setShowSavePresetModal(false)}
           onSaved={() => {
             setShowSavePresetModal(false)
-            setSavePresetMsg('Paleta guardada en presets de Propuestas ✓')
+            setSavePresetMsg('Paleta guardada como preset ✓')
             setTimeout(() => setSavePresetMsg(''), 4000)
+            reloadPresets()
           }}
         />
       )}
@@ -1033,7 +1112,7 @@ function SavePresetModal({ colors, token, onClose, onSaved }) {
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-          Guarda esta paleta como un preset reutilizable. Estará disponible al crear o editar propuestas para enviarles colores específicos por cliente.
+          Guarda esta paleta para reusarla después como marca de toda la plataforma con un click.
         </p>
 
         {/* Preview de los colores */}
