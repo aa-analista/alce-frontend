@@ -31,6 +31,7 @@ import PublicContratoView from './components/PublicContratoView'
 import PropuestasModule from './components/PropuestasModule'
 import AgentesAdminModule from './components/AgentesAdminModule'
 import PublicPropuestaView from './components/PublicPropuestaView'
+import ErrorBoundary from './components/ErrorBoundary'
 import { AssistantProvider } from './context/AssistantContext'
 
 function ProtectedRoute({ children }) {
@@ -166,6 +167,7 @@ function Dashboard() {
 
 function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <Routes>
@@ -214,6 +216,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 

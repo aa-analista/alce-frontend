@@ -984,6 +984,15 @@ function SavePresetModal({ colors, token, onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Sanitizar colors — si alguno es undefined/null usar defaults seguros.
+  // Hex válido para que el backend no rechace y el preview no rompa.
+  const safeColors = {
+    primary_color: colors?.primary_color || '#101C44',
+    secondary_color: colors?.secondary_color || '#1e3a8a',
+    accent_color: colors?.accent_color || '#3b82f6',
+    text_on_primary: colors?.text_on_primary || '#ffffff',
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     if (!nombre.trim()) { setError('Pon un nombre'); return }
@@ -995,14 +1004,21 @@ function SavePresetModal({ colors, token, onClose, onSaved }) {
         body: JSON.stringify({
           nombre: nombre.trim(),
           descripcion: descripcion.trim() || null,
-          ...colors,
+          ...safeColors,
         }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al guardar')
+      let data = {}
+      try { data = await res.json() } catch { /* respuesta no-JSON */ }
+      if (!res.ok) throw new Error(data.error || `Error ${res.status} al guardar`)
+      // Quitar setSaving(false) ANTES de onSaved (que desmonta) para evitar
+      // "state update on unmounted component" warning.
+      setSaving(false)
       onSaved()
-    } catch (err) { setError(err.message) }
-    finally { setSaving(false) }
+      return
+    } catch (err) {
+      setError(err.message || 'Error desconocido')
+      setSaving(false)
+    }
   }
 
   const inputCls = "w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
@@ -1023,7 +1039,7 @@ function SavePresetModal({ colors, token, onClose, onSaved }) {
         {/* Preview de los colores */}
         <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 mb-4 flex items-center gap-2">
           <div className="grid grid-cols-4 gap-1 flex-1">
-            {Object.entries(colors).map(([k, v]) => (
+            {Object.entries(safeColors).map(([k, v]) => (
               <div key={k} className="flex flex-col items-center">
                 <div className="w-full h-8 rounded border-2 border-white shadow-sm" style={{ background: v }} />
                 <p className="text-[8px] text-slate-500 mt-0.5 font-mono">{v}</p>
