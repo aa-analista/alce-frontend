@@ -61,6 +61,8 @@ const SettingsModule = () => {
   const [aiAccentReplaced, setAiAccentReplaced] = useState(false)
   const [aiAccentOptions, setAiAccentOptions] = useState([])
   const [aiError, setAiError] = useState('')
+  const [aiSource, setAiSource] = useState('logo') // 'logo' | 'reference-image'
+  const [analyzingImage, setAnalyzingImage] = useState(false)
 
   // Re-sincronizar si el user cambia (login / refresh)
   useEffect(() => {
@@ -199,6 +201,7 @@ const SettingsModule = () => {
       setAiLogoFeedback(data.logoFeedback || '')
       setAiAccentReplaced(!!data.accentReplaced)
       setAiAccentOptions(Array.isArray(data.accentOptions) ? data.accentOptions : [])
+      setAiSource('logo')
     } catch (err) {
       setAiError(err.message)
     } finally {
@@ -224,6 +227,42 @@ const SettingsModule = () => {
     setBrandingDraft(next)
     // Aplica al DOM en vivo para que la previsualización se sienta inmediata
     updateBranding(next)
+  }
+
+  // ── IA: analizar imagen DE REFERENCIA (no es el logo) ──
+  // Permite cargar brand guide, screenshot de paleta, foto de inspiración, etc.
+  // sin modificar el logo de la organización.
+  const handleAnalyzeReferenceImage = async (file) => {
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setAiError('La imagen no puede pesar más de 5 MB')
+      return
+    }
+    setAnalyzingImage(true)
+    setAiError(''); setError(''); setSuccess('')
+    try {
+      const fd = new FormData()
+      fd.append('image', file)
+      const res = await fetch('/api/organizations/me/analyze-image', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al analizar imagen')
+      setAiPalette(data.palette)
+      setAiVibe(data.vibe || '')
+      setAiReasoning(data.reasoning || '')
+      setAiLogoQuality('') // no aplica al venir de imagen de referencia
+      setAiLogoFeedback('')
+      setAiAccentReplaced(false)
+      setAiAccentOptions(Array.isArray(data.accentOptions) ? data.accentOptions : [])
+      setAiSource('reference-image')
+    } catch (err) {
+      setAiError(err.message)
+    } finally {
+      setAnalyzingImage(false)
+    }
   }
 
   // Cambia solo el accent (desde los swatches de alternativas)
@@ -762,6 +801,50 @@ const SettingsModule = () => {
                     </p>
                   </div>
                 </div>
+              )}
+            </div>
+
+            {/* ── Paleta desde imagen de referencia ── */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+              <div className="flex items-start justify-between flex-wrap gap-2 mb-1">
+                <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-violet-500" /> Paleta desde otra fuente
+                </h3>
+                <span className="text-[10px] font-semibold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded">
+                  Nuevo
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
+                ¿No quieres cambiar tu logo pero sí quieres una paleta nueva? Sube una <b>imagen de referencia</b>: brand guide oficial, screenshot de una paleta, foto de inspiración, etc. La IA extraerá los colores principales y los propondrá igual que con el logo.
+              </p>
+              <div className="flex items-center gap-3">
+                <label className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-white rounded-lg cursor-pointer transition-all ${analyzingImage ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+                  {analyzingImage ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analizando…</>
+                  ) : (
+                    <><Upload className="w-3.5 h-3.5" /> Cargar imagen de referencia</>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    className="hidden"
+                    disabled={analyzingImage}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) handleAnalyzeReferenceImage(f)
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  PNG, JPG, WebP o SVG · máx 5 MB · no se guarda
+                </p>
+              </div>
+              {aiSource === 'reference-image' && aiPalette && (
+                <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-2 font-semibold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> La paleta de arriba viene de tu imagen de referencia, no del logo
+                </p>
               )}
             </div>
 
