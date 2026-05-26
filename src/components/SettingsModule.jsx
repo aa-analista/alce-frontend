@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth, applyBrandingToDOM } from '../context/AuthContext'
 import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
 import { useTheme } from '../hooks/useTheme'
 import LogoCropper from './LogoCropper'
@@ -89,12 +89,12 @@ const SettingsModule = () => {
   }
 
   // Restaurar colores predeterminados (mantiene el logo).
-  // También aplica en vivo al DOM para que el usuario vea el cambio inmediato.
+  // Solo cambia DRAFT + DOM, no user state, para que "Guardar marca" se active.
   const handleResetBranding = () => {
     const defaults = { ...DEFAULT_BRANDING, logoUrl: brandingDraft.logoUrl, displayName: brandingDraft.displayName }
     setBrandingDraft(defaults)
-    updateBranding(defaults)
-    // También limpiar sugerencia de IA si había
+    applyBrandingToDOM(defaults)
+    // Limpiar sugerencia de IA si había
     setAiPalette(null); setAiReasoning(''); setAiVibe('')
     setAiLogoQuality(''); setAiLogoFeedback(''); setAiError('')
   }
@@ -186,6 +186,7 @@ const SettingsModule = () => {
 
   // ── IA: analizar logo y proponer paleta ──
   const handleAnalyzeLogo = async () => {
+    setAiSource('logo')  // marcar origen ANTES del loading para que el panel salga en el lugar correcto
     setAnalyzingLogo(true)
     setAiError(''); setError(''); setSuccess('')
     try {
@@ -214,7 +215,6 @@ const SettingsModule = () => {
     if (!aiPalette) return
     let next
     if (scope === 'principales') {
-      // Solo primary + secondary + textOnPrimary
       next = {
         ...brandingDraft,
         primaryColor: aiPalette.primaryColor,
@@ -222,12 +222,13 @@ const SettingsModule = () => {
         textOnPrimary: aiPalette.textOnPrimary,
       }
     } else {
-      // Todo
       next = { ...brandingDraft, ...aiPalette }
     }
+    // Solo cambia el DRAFT y aplica al DOM. NO toca el user state — así
+    // brandingDirty detecta que hay cambios sin guardar y el botón "Guardar marca"
+    // se habilita correctamente.
     setBrandingDraft(next)
-    // Aplica al DOM en vivo para que la previsualización se sienta inmediata
-    updateBranding(next)
+    applyBrandingToDOM(next)
   }
 
   // ── IA: analizar imagen DE REFERENCIA (no es el logo) ──
@@ -239,6 +240,7 @@ const SettingsModule = () => {
       setAiError('La imagen no puede pesar más de 5 MB')
       return
     }
+    setAiSource('reference-image')  // marcar origen ANTES del loading para que el panel salga en el lugar correcto
     setAnalyzingImage(true)
     setAiError(''); setError(''); setSuccess('')
     try {
@@ -271,11 +273,12 @@ const SettingsModule = () => {
     if (!aiPalette) return
     const nextPalette = { ...aiPalette, accentColor: newAccentHex }
     setAiPalette(nextPalette)
-    // Si el usuario ya había aplicado la paleta, actualiza también el draft
+    // Si el usuario ya había aplicado la paleta, actualiza también el draft.
+    // Solo DRAFT + DOM — no tocar user state para no resetear el "dirty" flag.
     if (brandingDraft.accentColor === aiPalette.accentColor) {
       const nextDraft = { ...brandingDraft, accentColor: newAccentHex }
       setBrandingDraft(nextDraft)
-      updateBranding(nextDraft)
+      applyBrandingToDOM(nextDraft)
     }
   }
 
