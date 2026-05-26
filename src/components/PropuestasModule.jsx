@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   ClipboardList, Plus, RefreshCw, FileText, Eye, Send, CheckCircle2, FileX,
   Loader2, Search, X, ChevronLeft, ChevronRight, Settings, Layers, XCircle, Clock,
-  Edit3, Copy, Trash2, Calendar, User, Palette
+  Edit3, Copy, Trash2, Calendar, User, Palette, Download, Upload, Sparkles, Star,
+  CheckCheck, FileStack
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -97,6 +98,22 @@ const api = {
   deletePaleta: (token, id) => fetch(`/api/propuestas/paletas/${id}`, {
     method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
   }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
+  updatePaleta: (token, id, body) => fetch(`/api/propuestas/paletas/${id}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
+  applyPaletaAsBrand: (token, id) => fetch(`/api/propuestas/paletas/${id}/apply-as-brand`, {
+    method: 'POST', headers: { Authorization: `Bearer ${token}` },
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
+  // ── Plantillas de propuesta ──
+  plantillas: (token) => fetch('/api/propuestas/plantillas', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+  createPlantilla: (token, body) => fetch('/api/propuestas/plantillas', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
+  deletePlantilla: (token, id) => fetch(`/api/propuestas/plantillas/${id}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Error'); return d }),
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -110,6 +127,7 @@ export default function PropuestasModule() {
   const [propuestas, setPropuestas] = useState([])
   const [servicios, setServicios] = useState([])
   const [paletas, setPaletas] = useState([])
+  const [plantillas, setPlantillas] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterEstado, setFilterEstado] = useState('todas')
   const [filterPeriod, setFilterPeriod] = useState('all')
@@ -122,14 +140,16 @@ export default function PropuestasModule() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [props, servs, pals] = await Promise.all([
+      const [props, servs, pals, plants] = await Promise.all([
         api.list(token).catch(() => []),
         api.servicios(token).catch(() => ({ servicios: [] })),
         api.paletas(token).catch(() => ({ paletas: [] })),
+        api.plantillas(token).catch(() => ({ plantillas: [] })),
       ])
       setPropuestas(Array.isArray(props) ? props : [])
       setServicios(servs.servicios || [])
       setPaletas(pals.paletas || [])
+      setPlantillas(plants.plantillas || [])
     } finally { setLoading(false) }
   }, [token])
 
@@ -175,10 +195,11 @@ export default function PropuestasModule() {
 
   // ─── Sub-vistas ───
   if (view === 'nueva') {
-    return <PropuestaForm servicios={servicios} paletas={paletas} onClose={() => { setView('dashboard'); load() }} />
+    return <PropuestaForm servicios={servicios} paletas={paletas} plantillas={plantillas}
+      onClose={() => { setView('dashboard'); load() }} />
   }
   if (view === 'edit' && selectedId) {
-    return <PropuestaForm servicios={servicios} paletas={paletas} editId={selectedId}
+    return <PropuestaForm servicios={servicios} paletas={paletas} plantillas={plantillas} editId={selectedId}
       onClose={() => { setView('dashboard'); setSelectedId(null); load() }} />
   }
   if (view === 'preview' && selectedId) {
@@ -191,6 +212,9 @@ export default function PropuestasModule() {
   }
   if (view === 'paletas') {
     return <PaletasGestor isAdmin={isAdmin} onClose={() => { setView('dashboard'); load() }} />
+  }
+  if (view === 'plantillas') {
+    return <PlantillasGestor isAdmin={isAdmin} onClose={() => { setView('dashboard'); load() }} />
   }
 
   // ─── Dashboard ───
@@ -211,6 +235,10 @@ export default function PropuestasModule() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <button onClick={() => setView('plantillas')}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">
+            <FileStack className="w-3.5 h-3.5" /> Plantillas ({plantillas.length})
+          </button>
           <button onClick={() => setView('paletas')}
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">
             <Palette className="w-3.5 h-3.5" /> Paletas ({paletas.length})
@@ -413,10 +441,12 @@ function KpiCard({ icon: Icon, label, value, sub, accent = 'slate', onClick, act
 //  Formulario de Propuesta (Nueva + Edición)
 // ─────────────────────────────────────────────────────────────
 
-function PropuestaForm({ servicios, paletas = [], onClose, editId }) {
+function PropuestaForm({ servicios, paletas = [], plantillas = [], onClose, editId }) {
   const { token, user } = useAuth()
   const isEdit = !!editId
   const [loadingEdit, setLoadingEdit] = useState(!!editId)
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false)
+  const [templateMsg, setTemplateMsg] = useState('')
   const [form, setForm] = useState({
     servicio_id: '',
     paleta_id: '',
@@ -484,6 +514,29 @@ function PropuestaForm({ servicios, paletas = [], onClose, editId }) {
     return { mxn, usd }
   }, [conceptos])
 
+  const loadFromTemplate = (templateId) => {
+    if (!templateId) return
+    const t = plantillas.find(x => String(x.id) === String(templateId))
+    if (!t) return
+    setForm(f => ({
+      ...f,
+      servicio_id: t.servicio_id || '',
+      paleta_id: t.paleta_id || '',
+      notas: t.notas || f.notas,
+      vigencia_dias: t.vigencia_dias || 30,
+    }))
+    if (Array.isArray(t.conceptos) && t.conceptos.length > 0) {
+      setConceptos(t.conceptos.map(c => ({
+        concepto: c.concepto || '',
+        precio: c.precio ?? 0,
+        moneda: c.moneda || 'MXN',
+        cantidad: c.cantidad ?? 1,
+      })))
+    }
+    setTemplateMsg(`Plantilla "${t.nombre}" cargada — modifica lo que necesites`)
+    setTimeout(() => setTemplateMsg(''), 4000)
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     setError(''); setSaving(true)
@@ -522,6 +575,23 @@ function PropuestaForm({ servicios, paletas = [], onClose, editId }) {
       </div>
 
       <form onSubmit={submit} className="space-y-4">
+        {/* Plantilla — cargar conceptos pre-llenados */}
+        {plantillas.length > 0 && !isEdit && (
+          <Card title="Cargar desde plantilla (opcional)" icon={FileStack}>
+            <select onChange={e => loadFromTemplate(e.target.value)} className={inputCls} defaultValue="">
+              <option value="">— Empezar desde cero —</option>
+              {plantillas.map(t => (
+                <option key={t.id} value={t.id}>{t.nombre}{t.servicio_nombre ? ` · ${t.servicio_nombre}` : ''}</option>
+              ))}
+            </select>
+            {templateMsg && (
+              <p className="mt-2 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" /> {templateMsg}
+              </p>
+            )}
+          </Card>
+        )}
+
         {/* Servicio */}
         <Card title="Servicio (opcional)" icon={ClipboardList}>
           <select value={form.servicio_id} onChange={e => setForm({ ...form, servicio_id: e.target.value })}
@@ -680,17 +750,35 @@ function PropuestaForm({ servicios, paletas = [], onClose, editId }) {
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">{error}</div>
         )}
 
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose}
-            className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg">Cancelar</button>
-          <button type="submit" disabled={saving}
-            className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
-            style={{ background: NAVY }}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            {isEdit ? 'Guardar cambios' : 'Crear propuesta'}
+        <div className="flex justify-between items-center gap-2 flex-wrap">
+          <button type="button" onClick={() => setShowSaveTemplate(true)}
+            disabled={conceptos.every(c => !c.concepto?.trim())}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all disabled:opacity-50"
+            title="Guarda los conceptos y notas actuales como plantilla reutilizable">
+            <FileStack className="w-3.5 h-3.5" /> Guardar como plantilla
           </button>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg">Cancelar</button>
+            <button type="submit" disabled={saving}
+              className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+              style={{ background: NAVY }}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              {isEdit ? 'Guardar cambios' : 'Crear propuesta'}
+            </button>
+          </div>
         </div>
       </form>
+
+      {showSaveTemplate && (
+        <SavePlantillaModal
+          form={form}
+          conceptos={conceptos.filter(c => c.concepto?.trim())}
+          token={token}
+          onClose={() => setShowSaveTemplate(false)}
+          onSaved={() => { setShowSaveTemplate(false); setTemplateMsg('Plantilla guardada ✓'); setTimeout(() => setTemplateMsg(''), 4000) }}
+        />
+      )}
     </div>
   )
 }
@@ -1225,6 +1313,9 @@ function PaletasGestor({ isAdmin, onClose }) {
   const [paletas, setPaletas] = useState([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
+  const [editPaleta, setEditPaleta] = useState(null)     // paleta en edición
+  const [duplicateFrom, setDuplicateFrom] = useState(null) // colores para duplicar
+  const [toastMsg, setToastMsg] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
@@ -1236,6 +1327,75 @@ function PaletasGestor({ isAdmin, onClose }) {
   const handleDelete = async (p) => {
     if (!confirm(`¿Eliminar la paleta "${p.nombre}"? Las propuestas que la usen quedarán sin paleta (volverán a la marca de la org).`)) return
     try { await api.deletePaleta(token, p.id); load() } catch (e) { alert(e.message) }
+  }
+
+  const handleDuplicate = (p) => {
+    setDuplicateFrom({
+      nombre: `${p.nombre} (copia)`,
+      descripcion: p.descripcion || '',
+      primary_color: p.primary_color,
+      secondary_color: p.secondary_color,
+      accent_color: p.accent_color,
+      text_on_primary: p.text_on_primary,
+    })
+    setShowNew(true)
+  }
+
+  const handleExport = (p) => {
+    const json = {
+      format: 'alce-paleta-v1',
+      nombre: p.nombre,
+      descripcion: p.descripcion,
+      primary_color: p.primary_color,
+      secondary_color: p.secondary_color,
+      accent_color: p.accent_color,
+      text_on_primary: p.text_on_primary,
+    }
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `paleta-${p.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImport = async (file) => {
+    if (!file) return
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      // Soporta un objeto o un array de paletas
+      const paletasImport = Array.isArray(data) ? data : [data]
+      let count = 0
+      for (const p of paletasImport) {
+        if (!p.nombre || !p.primary_color) continue
+        await api.createPaleta(token, {
+          nombre: p.nombre,
+          descripcion: p.descripcion || null,
+          primary_color: p.primary_color,
+          secondary_color: p.secondary_color || p.primary_color,
+          accent_color: p.accent_color || '#3b82f6',
+          text_on_primary: p.text_on_primary || '#ffffff',
+        })
+        count++
+      }
+      load()
+      setToastMsg(`✓ ${count} paleta(s) importada(s)`)
+      setTimeout(() => setToastMsg(''), 4000)
+    } catch (e) {
+      alert('Error al importar: ' + e.message)
+    }
+  }
+
+  const handleApplyAsBrand = async (p) => {
+    if (!isAdmin) return
+    if (!confirm(`¿Aplicar la paleta "${p.nombre}" como marca oficial de tu organización?\n\nEsto cambiará los colores de toda la plataforma (sidebar, navbar, botones, etc.) para todos los usuarios de la org. Las propuestas existentes que tenían esta paleta NO se ven afectadas.`)) return
+    try {
+      await api.applyPaletaAsBrand(token, p.id)
+      setToastMsg(`✓ "${p.nombre}" aplicada como marca de la org. Recarga para ver los cambios.`)
+      setTimeout(() => setToastMsg(''), 5000)
+    } catch (e) { alert(e.message) }
   }
 
   return (
@@ -1252,10 +1412,17 @@ function PaletasGestor({ isAdmin, onClose }) {
             <p className="text-xs text-slate-500 mt-0.5">Presets reutilizables — cada propuesta puede usar una distinta sin tocar la marca de tu organización.</p>
           </div>
         </div>
-        <button onClick={() => setShowNew(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg" style={{ background: NAVY }}>
-          <Plus className="w-4 h-4" /> Nueva paleta
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <label className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+            <Upload className="w-3.5 h-3.5" /> Importar
+            <input type="file" accept="application/json,.json" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImport(f); e.target.value = '' }} />
+          </label>
+          <button onClick={() => setShowNew(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg" style={{ background: NAVY }}>
+            <Plus className="w-4 h-4" /> Nueva paleta
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -1274,18 +1441,15 @@ function PaletasGestor({ isAdmin, onClose }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {paletas.map(p => (
-            <div key={p.id} className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-2">
+          {paletas.map(p => {
+            const conv = p.uso_count > 0 ? Math.round((p.firmadas_count / p.uso_count) * 100) : 0
+            return (
+            <div key={p.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-2 gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-slate-900 truncate">{p.nombre}</p>
-                  {p.descripcion && <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{p.descripcion}</p>}
+                  <p className="font-semibold text-slate-900 dark:text-white truncate">{p.nombre}</p>
+                  {p.descripcion && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{p.descripcion}</p>}
                 </div>
-                {isAdmin && (
-                  <button onClick={() => handleDelete(p)} className="p-1 text-slate-400 hover:text-red-500" title="Eliminar">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
               </div>
               {/* Swatches grandes */}
               <div className="grid grid-cols-4 gap-1 mt-2">
@@ -1301,25 +1465,89 @@ function PaletasGestor({ isAdmin, onClose }) {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-[10px] text-slate-400">
-                <span>Usada en <strong className="text-slate-700">{p.uso_count || 0}</strong> propuesta(s)</span>
-                {p.created_by_name && <span>por {p.created_by_name}</span>}
+
+              {/* Stats: uso y conversión */}
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 text-[10px]">
+                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                  <span>Uso: <strong className="text-slate-700 dark:text-slate-200">{p.uso_count || 0}</strong> · Firmadas: <strong className="text-emerald-600">{p.firmadas_count || 0}</strong></span>
+                  {p.uso_count > 0 && (
+                    <span className={`px-1.5 py-0.5 rounded-full font-bold ${conv >= 50 ? 'bg-emerald-100 text-emerald-700' : conv >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {conv}% conv
+                    </span>
+                  )}
+                </div>
+                {p.created_by_name && <p className="text-[9px] text-slate-400 mt-1">por {p.created_by_name}</p>}
+              </div>
+
+              {/* Acciones */}
+              <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-wrap">
+                <button onClick={() => setEditPaleta(p)} className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded" title="Editar">
+                  <Edit3 className="w-3 h-3" /> Editar
+                </button>
+                <button onClick={() => handleDuplicate(p)} className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded" title="Duplicar">
+                  <Copy className="w-3 h-3" /> Duplicar
+                </button>
+                <button onClick={() => handleExport(p)} className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded" title="Exportar JSON">
+                  <Download className="w-3 h-3" /> Exportar
+                </button>
+                {isAdmin && (
+                  <button onClick={() => handleApplyAsBrand(p)} className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 rounded" title="Aplicar como marca oficial de la organización">
+                    <Star className="w-3 h-3" /> Como marca
+                  </button>
+                )}
+                {isAdmin && (
+                  <button onClick={() => handleDelete(p)} className="ml-auto p-1 text-slate-400 hover:text-red-500" title="Eliminar">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
-      {showNew && <NuevaPaletaModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); load() }} />}
+      {showNew && (
+        <NuevaPaletaModal
+          prefilled={duplicateFrom}
+          onClose={() => { setShowNew(false); setDuplicateFrom(null) }}
+          onCreated={() => { setShowNew(false); setDuplicateFrom(null); load() }}
+        />
+      )}
+      {editPaleta && (
+        <NuevaPaletaModal
+          editPaleta={editPaleta}
+          onClose={() => setEditPaleta(null)}
+          onCreated={() => { setEditPaleta(null); load() }}
+        />
+      )}
+
+      {/* Toast */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 bg-emerald-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg z-50 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" /> {toastMsg}
+        </div>
+      )}
     </div>
   )
 }
 
-function NuevaPaletaModal({ onClose, onCreated }) {
+function NuevaPaletaModal({ onClose, onCreated, editPaleta = null, prefilled = null }) {
   const { token } = useAuth()
-  const [form, setForm] = useState({
-    nombre: '', descripcion: '',
-    primary_color: '#101C44', secondary_color: '#1e3a8a', accent_color: '#f59e0b', text_on_primary: '#ffffff',
+  const isEdit = !!editPaleta
+  const [form, setForm] = useState(() => {
+    if (editPaleta) return {
+      nombre: editPaleta.nombre || '',
+      descripcion: editPaleta.descripcion || '',
+      primary_color: editPaleta.primary_color || '#101C44',
+      secondary_color: editPaleta.secondary_color || '#1e3a8a',
+      accent_color: editPaleta.accent_color || '#f59e0b',
+      text_on_primary: editPaleta.text_on_primary || '#ffffff',
+    }
+    if (prefilled) return prefilled
+    return {
+      nombre: '', descripcion: '',
+      primary_color: '#101C44', secondary_color: '#1e3a8a', accent_color: '#f59e0b', text_on_primary: '#ffffff',
+    }
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -1328,7 +1556,11 @@ function NuevaPaletaModal({ onClose, onCreated }) {
     e.preventDefault()
     setError(''); setSaving(true)
     try {
-      await api.createPaleta(token, form)
+      if (isEdit) {
+        await api.updatePaleta(token, editPaleta.id, form)
+      } else {
+        await api.createPaleta(token, form)
+      }
       onCreated()
     } catch (err) { setError(err.message) }
     finally { setSaving(false) }
@@ -1340,7 +1572,7 @@ function NuevaPaletaModal({ onClose, onCreated }) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-lg w-full my-8 p-6">
         <div className="flex items-start justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Nueva paleta</h3>
+          <h3 className="text-lg font-semibold text-slate-900">{isEdit ? 'Editar paleta' : 'Nueva paleta'}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X className="w-4 h-4" /></button>
         </div>
 
@@ -1410,7 +1642,163 @@ function NuevaPaletaModal({ onClose, onCreated }) {
               className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
               style={{ background: NAVY }}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Crear paleta
+              {isEdit ? 'Guardar cambios' : 'Crear paleta'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Gestor de Plantillas (de propuesta)
+// ─────────────────────────────────────────────────────────────
+
+function PlantillasGestor({ isAdmin, onClose }) {
+  const { token } = useAuth()
+  const [plantillas, setPlantillas] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const load = useCallback(() => {
+    setLoading(true)
+    api.plantillas(token).then(d => setPlantillas(d.plantillas || [])).finally(() => setLoading(false))
+  }, [token])
+
+  useEffect(() => { load() }, [load])
+
+  const handleDelete = async (t) => {
+    if (!confirm(`¿Eliminar la plantilla "${t.nombre}"?`)) return
+    try { await api.deletePlantilla(token, t.id); load() } catch (e) { alert(e.message) }
+  }
+
+  return (
+    <div className="space-y-4 max-w-4xl">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <button onClick={onClose} className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-1">
+            <ChevronLeft className="w-4 h-4" /> Volver
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <FileStack className="w-5 h-5" style={{ color: NAVY }} /> Plantillas de propuesta
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">Plantillas con conceptos y notas pre-cargados. Se crean desde el formulario de propuesta con el botón "Guardar como plantilla".</p>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-16 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" /></div>
+      ) : plantillas.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+          <FileStack className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+          <p className="text-sm text-slate-500 mb-1">Aún no tienes plantillas</p>
+          <p className="text-xs text-slate-400 mb-4 max-w-md mx-auto">
+            Crea una propuesta normal y al final del formulario presiona <b>"Guardar como plantilla"</b> — guarda los conceptos, precios y notas para reusarlos después.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="divide-y divide-slate-100">
+            {plantillas.map(t => {
+              const conceptos = Array.isArray(t.conceptos) ? t.conceptos : []
+              const total = conceptos.reduce((s, c) => s + ((parseFloat(c.precio) || 0) * (parseInt(c.cantidad) || 1)), 0)
+              return (
+                <div key={t.id} className="px-5 py-4 hover:bg-slate-50/50">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-900">{t.nombre}</p>
+                      {t.descripcion && <p className="text-xs text-slate-500 mt-0.5">{t.descripcion}</p>}
+                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-400 flex-wrap">
+                        {t.servicio_nombre && <span><Layers className="w-3 h-3 inline" /> {t.servicio_nombre}</span>}
+                        {t.paleta_nombre && <span><Palette className="w-3 h-3 inline" /> {t.paleta_nombre}</span>}
+                        <span>{conceptos.length} concepto(s) · ~{fmtMoney(total, 'MXN')}</span>
+                        <span>vigencia {t.vigencia_dias}d</span>
+                        {t.created_by_name && <span>por {t.created_by_name}</span>}
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <button onClick={() => handleDelete(t)} className="p-1 text-slate-400 hover:text-red-500" title="Eliminar">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Modal: guardar form actual como plantilla
+// ─────────────────────────────────────────────────────────────
+
+function SavePlantillaModal({ form, conceptos, token, onClose, onSaved }) {
+  const [nombre, setNombre] = useState('')
+  const [descripcion, setDescripcion] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!nombre.trim()) { setError('Pon un nombre'); return }
+    setSaving(true); setError('')
+    try {
+      await api.createPlantilla(token, {
+        nombre: nombre.trim(),
+        descripcion: descripcion.trim() || null,
+        servicio_id: form.servicio_id || null,
+        paleta_id: form.paleta_id || null,
+        conceptos,
+        notas: form.notas || null,
+        vigencia_dias: form.vigencia_dias || 30,
+      })
+      onSaved()
+    } catch (err) { setError(err.message) }
+    finally { setSaving(false) }
+  }
+
+  const inputCls = "w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6">
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <FileStack className="w-5 h-5 text-emerald-600" /> Guardar como plantilla
+          </h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
+        </div>
+        <p className="text-xs text-slate-500 mb-4">
+          Se guardarán los <b>{conceptos.length} concepto(s)</b>, las notas, vigencia, servicio y paleta seleccionada (si hay). El cliente, vendedor y datos específicos NO se guardan.
+        </p>
+
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="text-xs text-slate-600 mb-1 block">Nombre *</label>
+            <input className={inputCls} required value={nombre} onChange={e => setNombre(e.target.value)}
+              placeholder="Ej: Auditoría financiera estándar" autoFocus />
+          </div>
+          <div>
+            <label className="text-xs text-slate-600 mb-1 block">Descripción</label>
+            <input className={inputCls} value={descripcion} onChange={e => setDescripcion(e.target.value)}
+              placeholder="Para qué tipo de cliente / situación" />
+          </div>
+
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{error}</div>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg">Cancelar</button>
+            <button type="submit" disabled={saving}
+              className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileStack className="w-4 h-4" />}
+              Guardar plantilla
             </button>
           </div>
         </form>
