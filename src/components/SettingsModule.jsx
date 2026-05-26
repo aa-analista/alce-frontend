@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle'
 import {
   User, Mail, Lock, ShieldCheck, Save, CheckCircle2, Eye, EyeOff, KeyRound,
   Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2,
-  Sparkles, Wand2, Loader2
+  Sparkles, Wand2, Loader2, Sun, Moon, Bookmark
 } from 'lucide-react'
 
 const GOOGLE_CONNECTORS = [
@@ -64,6 +64,8 @@ const SettingsModule = () => {
   const [aiError, setAiError] = useState('')
   const [aiSource, setAiSource] = useState('logo') // 'logo' | 'reference-image'
   const [analyzingImage, setAnalyzingImage] = useState(false)
+  const [showSavePresetModal, setShowSavePresetModal] = useState(false)
+  const [savePresetMsg, setSavePresetMsg] = useState('')
 
   // Re-sincronizar si el user cambia (login / refresh)
   useEffect(() => {
@@ -491,6 +493,11 @@ const SettingsModule = () => {
                 className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-all"
                 title="Volver a los colores predeterminados de Alce">
                 Reiniciar a default
+              </button>
+              <button type="button" onClick={() => setShowSavePresetModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all"
+                title="Guardar esta paleta como preset para usar en propuestas">
+                <Bookmark className="w-3.5 h-3.5" /> Guardar como preset
               </button>
               <p className="text-[10px] text-slate-500 self-center ml-auto">
                 Acuérdate de pulsar <b>Guardar marca</b> para persistir.
@@ -937,6 +944,119 @@ const SettingsModule = () => {
           }}
         />
       )}
+
+      {/* ── Modal: guardar paleta actual como preset de propuestas ── */}
+      {showSavePresetModal && (
+        <SavePresetModal
+          colors={{
+            primary_color: brandingDraft.primaryColor,
+            secondary_color: brandingDraft.secondaryColor,
+            accent_color: brandingDraft.accentColor,
+            text_on_primary: brandingDraft.textOnPrimary,
+          }}
+          token={token}
+          onClose={() => setShowSavePresetModal(false)}
+          onSaved={() => {
+            setShowSavePresetModal(false)
+            setSavePresetMsg('Paleta guardada en presets de Propuestas ✓')
+            setTimeout(() => setSavePresetMsg(''), 4000)
+          }}
+        />
+      )}
+
+      {/* Toast de éxito */}
+      {savePresetMsg && (
+        <div className="fixed bottom-6 right-6 bg-emerald-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-in slide-in-from-bottom-2">
+          <CheckCircle2 className="w-4 h-4" /> {savePresetMsg}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Modal: guardar paleta actual como preset de propuestas
+//  Reutiliza el endpoint POST /propuestas/paletas
+// ─────────────────────────────────────────────────────────────
+function SavePresetModal({ colors, token, onClose, onSaved }) {
+  const [nombre, setNombre] = useState('')
+  const [descripcion, setDescripcion] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!nombre.trim()) { setError('Pon un nombre'); return }
+    setSaving(true); setError('')
+    try {
+      const res = await fetch('/api/propuestas/paletas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          nombre: nombre.trim(),
+          descripcion: descripcion.trim() || null,
+          ...colors,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al guardar')
+      onSaved()
+    } catch (err) { setError(err.message) }
+    finally { setSaving(false) }
+  }
+
+  const inputCls = "w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6">
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Bookmark className="w-5 h-5 text-emerald-600" /> Guardar como preset
+          </h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          Guarda esta paleta como un preset reutilizable. Estará disponible al crear o editar propuestas para enviarles colores específicos por cliente.
+        </p>
+
+        {/* Preview de los colores */}
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 mb-4 flex items-center gap-2">
+          <div className="grid grid-cols-4 gap-1 flex-1">
+            {Object.entries(colors).map(([k, v]) => (
+              <div key={k} className="flex flex-col items-center">
+                <div className="w-full h-8 rounded border-2 border-white shadow-sm" style={{ background: v }} />
+                <p className="text-[8px] text-slate-500 mt-0.5 font-mono">{v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="text-xs text-slate-600 dark:text-slate-300 mb-1 block">Nombre *</label>
+            <input className={inputCls} required value={nombre} onChange={e => setNombre(e.target.value)}
+              placeholder="Ej: Mi marca actual" autoFocus />
+          </div>
+          <div>
+            <label className="text-xs text-slate-600 dark:text-slate-300 mb-1 block">Descripción</label>
+            <input className={inputCls} value={descripcion} onChange={e => setDescripcion(e.target.value)}
+              placeholder="Para qué clientes / proyectos" />
+          </div>
+
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{error}</div>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg">Cancelar</button>
+            <button type="submit" disabled={saving}
+              className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bookmark className="w-4 h-4" />}
+              Guardar preset
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }
@@ -1006,16 +1126,23 @@ function BrandingPreview({ branding, orgFallback }) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Vista previa</p>
         <div className="flex items-center gap-1.5">
-          {/* Toggle modo de la PREVIEW (independiente del modo de la app) */}
+          {/* Toggle modo de la PREVIEW (sigue al app por default, puedes overridear) */}
           {tab === 'app' && (
-            <div className="inline-flex bg-slate-100 dark:bg-slate-700 rounded-lg p-0.5 gap-0.5">
+            <div className="inline-flex bg-slate-100 dark:bg-slate-700 rounded-lg p-0.5 gap-0.5" title={previewMode === 'auto' ? 'Sigue al modo de la app' : 'Override manual'}>
+              <button type="button" onClick={() => setPreviewMode('auto')}
+                className={`px-1.5 py-1 text-[9px] font-semibold rounded-md transition-colors flex items-center ${previewMode === 'auto' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                title="Sigue al modo de la app">
+                <span className="text-[8px] font-bold">A</span>
+              </button>
               <button type="button" onClick={() => setPreviewMode('light')}
-                className={`px-2 py-1 text-[9px] font-semibold rounded-md transition-colors ${effectiveMode === 'light' && previewMode !== 'auto' ? 'bg-white dark:bg-slate-900 shadow-sm' : 'text-slate-500'}`}>
-                ☀
+                className={`px-1.5 py-1 rounded-md transition-colors flex items-center ${previewMode === 'light' ? 'bg-white dark:bg-slate-900 text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                title="Forzar claro">
+                <Sun className="w-3 h-3" />
               </button>
               <button type="button" onClick={() => setPreviewMode('dark')}
-                className={`px-2 py-1 text-[9px] font-semibold rounded-md transition-colors ${effectiveMode === 'dark' && previewMode !== 'auto' ? 'bg-white dark:bg-slate-900 shadow-sm' : 'text-slate-500'}`}>
-                ☾
+                className={`px-1.5 py-1 rounded-md transition-colors flex items-center ${previewMode === 'dark' ? 'bg-white dark:bg-slate-900 text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                title="Forzar oscuro">
+                <Moon className="w-3 h-3" />
               </button>
             </div>
           )}

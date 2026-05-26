@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import {
   DollarSign, TrendingUp, Users as UsersIcon, Zap, Calendar,
   MessageSquare, AudioLines, Mic, Volume2, Database, Image as ImageIcon, Bot,
-  ArrowUpDown, Loader2, Building2
+  ArrowUpDown, Loader2, Building2, RotateCcw
 } from 'lucide-react'
 
 const FEATURE_META = {
@@ -80,21 +80,48 @@ const GastosModule = () => {
               : 'Consumo de tokens, audio y costo estimado de OpenAI por tu organizacion.'}
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-          {RANGES.map(r => (
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+            {RANGES.map(r => (
+              <button
+                key={r.id}
+                onClick={() => setRange(r.id)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  range === r.id
+                    ? 'text-white'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                style={range === r.id ? { background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)' } : {}}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+          {isSuperAdmin && (
             <button
-              key={r.id}
-              onClick={() => setRange(r.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                range === r.id
-                  ? 'text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              style={range === r.id ? { background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)' } : {}}
+              onClick={async () => {
+                if (!confirm('⚠️ DEV — ¿Resetear el contador de tokens de TU organización?\n\nEsto borra todos los registros de uso de IA. No se puede deshacer.')) return
+                try {
+                  const res = await fetch('/api/admin/usage/reset?scope=org', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                  })
+                  const data = await res.json()
+                  if (!res.ok) throw new Error(data.error)
+                  alert(`✓ Reseteado: ${data.deleted} registros borrados`)
+                  // Reload data
+                  setRange(r => r) // trigger refetch
+                  window.location.reload()
+                } catch (err) {
+                  alert('Error: ' + err.message)
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg transition-all"
+              title="DEV: Reiniciar contador de tokens de tu organización (solo super_admin)"
             >
-              {r.label}
+              <RotateCcw className="w-3.5 h-3.5" /> Reset (dev)
             </button>
-          ))}
+          )}
         </div>
       </div>
 
