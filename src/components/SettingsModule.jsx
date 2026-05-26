@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle'
 import {
   User, Mail, Lock, ShieldCheck, Save, CheckCircle2, Eye, EyeOff, KeyRound,
   Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2,
-  Sparkles, Wand2, Loader2, Sun, Moon, Bookmark, X
+  Sparkles, Wand2, Loader2, Sun, Moon, Bookmark, X, Edit3
 } from 'lucide-react'
 
 const GOOGLE_CONNECTORS = [
@@ -89,6 +89,23 @@ const SettingsModule = () => {
     }
     setBrandingDraft(next)
     applyBrandingToDOM(next)
+  }
+
+  // Editar nombre/descripción de un preset (sin tocar colores)
+  const [editingPreset, setEditingPreset] = useState(null) // paleta en edición
+
+  const handleDeletePreset = async (p, e) => {
+    e.stopPropagation() // evitar que se aplique al hacer click
+    if (!confirm(`¿Eliminar la paleta "${p.nombre}"?\n\nSi la usas como marca actual de tu plataforma, los colores siguen aplicados — solo se borra el preset guardado.`)) return
+    try {
+      const res = await fetch(`/api/propuestas/paletas/${p.id}`, {
+        method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Error al eliminar')
+      reloadPresets()
+      setSavePresetMsg(`Paleta "${p.nombre}" eliminada`)
+      setTimeout(() => setSavePresetMsg(''), 3000)
+    } catch (err) { alert(err.message) }
   }
 
   // Re-sincronizar si el user cambia (login / refresh)
@@ -897,32 +914,56 @@ const SettingsModule = () => {
                       brandingDraft.secondaryColor?.toLowerCase() === p.secondary_color?.toLowerCase() &&
                       brandingDraft.accentColor?.toLowerCase() === p.accent_color?.toLowerCase()
                     return (
-                      <button
+                      <div
                         key={p.id}
-                        type="button"
-                        onClick={() => applyPresetToDraft(p)}
-                        title={p.descripcion || p.nombre}
-                        className={`text-left p-2.5 rounded-lg border-2 transition-all hover:shadow-md ${
+                        className={`group relative text-left p-2.5 rounded-lg border-2 transition-all hover:shadow-md ${
                           isActive
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                             : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
-                        {/* Swatches grandes en barra horizontal */}
-                        <div className="flex h-7 rounded overflow-hidden border border-white shadow-sm">
-                          <div className="flex-1" style={{ background: p.primary_color }} />
-                          <div className="flex-1" style={{ background: p.secondary_color }} />
-                          <div className="flex-1" style={{ background: p.accent_color }} />
-                          <div className="flex-1" style={{ background: p.text_on_primary }} />
+                        <button
+                          type="button"
+                          onClick={() => applyPresetToDraft(p)}
+                          title={p.descripcion || p.nombre}
+                          className="w-full text-left"
+                        >
+                          {/* Swatches grandes en barra horizontal */}
+                          <div className="flex h-7 rounded overflow-hidden border border-white shadow-sm">
+                            <div className="flex-1" style={{ background: p.primary_color }} />
+                            <div className="flex-1" style={{ background: p.secondary_color }} />
+                            <div className="flex-1" style={{ background: p.accent_color }} />
+                            <div className="flex-1" style={{ background: p.text_on_primary }} />
+                          </div>
+                          <p className="text-xs font-semibold text-slate-800 dark:text-white mt-1.5 truncate flex items-center gap-1 pr-12">
+                            {isActive && <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />}
+                            {p.nombre}
+                          </p>
+                          {p.descripcion && (
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1 pr-12">{p.descripcion}</p>
+                          )}
+                        </button>
+
+                        {/* Botones de acción — aparecen al hover */}
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setEditingPreset(p) }}
+                            title="Editar nombre y descripción"
+                            className="p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded shadow-sm"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeletePreset(p, e)}
+                            title="Eliminar"
+                            className="p-1 text-slate-500 hover:text-red-600 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded shadow-sm"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
-                        <p className="text-xs font-semibold text-slate-800 dark:text-white mt-1.5 truncate flex items-center gap-1">
-                          {isActive && <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />}
-                          {p.nombre}
-                        </p>
-                        {p.descripcion && (
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{p.descripcion}</p>
-                        )}
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
@@ -1048,6 +1089,21 @@ const SettingsModule = () => {
         <div className="fixed bottom-6 right-6 bg-emerald-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-in slide-in-from-bottom-2">
           <CheckCircle2 className="w-4 h-4" /> {savePresetMsg}
         </div>
+      )}
+
+      {/* Modal editar preset (nombre + descripción) */}
+      {editingPreset && (
+        <EditPresetModal
+          preset={editingPreset}
+          token={token}
+          onClose={() => setEditingPreset(null)}
+          onSaved={() => {
+            setEditingPreset(null)
+            setSavePresetMsg('Preset actualizado ✓')
+            setTimeout(() => setSavePresetMsg(''), 3000)
+            reloadPresets()
+          }}
+        />
       )}
     </div>
   )
@@ -1606,6 +1662,86 @@ function UserIcon() {
       <circle cx="12" cy="7" r="4" />
       <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
     </svg>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Modal: editar nombre/descripción de un preset existente
+// ─────────────────────────────────────────────────────────────
+function EditPresetModal({ preset, token, onClose, onSaved }) {
+  const [nombre, setNombre] = useState(preset.nombre || '')
+  const [descripcion, setDescripcion] = useState(preset.descripcion || '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!nombre.trim()) { setError('Pon un nombre'); return }
+    setSaving(true); setError('')
+    try {
+      const res = await fetch(`/api/propuestas/paletas/${preset.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre: nombre.trim(), descripcion: descripcion.trim() || null }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Error al guardar')
+      setSaving(false)
+      onSaved()
+    } catch (err) {
+      setError(err.message || 'Error')
+      setSaving(false)
+    }
+  }
+
+  const inputCls = "w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20"
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6">
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Edit3 className="w-5 h-5 text-slate-600" /> Editar preset
+          </h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+          Cambia el nombre o descripción. Para cambiar los colores, aplica el preset, modifícalos arriba y guarda como nuevo preset.
+        </p>
+
+        {/* Mini preview de los colores actuales */}
+        <div className="flex h-8 rounded overflow-hidden border border-slate-200 dark:border-slate-700 mb-4">
+          <div className="flex-1" style={{ background: preset.primary_color }} />
+          <div className="flex-1" style={{ background: preset.secondary_color }} />
+          <div className="flex-1" style={{ background: preset.accent_color }} />
+          <div className="flex-1" style={{ background: preset.text_on_primary }} />
+        </div>
+
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="text-xs text-slate-600 dark:text-slate-300 mb-1 block">Nombre *</label>
+            <input className={inputCls} required value={nombre} onChange={e => setNombre(e.target.value)} autoFocus />
+          </div>
+          <div>
+            <label className="text-xs text-slate-600 dark:text-slate-300 mb-1 block">Descripción</label>
+            <input className={inputCls} value={descripcion} onChange={e => setDescripcion(e.target.value)} />
+          </div>
+
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{error}</div>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg">Cancelar</button>
+            <button type="submit" disabled={saving}
+              className="px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+              style={{ background: 'var(--brand-primary)', color: 'var(--brand-text-on-primary)' }}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 
