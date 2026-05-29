@@ -4,7 +4,7 @@ import {
   Users, UserPlus, ChevronDown, ChevronUp, Mail, Lock, User,
   Blocks, ToggleLeft, ToggleRight, CheckCircle2, XCircle, RefreshCw, Phone,
   MessageSquare, FileText, Clock, Bell, Send, Sparkles, BarChart3, Activity,
-  Pencil, Trash2, X, Save, Copy, AlertTriangle
+  Pencil, Trash2, X, Save, Copy, AlertTriangle, MessageCircle
 } from 'lucide-react'
 import { DIAL_CODES } from '../utils/phoneCodes'
 
@@ -94,6 +94,21 @@ const UsersModule = () => {
       console.error('Clipboard error:', err)
       alert('No se pudo copiar el enlace.')
     }
+  }
+
+  // Invitar por WhatsApp del PROPIO admin (wa.me) — no depende de Twilio.
+  // Abre WhatsApp con el número del invitado y el mensaje + link pre-cargados.
+  const sendWhatsAppInvite = (user) => {
+    const link = user?.activation?.link
+    if (!link) { alert('No hay enlace de activación vigente. Genera uno con "Reenviar".'); return }
+    const phoneDigits = (user.phone || '').replace(/\D/g, '') // solo dígitos para wa.me
+    const orgName = user?.org_name || 'la plataforma'
+    const msg =
+      `¡Hola ${user.name || ''}! 👋\n\n` +
+      `Te damos de alta en ${orgName}. Activa tu cuenta y define tu contraseña aquí:\n${link}\n\n` +
+      `El enlace es personal y temporal. ¡Bienvenido(a)!`
+    const base = phoneDigits ? `https://wa.me/${phoneDigits}` : 'https://wa.me/'
+    window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
   }
 
   const resendActivation = async (userId) => {
@@ -287,6 +302,13 @@ const UsersModule = () => {
                           className="p-1.5 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[#e8f0f0] rounded-lg transition-all"
                         >
                           {copiedId === user.id ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); sendWhatsAppInvite(user) }}
+                          title="Enviar invitación por mi WhatsApp"
+                          className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
                         </button>
                       </>
                     ) : user.activation?.status === 'expired' ? (
