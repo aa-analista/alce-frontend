@@ -71,6 +71,20 @@ const UsersModule = () => {
   const toggleUserActive = async (userId, currentActive) => {
     try { await fetch(`/api/users/${userId}`, { method: 'PATCH', headers, body: JSON.stringify({ is_active: !currentActive }) }); fetchUsers() } catch (err) { console.error(err) }
   }
+  const [teamBusy, setTeamBusy] = useState(null) // moduleId en proceso
+
+  // Asigna o quita un módulo a TODO el equipo de un jalón
+  const toggleTeamModule = async (moduleId, assignToAll) => {
+    setTeamBusy(moduleId)
+    try {
+      await fetch(`/api/modules/team/${moduleId}`, {
+        method: 'PUT', headers, body: JSON.stringify({ assigned: assignToAll }),
+      })
+      await fetchUsers()
+    } catch (err) { console.error(err) }
+    finally { setTeamBusy(null) }
+  }
+
   const toggleUserModule = async (userId, moduleId, assigned) => {
     try { await fetch(`/api/modules/user/${userId}`, { method: 'PUT', headers, body: JSON.stringify({ moduleId, assigned: !assigned }) }); fetchUsers() } catch (err) { console.error(err) }
   }
@@ -259,6 +273,65 @@ const UsersModule = () => {
           </form>
         </div>
       )}
+
+      {/* Módulos del equipo — asignación masiva */}
+      {orgModules.length > 0 && (() => {
+        const empleados = users.filter(u => u.role === 'user')
+        const totalEmp = empleados.length
+        return (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+              <Blocks className="w-4 h-4 text-[var(--brand-primary)]" />
+              <h2 className="font-semibold text-slate-900 text-sm">Módulos del equipo</h2>
+              <span className="text-xs text-slate-400">Asigna o quita un módulo a todos los empleados de un clic</span>
+            </div>
+            {totalEmp === 0 ? (
+              <p className="p-4 text-sm text-slate-400">Crea empleados primero para gestionar sus módulos.</p>
+            ) : (
+              <div className="divide-y divide-slate-50">
+                {orgModules.map(mod => {
+                  const Icon = MODULE_ICONS[mod.id] || Blocks
+                  const conMod = empleados.filter(u => (u.modules || []).includes(mod.id)).length
+                  const todos = conMod === totalEmp
+                  const ninguno = conMod === 0
+                  const busy = teamBusy === mod.id
+                  return (
+                    <div key={mod.id} className="px-4 py-2.5 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#e8f0f0] flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-[var(--brand-primary)]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-800 truncate">{mod.name || mod.id}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {conMod} de {totalEmp} empleado{totalEmp !== 1 ? 's' : ''} con acceso
+                        </p>
+                      </div>
+                      {/* Barra de progreso */}
+                      <div className="hidden sm:block w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[var(--brand-primary)]" style={{ width: `${totalEmp ? (conMod / totalEmp) * 100 : 0}%` }} />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => toggleTeamModule(mod.id, true)}
+                          disabled={busy || todos}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-md text-[var(--brand-primary)] bg-[#e8f0f0] hover:bg-[#dceaea] disabled:opacity-40 disabled:cursor-default transition-all">
+                          {busy ? '…' : 'Todos'}
+                        </button>
+                        <button
+                          onClick={() => toggleTeamModule(mod.id, false)}
+                          disabled={busy || ninguno}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-md text-slate-500 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-default transition-all">
+                          Ninguno
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Users List */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
