@@ -54,22 +54,32 @@ export default function ReunionesModule() {
   const [pdfInfo, setPdfInfo] = useState('')
   const estTimer = useRef(null)
 
-  // Subir PDF → extraer texto → llenar el textarea
+  // Subir PDF → extraer texto EN EL NAVEGADOR (pdfjs) → llenar el textarea.
+  // Se hace local: el PDF no se sube a ningún servidor (privacidad + sin deps backend).
   const handlePdf = async (file) => {
     if (!file) return
     setPdfLoading(true); setError(''); setPdfInfo('')
     try {
-      const fd = new FormData()
-      fd.append('pdf', file)
-      const res = await fetch('/api/reuniones/extraer-pdf', {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al leer el PDF')
-      setTexto(data.texto)
-      setPdfInfo(`PDF cargado: ${data.paginas || '?'} pág · ${data.caracteres.toLocaleString('es-MX')} caracteres extraídos`)
-    } catch (e) { setError(e.message) }
-    finally { setPdfLoading(false) }
+      // Import dinámico de pdfjs (carga el bundle solo cuando se usa)
+      const pdfjs = await import('pdfjs-dist')
+      const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default
+      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
+
+      const buffer = await file.arrayBuffer()
+      const pdf = await pdfjs.getDocument({ data: buffer }).promise
+      let txt = ''
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i)
+        const content = await page.getTextContent()
+        txt += content.items.map(it => it.str).join(' ') + '\n\n'
+      }
+      txt = txt.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+      if (txt.length < 50) throw new Error('No se pudo extraer texto. ¿Es un PDF escaneado/de imágenes? Intenta copiar y pegar.')
+      setTexto(txt)
+      setPdfInfo(`PDF cargado: ${pdf.numPages} pág · ${txt.length.toLocaleString('es-MX')} caracteres extraídos`)
+    } catch (e) {
+      setError(e.message || 'Error al leer el PDF')
+    } finally { setPdfLoading(false) }
   }
 
   // Estimación en vivo (debounced) cuando cambia el texto o el modelo
