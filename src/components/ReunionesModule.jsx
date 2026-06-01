@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import {
   Mic, Loader2, Copy, CheckCircle2, FileText, ListChecks, Users, ArrowRight,
   AlertTriangle, Wand2, RotateCcw, MessageCircle, Presentation, ClipboardList,
-  Settings2, Zap, Sparkles, FileStack
+  Settings2, Zap, Sparkles, FileStack, Upload, FileUp
 } from 'lucide-react'
 
 const NAVY = 'var(--brand-primary, #101C44)'
@@ -50,7 +50,27 @@ export default function ReunionesModule() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [estimacion, setEstimacion] = useState(null)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [pdfInfo, setPdfInfo] = useState('')
   const estTimer = useRef(null)
+
+  // Subir PDF → extraer texto → llenar el textarea
+  const handlePdf = async (file) => {
+    if (!file) return
+    setPdfLoading(true); setError(''); setPdfInfo('')
+    try {
+      const fd = new FormData()
+      fd.append('pdf', file)
+      const res = await fetch('/api/reuniones/extraer-pdf', {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al leer el PDF')
+      setTexto(data.texto)
+      setPdfInfo(`PDF cargado: ${data.paginas || '?'} pág · ${data.caracteres.toLocaleString('es-MX')} caracteres extraídos`)
+    } catch (e) { setError(e.message) }
+    finally { setPdfLoading(false) }
+  }
 
   // Estimación en vivo (debounced) cuando cambia el texto o el modelo
   useEffect(() => {
@@ -153,7 +173,21 @@ export default function ReunionesModule() {
 
           {/* Textarea */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 block">Transcripción</label>
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Transcripción</label>
+              <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer border transition-all ${pdfLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                style={{ borderColor: NAVY, color: NAVY }}>
+                {pdfLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileUp className="w-3.5 h-3.5" />}
+                {pdfLoading ? 'Leyendo PDF…' : 'Subir PDF'}
+                <input type="file" accept="application/pdf" className="hidden" disabled={pdfLoading}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handlePdf(f); e.target.value = '' }} />
+              </label>
+            </div>
+            {pdfInfo && (
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> {pdfInfo}
+              </p>
+            )}
             <textarea value={texto} onChange={e => setTexto(e.target.value)} rows={12}
               placeholder="Pega aquí el texto de la transcripción (de Gemini, Zoom, Meet, Otter, etc.)…"
               className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary,#101C44)]/15 resize-y leading-relaxed" />
