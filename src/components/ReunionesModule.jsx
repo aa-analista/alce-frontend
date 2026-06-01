@@ -216,9 +216,9 @@ export default function ReunionesModule() {
                 </div>
               </div>
               {estimacion && estimacion.model && (
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5" title="Estimación antes de procesar">
                   <Zap className="w-3 h-3" />
-                  {estimacion.model} · ~{estimacion.input_tokens.toLocaleString('es-MX')} tokens · ≈ ${estimacion.costo_usd} USD
+                  {estimacion.model} · ~{estimacion.input_tokens.toLocaleString('es-MX')} tokens · costo aprox <b>${estimacion.costo_usd} USD</b> (~${estimacion.costo_mxn} MXN)
                 </span>
               )}
             </div>
@@ -253,11 +253,6 @@ export default function ReunionesModule() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">{result.titulo}</h3>
-              {result.usado && (
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  {result.usado.modelo} · {result.usado.tokens?.toLocaleString('es-MX')} tokens · ${result.usado.costo_usd} USD
-                </p>
-              )}
             </div>
             <div className="flex gap-2">
               {result.tipo === 'texto' ? (
@@ -284,6 +279,39 @@ export default function ReunionesModule() {
               </button>
             </div>
           </div>
+
+          {/* Tarjeta de costo detallado */}
+          {result.usado && (
+            <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-3.5 h-3.5" style={{ color: NAVY }} />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Costo de esta operación</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+                <div>
+                  <p className="text-[9px] uppercase tracking-wide text-slate-400">Modelo</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono">{result.usado.modelo}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-wide text-slate-400">Tokens entrada</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{(result.usado.input_tokens || 0).toLocaleString('es-MX')}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-wide text-slate-400">Tokens salida</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{(result.usado.output_tokens || 0).toLocaleString('es-MX')}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-wide text-slate-400">Costo USD</p>
+                  <p className="text-sm font-bold" style={{ color: NAVY }}>${result.usado.costo_usd}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase tracking-wide text-slate-400">Costo MXN aprox</p>
+                  <p className="text-sm font-bold text-emerald-600">${result.usado.costo_mxn}</p>
+                </div>
+              </div>
+              <p className="text-[9px] text-slate-400 mt-2 text-center">Registrado en el módulo Gastos · MXN aproximado al tipo de cambio actual</p>
+            </div>
+          )}
 
           {/* Texto plano (whatsapp / presentación / custom) */}
           {result.tipo === 'texto' && (
