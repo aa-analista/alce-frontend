@@ -3,12 +3,12 @@
  * Pegas la transcripción → eliges FORMATO de salida (minuta, WhatsApp, presentación,
  * pendientes, personalizado) y MODELO (auto/económico/calidad) → la IA lo genera.
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
   Mic, Loader2, Copy, CheckCircle2, FileText, ListChecks, Users, ArrowRight,
   AlertTriangle, Wand2, RotateCcw, MessageCircle, Presentation, ClipboardList,
-  Settings2, Zap, Sparkles, FileStack, Upload, FileUp
+  Settings2, Zap, Sparkles, FileStack, Upload, FileUp, History, Trash2, Plus, Clock
 } from 'lucide-react'
 
 const NAVY = 'var(--brand-primary, #101C44)'
@@ -52,7 +52,42 @@ export default function ReunionesModule() {
   const [estimacion, setEstimacion] = useState(null)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfInfo, setPdfInfo] = useState('')
+  const [vista, setVista] = useState('nueva') // nueva | historial
+  const [historial, setHistorial] = useState([])
+  const [loadingHist, setLoadingHist] = useState(false)
   const estTimer = useRef(null)
+
+  const FMT_LABEL = { minuta: 'Minuta', whatsapp: 'WhatsApp', presentacion: 'Presentación', pendientes: 'Pendientes', custom: 'Personalizado' }
+
+  const fetchHistorial = useCallback(async () => {
+    setLoadingHist(true)
+    try {
+      const res = await fetch('/api/reuniones', { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      setHistorial(Array.isArray(data.reuniones) ? data.reuniones : [])
+    } catch {} finally { setLoadingHist(false) }
+  }, [token])
+
+  useEffect(() => { if (vista === 'historial') fetchHistorial() }, [vista, fetchHistorial])
+
+  const abrirReunion = async (id) => {
+    try {
+      const res = await fetch(`/api/reuniones/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      if (res.ok) { setResult(data); setVista('nueva') }
+    } catch {}
+  }
+
+  const borrarReunion = async (id, e) => {
+    e.stopPropagation()
+    if (!confirm('¿Eliminar esta reunión del historial?')) return
+    try {
+      await fetch(`/api/reuniones/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      fetchHistorial()
+    } catch {}
+  }
+
+  const fmtFechaHora = (d) => { try { return new Date(d).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) } catch { return '' } }
 
   // Subir PDF → extraer texto EN EL NAVEGADOR (pdfjs) → llenar el textarea.
   // Se hace local: el PDF no se sube a ningún servidor (privacidad + sin deps backend).
@@ -143,19 +178,76 @@ export default function ReunionesModule() {
   return (
     <div className="space-y-5 max-w-5xl">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-white" style={{ background: NAVY }}>
-            <Mic className="w-5 h-5" />
-          </span>
-          Asistente de Reuniones
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Pega una transcripción y elige qué quieres: minuta, mensaje de WhatsApp, presentación o lo que necesites.
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-white" style={{ background: NAVY }}>
+              <Mic className="w-5 h-5" />
+            </span>
+            Asistente de Reuniones
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Pega una transcripción y elige qué quieres: minuta, mensaje de WhatsApp, presentación o lo que necesites.
+          </p>
+        </div>
+        <div className="inline-flex bg-slate-100 dark:bg-slate-700 rounded-lg p-0.5 gap-0.5">
+          <button onClick={() => { setVista('nueva') }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${vista === 'nueva' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>
+            <Plus className="w-3.5 h-3.5" /> Nueva
+          </button>
+          <button onClick={() => { setVista('historial'); setResult(null) }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${vista === 'historial' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>
+            <History className="w-3.5 h-3.5" /> Historial
+          </button>
+        </div>
       </div>
 
-      {!result && (
+      {/* Vista de HISTORIAL */}
+      {vista === 'historial' && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
+            <History className="w-4 h-4" style={{ color: NAVY }} />
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white">Reuniones procesadas</h3>
+            <span className="text-xs text-slate-400">{historial.length}</span>
+          </div>
+          {loadingHist ? (
+            <div className="py-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" /></div>
+          ) : historial.length === 0 ? (
+            <div className="py-12 text-center text-slate-400">
+              <History className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Aún no has procesado reuniones.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50 dark:divide-slate-700">
+              {historial.map(r => (
+                <button key={r.id} onClick={() => abrirReunion(r.id)}
+                  className="w-full text-left px-5 py-3.5 hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{r.titulo}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'var(--brand-primary-soft,#f0f4f9)', color: NAVY }}>{FMT_LABEL[r.formato] || r.formato}</span>
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1"><Clock className="w-3 h-3" /> {fmtFechaHora(r.created_at)}</span>
+                      {r.autor && <span className="text-[11px] text-slate-400">· {r.autor}</span>}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-[11px] text-slate-400 font-mono">{r.modelo}</span>
+                    <p className="text-[10px] text-slate-400">${r.costo_usd}</p>
+                  </div>
+                  <span onClick={(e) => borrarReunion(r.id, e)} className="p-1.5 text-slate-300 hover:text-red-500 rounded cursor-pointer" title="Eliminar">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {vista === 'nueva' && !result && (
         <>
           {/* Selector de formato */}
           <div>
@@ -248,7 +340,7 @@ export default function ReunionesModule() {
       )}
 
       {/* RESULTADO */}
-      {result && (
+      {vista === 'nueva' && result && (
         <div className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
