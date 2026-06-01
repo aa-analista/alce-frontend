@@ -31,6 +31,7 @@ import PublicContratoView from './components/PublicContratoView'
 import PropuestasModule from './components/PropuestasModule'
 import AgentesAdminModule from './components/AgentesAdminModule'
 import PublicPropuestaView from './components/PublicPropuestaView'
+import ReunionesModule from './components/ReunionesModule'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AssistantProvider } from './context/AssistantContext'
 
@@ -202,6 +203,7 @@ function App() {
             <Route path="gestion-equipo/equipo/:id" element={<AlceEmpleadoView />} />
             <Route path="contratos" element={<ContratosModule />} />
             <Route path="propuestas" element={<PropuestasModule />} />
+            <Route path="reuniones" element={<ReunionesModule />} />
             {/* Google Connector pages */}
             <Route path="google-drive" element={<ConnectorPage />} />
             <Route path="google-gmail" element={<GmailPage />} />
