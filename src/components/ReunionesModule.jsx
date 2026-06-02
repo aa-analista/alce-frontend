@@ -401,7 +401,14 @@ export default function ReunionesModule() {
                   <p className="text-sm font-bold text-emerald-600">${result.usado.costo_mxn}</p>
                 </div>
               </div>
-              <p className="text-[9px] text-slate-400 mt-2 text-center">Registrado en el módulo Gastos · MXN aproximado al tipo de cambio actual</p>
+              <p className="text-[9px] text-slate-400 mt-2 text-center">
+                Registrado en el módulo Gastos · MXN aproximado al tipo de cambio actual
+                {result.usado.clave === 'organizacion'
+                  ? ' · 💳 cargado a la cuenta de tu organización'
+                  : result.usado.clave === 'plataforma'
+                    ? ' · cuenta de la plataforma (configura tu clave en Ajustes → IA)'
+                    : ''}
+              </p>
             </div>
           )}
 

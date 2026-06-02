@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle'
 import {
   User, Mail, Lock, ShieldCheck, Save, CheckCircle2, Eye, EyeOff, KeyRound,
   Plug, Link2, Unlink, XCircle, Palette, Upload, Image as ImageIcon, RotateCcw, Trash2,
-  Sparkles, Wand2, Loader2, Sun, Moon, Bookmark, X, Edit3
+  Sparkles, Wand2, Loader2, Sun, Moon, Bookmark, X, Edit3, Cpu, ShieldAlert
 } from 'lucide-react'
 
 const GOOGLE_CONNECTORS = [
@@ -66,6 +66,68 @@ const SettingsModule = () => {
   const [analyzingImage, setAnalyzingImage] = useState(false)
   const [showSavePresetModal, setShowSavePresetModal] = useState(false)
   const [savePresetMsg, setSavePresetMsg] = useState('')
+
+  // ── BYOK: configuración de IA (clave propia de OpenAI) ──
+  const [aiConfig, setAiConfig] = useState(null) // { tiene_clave_propia, mascara, plataforma_disponible }
+  const [loadingAiConfig, setLoadingAiConfig] = useState(false)
+  const [aiKeyInput, setAiKeyInput] = useState('')
+  const [showAiKey, setShowAiKey] = useState(false)
+  const [savingAiKey, setSavingAiKey] = useState(false)
+  const [aiCfgMsg, setAiCfgMsg] = useState('')
+  const [aiCfgErr, setAiCfgErr] = useState('')
+
+  const fetchAiConfig = async () => {
+    setLoadingAiConfig(true)
+    try {
+      const res = await fetch('/api/organizations/me/ai-config', { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      if (res.ok) setAiConfig(data)
+    } catch { /* silencio */ }
+    setLoadingAiConfig(false)
+  }
+  useEffect(() => { if (activeSection === 'ai') fetchAiConfig() }, [activeSection])
+
+  const saveAiKey = async () => {
+    const key = aiKeyInput.trim()
+    if (!key) { setAiCfgErr('Pega tu API key primero.'); return }
+    setSavingAiKey(true); setAiCfgErr(''); setAiCfgMsg('')
+    try {
+      const res = await fetch('/api/organizations/me/ai-config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ apiKey: key }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'No se pudo guardar la clave')
+      setAiConfig(data)
+      setAiKeyInput('')
+      setShowAiKey(false)
+      setAiCfgMsg('✓ Clave validada y guardada. Tu organización ahora usa su propia cuenta de OpenAI.')
+      setTimeout(() => setAiCfgMsg(''), 6000)
+    } catch (err) {
+      setAiCfgErr(err.message || 'Error al guardar la clave')
+    }
+    setSavingAiKey(false)
+  }
+
+  const removeAiKey = async () => {
+    if (!confirm('¿Quitar tu clave propia de OpenAI?\n\nEl consumo de IA volverá a usar la cuenta de la plataforma (Alce Alce).')) return
+    setSavingAiKey(true); setAiCfgErr(''); setAiCfgMsg('')
+    try {
+      const res = await fetch('/api/organizations/me/ai-config', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'No se pudo eliminar la clave')
+      setAiConfig({ ...aiConfig, ...data })
+      setAiCfgMsg('Clave eliminada. Vuelves a la cuenta de la plataforma.')
+      setTimeout(() => setAiCfgMsg(''), 5000)
+    } catch (err) {
+      setAiCfgErr(err.message || 'Error al eliminar la clave')
+    }
+    setSavingAiKey(false)
+  }
 
   // Presets de paletas guardados — se cargan una vez para mostrar como cards seleccionables
   const [presets, setPresets] = useState([])
@@ -561,6 +623,7 @@ const SettingsModule = () => {
     { id: 'password', label: 'Contrasena', icon: KeyRound },
     ...(isSuperAdmin ? [] : [{ id: 'connectors', label: 'Conectores', icon: Plug }]),
     ...(isAdmin ? [{ id: 'design', label: 'Marca', icon: Palette }] : []),
+    ...(isAdmin ? [{ id: 'ai', label: 'IA', icon: Cpu }] : []),
   ]
 
   // Diseño tab es más amplio por el preview en vivo
@@ -1050,6 +1113,141 @@ const SettingsModule = () => {
           </div>
         </div>
         </>
+      )}
+
+      {/* ── Tab IA — BYOK (clave propia de OpenAI) ── */}
+      {activeSection === 'ai' && isAdmin && (
+        <div className="space-y-5">
+          {/* Intro */}
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+            <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-2 flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-[var(--brand-primary)]" /> Tu propia cuenta de OpenAI
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              Conecta la API key de tu organización para que el consumo de las funciones de IA
+              (Asistente de Reuniones, análisis de marca, etc.) se cargue a <strong>tu propia cuenta</strong>.
+              Así controlas tus costos directamente y no dependes de los límites de uso compartidos.
+            </p>
+          </div>
+
+          {loadingAiConfig && (
+            <div className="flex items-center justify-center py-10 text-slate-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+            </div>
+          )}
+
+          {!loadingAiConfig && aiConfig && (
+            <>
+              {/* Estado actual */}
+              <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+                aiConfig.tiene_clave_propia
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
+                  : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+              }`}>
+                {aiConfig.tiene_clave_propia
+                  ? <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  : <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />}
+                <div className="text-sm">
+                  {aiConfig.tiene_clave_propia ? (
+                    <>
+                      <p className="font-semibold text-emerald-800 dark:text-emerald-300">
+                        Usando la cuenta de tu organización
+                      </p>
+                      <p className="text-emerald-700 dark:text-emerald-400 mt-0.5">
+                        Clave activa: <span className="font-mono bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 rounded">{aiConfig.mascara}</span>
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-amber-800 dark:text-amber-300">
+                        Usando la cuenta de la plataforma (Alce Alce)
+                      </p>
+                      <p className="text-amber-700 dark:text-amber-400 mt-0.5">
+                        {aiConfig.plataforma_disponible
+                          ? 'Funciona, pero el consumo se carga a la cuenta compartida. Registra tu clave para usar la tuya.'
+                          : 'No hay clave de plataforma configurada — las funciones de IA no estarán disponibles hasta registrar una clave aquí.'}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Form para registrar / reemplazar clave */}
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {aiConfig.tiene_clave_propia ? 'Reemplazar clave' : 'API key de OpenAI'}
+                  </label>
+                  <a
+                    href="https://platform.openai.com/api-keys"
+                    target="_blank" rel="noreferrer"
+                    className="text-xs text-[var(--brand-primary)] hover:underline flex items-center gap-1"
+                  >
+                    <Link2 className="w-3 h-3" /> ¿Cómo obtengo mi clave?
+                  </a>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showAiKey ? 'text' : 'password'}
+                    value={aiKeyInput}
+                    onChange={(e) => setAiKeyInput(e.target.value)}
+                    placeholder="sk-..."
+                    autoComplete="off"
+                    className={`${inputCls} pr-12 font-mono dark:bg-slate-900 dark:border-slate-700 dark:text-white`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAiKey(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showAiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <Lock className="w-3 h-3" /> Tu clave se guarda <strong>encriptada</strong> y validamos que funcione antes de guardarla. Nunca la mostramos completa.
+                </p>
+
+                {aiCfgErr && (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
+                    <XCircle className="w-4 h-4 shrink-0" /> {aiCfgErr}
+                  </div>
+                )}
+                {aiCfgMsg && (
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm px-3 py-2 rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" /> {aiCfgMsg}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  {aiConfig.tiene_clave_propia ? (
+                    <button
+                      onClick={removeAiKey}
+                      disabled={savingAiKey}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" /> Quitar mi clave
+                    </button>
+                  ) : <span />}
+                  <button
+                    onClick={saveAiKey}
+                    disabled={savingAiKey || !aiKeyInput.trim()}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg font-semibold text-sm hover:bg-[var(--brand-secondary)] transition-all active:scale-[0.98] shadow-sm disabled:opacity-50"
+                  >
+                    {savingAiKey
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Validando…</>
+                      : <><ShieldCheck className="w-4 h-4" /> Validar y guardar</>}
+                  </button>
+                </div>
+              </div>
+
+              {/* Nota de proveedores futuros (visión agnóstica de Dani) */}
+              <p className="text-xs text-slate-400 dark:text-slate-500 text-center px-4">
+                Por ahora soportamos <strong>OpenAI</strong>. La arquitectura es agnóstica: pronto podrás
+                conectar claves de otros proveedores (Anthropic, etc.) para elegir el que más te convenga.
+              </p>
+            </>
+          )}
+        </div>
       )}
 
       {/* ── Logo cropper modal ── */}
