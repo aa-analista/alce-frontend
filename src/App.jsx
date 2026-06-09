@@ -32,6 +32,7 @@ import PropuestasModule from './components/PropuestasModule'
 import AgentesAdminModule from './components/AgentesAdminModule'
 import PublicPropuestaView from './components/PublicPropuestaView'
 import ReunionesModule from './components/ReunionesModule'
+import SoporteModule from './components/SoporteModule'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AssistantProvider } from './context/AssistantContext'
 
@@ -204,6 +205,7 @@ function App() {
             <Route path="contratos" element={<ContratosModule />} />
             <Route path="propuestas" element={<PropuestasModule />} />
             <Route path="reuniones" element={<ReunionesModule />} />
+            <Route path="soporte" element={<SoporteModule />} />
             {/* Google Connector pages */}
             <Route path="google-drive" element={<ConnectorPage />} />
             <Route path="google-gmail" element={<GmailPage />} />

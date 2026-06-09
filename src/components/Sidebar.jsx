@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Home, Sparkles, BarChart3, Users, Bot, Activity, Settings, LogOut,
   MessageSquare, FileText, Clock, Database, ChevronDown, Blocks, DollarSign,
-  UserPlus, CalendarCheck, FileSignature, Wand2, Palette, ClipboardList, Mic
+  UserPlus, CalendarCheck, FileSignature, Wand2, Palette, ClipboardList, Mic, LifeBuoy
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -35,6 +35,7 @@ const MODULE_ICONS = {
   'contratos': FileSignature,
   'propuestas': ClipboardList,
   'reuniones': Mic,
+  'soporte': LifeBuoy,
   // ── Herramientas ──
   'openui': Wand2,
   'design': Palette,
@@ -48,9 +49,10 @@ const FIXED_ITEMS = [
   { id: 'gastos', path: '/gastos', label: 'Gastos', icon: DollarSign, adminOnly: true },
   { id: 'propuestas', path: '/propuestas', label: 'Propuestas', icon: ClipboardList, alwaysShow: true },
   { id: 'reuniones', path: '/reuniones', label: 'Reuniones', icon: Mic, alwaysShow: true },
+  { id: 'soporte', path: '/soporte', label: 'Soporte', icon: LifeBuoy, alwaysShow: true },
 ]
 
-const CORE_IDS = ['coach-ai', 'operacion', 'actividad', 'contratos', 'propuestas', 'reuniones']
+const CORE_IDS = ['coach-ai', 'operacion', 'actividad', 'contratos', 'propuestas', 'reuniones', 'soporte']
 
 const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
   const { user, logout } = useAuth()
