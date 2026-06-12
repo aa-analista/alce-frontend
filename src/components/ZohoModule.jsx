@@ -25,7 +25,7 @@ export default function ZohoModule() {
   const [config, setConfig] = useState(null)
   const [loadingCfg, setLoadingCfg] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ apiDomain: 'https://www.zohoapis.com', accountsDomain: 'https://accounts.zoho.com', clientId: '', clientSecret: '', refreshToken: '', accessToken: '' })
+  const [form, setForm] = useState({ apiDomain: 'https://www.zohoapis.com', accountsDomain: 'https://accounts.zoho.com', clientId: '', clientSecret: '', code: '', refreshToken: '', accessToken: '' })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
 
@@ -57,7 +57,8 @@ export default function ZohoModule() {
 
   const guardar = async () => {
     if (!form.apiDomain.trim()) { setErr('Falta el dominio de la API'); return }
-    if (!form.refreshToken.trim() && !form.accessToken.trim()) { setErr('Pon un Refresh Token (con Client ID/Secret) o un Access Token'); return }
+    if (!form.code.trim() && !form.refreshToken.trim() && !form.accessToken.trim()) { setErr('Pega el código del Self Client (recomendado), o un Refresh/Access Token'); return }
+    if (form.code.trim() && (!form.clientId.trim() || !form.clientSecret.trim())) { setErr('Para usar el código necesitas también Client ID y Client Secret'); return }
     setSaving(true); setErr('')
     try {
       const res = await fetch('/api/zoho/config', {
@@ -114,8 +115,9 @@ export default function ZohoModule() {
             { k: 'accountsDomain', label: 'Dominio de cuentas', ph: 'https://accounts.zoho.com' },
             { k: 'clientId', label: 'Client ID' },
             { k: 'clientSecret', label: 'Client Secret', secret: true },
-            { k: 'refreshToken', label: 'Refresh Token', secret: true, help: 'Recomendado (no expira). Si no, usa un Access Token.' },
-            { k: 'accessToken', label: 'Access Token (alternativa)', secret: true, help: 'Solo si no tienes Refresh Token. Caduca en 1 hora.' },
+            { k: 'code', label: 'Código del Self Client ⭐', help: 'Lo más fácil: pega aquí el código que genera Zoho (Generate Code). Nosotros lo cambiamos por un Refresh Token automáticamente. Caduca en minutos, así que pégalo rápido.' },
+            { k: 'refreshToken', label: 'Refresh Token (avanzado)', secret: true, help: 'Solo si ya tienes uno. Si pegaste el código, déjalo vacío.' },
+            { k: 'accessToken', label: 'Access Token (avanzado)', secret: true, help: 'Alternativa rápida que caduca en 1 hora.' },
           ].map((f) => (
             <div key={f.k}>
               <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{f.label}</label>
