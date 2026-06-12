@@ -36,6 +36,7 @@ const MODULE_ICONS = {
   'propuestas': ClipboardList,
   'reuniones': Mic,
   'soporte': LifeBuoy,
+  'zoho': Database,
   // ── Herramientas ──
   'openui': Wand2,
   'design': Palette,
@@ -50,9 +51,10 @@ const FIXED_ITEMS = [
   { id: 'propuestas', path: '/propuestas', label: 'Propuestas', icon: ClipboardList, alwaysShow: true },
   { id: 'reuniones', path: '/reuniones', label: 'Reuniones', icon: Mic, alwaysShow: true },
   { id: 'soporte', path: '/soporte', label: 'Soporte', icon: LifeBuoy, alwaysShow: true },
+  { id: 'zoho', path: '/zoho', label: 'Zoho CRM', icon: Database, adminOnly: true },
 ]
 
-const CORE_IDS = ['coach-ai', 'operacion', 'actividad', 'contratos', 'propuestas', 'reuniones', 'soporte']
+const CORE_IDS = ['coach-ai', 'operacion', 'actividad', 'contratos', 'propuestas', 'reuniones', 'soporte', 'zoho']
 
 const Sidebar = ({ collapsed, onToggle, userModules = [] }) => {
   const { user, logout } = useAuth()
