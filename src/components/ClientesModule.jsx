@@ -2,8 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   UserPlus, Mail, Phone, Building2, Calendar, Clock, MessageSquare,
   Search, RefreshCw, Filter, X, ChevronRight, Globe, FileText, Save,
-  CheckCircle2, AlertCircle, Briefcase, Users, Shield, MapPin, Lock, Unlock, Video
+  CheckCircle2, AlertCircle, Briefcase, Users, Shield, MapPin, Lock, Unlock, Video, Gauge
 } from 'lucide-react'
+
+// AlceIQ Lite — acento por nivel de madurez (1–5)
+const MATURITY_THEME = {
+  1: { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   bar: 'bg-amber-500' },
+  2: { bg: 'bg-orange-50',  border: 'border-orange-200',  text: 'text-orange-700',  bar: 'bg-orange-500' },
+  3: { bg: 'bg-sky-50',     border: 'border-sky-200',     text: 'text-sky-700',     bar: 'bg-sky-500' },
+  4: { bg: 'bg-blue-50',    border: 'border-blue-200',    text: 'text-blue-700',    bar: 'bg-blue-600' },
+  5: { bg: 'bg-violet-50',  border: 'border-violet-200',  text: 'text-violet-700',  bar: 'bg-violet-600' },
+}
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAuth } from '../context/AuthContext'
@@ -352,6 +361,11 @@ const PotentialClientsTab = () => {
                   <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
                     <span className="text-xs text-slate-400">{formatDate(c.created_at)}</span>
                     <div className="flex items-center gap-1">
+                      {c.maturity_level && (
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${(MATURITY_THEME[c.maturity_level] || MATURITY_THEME[3]).bg} ${(MATURITY_THEME[c.maturity_level] || MATURITY_THEME[3]).text}`} title={c.maturity_label}>
+                          N{c.maturity_level}
+                        </span>
+                      )}
                       {c.meet_link && <Video className="w-3.5 h-3.5 text-blue-400" />}
                       <ChevronRight className="w-4 h-4 text-slate-300" />
                     </div>
@@ -444,6 +458,37 @@ const PotentialClientsTab = () => {
                   </div>
                 </div>
               )}
+
+              {selected.maturity_level && (() => {
+                const t = MATURITY_THEME[selected.maturity_level] || MATURITY_THEME[3]
+                const pct = Math.round(((selected.maturity_score || 0) / 14) * 100)
+                return (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                      <Gauge className="w-3.5 h-3.5" />
+                      Diagnóstico de madurez IA
+                    </h3>
+                    <div className={`p-3 rounded-lg border ${t.bg} ${t.border}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-sm font-semibold ${t.text}`}>{selected.maturity_label}</span>
+                        <span className="text-xs font-medium text-slate-500 tabular-nums shrink-0">{selected.maturity_score}/14</span>
+                      </div>
+                      <div className="mt-2 h-1.5 w-full rounded-full bg-white/70 overflow-hidden">
+                        <div className={`h-full rounded-full ${t.bar}`} style={{ width: `${pct}%` }} />
+                      </div>
+                      {selected.fase_activa != null && (
+                        <p className="mt-2 text-xs text-slate-500">Fase activa: <span className="font-medium text-slate-700">{selected.fase_activa}</span></p>
+                      )}
+                      {selected.dolor_principal && (
+                        <p className="mt-1.5 text-xs text-slate-600"><span className="font-semibold">Dolor:</span> {selected.dolor_principal}</p>
+                      )}
+                      {selected.urgencia && (
+                        <p className="mt-1 text-xs text-slate-600"><span className="font-semibold">Urgencia:</span> {selected.urgencia}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {selected.meet_link && (
                 <div>
