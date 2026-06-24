@@ -51,7 +51,7 @@ const FIXED_ITEMS = [
   { id: 'propuestas', path: '/propuestas', label: 'Propuestas', icon: ClipboardList, alwaysShow: true },
   { id: 'reuniones', path: '/reuniones', label: 'Reuniones', icon: Mic, alwaysShow: true },
   { id: 'soporte', path: '/soporte', label: 'Soporte', icon: LifeBuoy, alwaysShow: true },
-  { id: 'correos', path: '/correos', label: 'Resumen Correos', icon: Mail, alwaysShow: true },
+  { id: 'correos', path: '/correos', label: 'Asistente de Correos', icon: Mail, alwaysShow: true },
   { id: 'zoho', path: '/zoho', label: 'Zoho CRM', icon: Database, adminOnly: true },
 ]
 
