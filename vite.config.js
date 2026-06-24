@@ -124,6 +124,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '/api/correos': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
       // Archivos servidos por el backend (logos, adjuntos de soporte, etc.)
       '/uploads': {
         target: 'http://localhost:3001',

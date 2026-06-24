@@ -34,6 +34,7 @@ import PublicPropuestaView from './components/PublicPropuestaView'
 import ReunionesModule from './components/ReunionesModule'
 import SoporteModule from './components/SoporteModule'
 import ZohoModule from './components/ZohoModule'
+import CorreosModule from './components/CorreosModule'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AssistantProvider } from './context/AssistantContext'
 
@@ -208,6 +209,7 @@ function App() {
             <Route path="reuniones" element={<ReunionesModule />} />
             <Route path="soporte" element={<SoporteModule />} />
             <Route path="zoho" element={<ZohoModule />} />
+            <Route path="correos" element={<CorreosModule />} />
             {/* Google Connector pages */}
             <Route path="google-drive" element={<ConnectorPage />} />
             <Route path="google-gmail" element={<GmailPage />} />

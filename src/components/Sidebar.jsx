@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Home, Sparkles, BarChart3, Users, Bot, Activity, Settings, LogOut,
   MessageSquare, FileText, Clock, Database, ChevronDown, Blocks, DollarSign,
-  UserPlus, CalendarCheck, FileSignature, Wand2, Palette, ClipboardList, Mic, LifeBuoy
+  UserPlus, CalendarCheck, FileSignature, Wand2, Palette, ClipboardList, Mic, LifeBuoy, Mail
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -51,6 +51,7 @@ const FIXED_ITEMS = [
   { id: 'propuestas', path: '/propuestas', label: 'Propuestas', icon: ClipboardList, alwaysShow: true },
   { id: 'reuniones', path: '/reuniones', label: 'Reuniones', icon: Mic, alwaysShow: true },
   { id: 'soporte', path: '/soporte', label: 'Soporte', icon: LifeBuoy, alwaysShow: true },
+  { id: 'correos', path: '/correos', label: 'Asistente de Correos', icon: Mail, alwaysShow: true },
   { id: 'zoho', path: '/zoho', label: 'Zoho CRM', icon: Database, adminOnly: true },
 ]
 
