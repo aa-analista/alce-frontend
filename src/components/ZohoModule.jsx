@@ -32,6 +32,7 @@ export default function ZohoModule() {
   const [modulo, setModulo] = useState('Leads')
   const [catalogo, setCatalogo] = useState(null)
   const [loadingCat, setLoadingCat] = useState(false)
+  const [uso, setUso] = useState(null)
 
   const fetchConfig = useCallback(async () => {
     setLoadingCfg(true)
@@ -54,6 +55,11 @@ export default function ZohoModule() {
 
   useEffect(() => { if (isAdmin) fetchConfig() }, [isAdmin, fetchConfig])
   useEffect(() => { if (config?.conectado) fetchCatalogo(modulo) }, [config?.conectado, modulo, fetchCatalogo])
+  // Contador de uso de la API de Zoho (se refresca tras cada carga de catálogo)
+  useEffect(() => {
+    if (!config?.conectado) return
+    fetch('/api/zoho/uso', { headers: authHeaders }).then(r => r.ok ? r.json() : null).then(setUso).catch(() => {})
+  }, [config?.conectado, catalogo])
 
   const guardar = async () => {
     if (!form.apiDomain.trim()) { setErr('Falta el dominio de la API'); return }
@@ -94,6 +100,12 @@ export default function ZohoModule() {
         </div>
         {config?.conectado && (
           <div className="flex items-center gap-2">
+            {uso && (
+              <span title="Llamadas a la API de Zoho hoy. Zoho no cobra por llamada; es un límite diario."
+                className={`text-xs font-medium px-2.5 py-1 rounded-full ${uso.restante <= uso.limite * 0.1 ? 'text-amber-700 bg-amber-50 dark:bg-amber-900/20' : 'text-slate-500 bg-slate-100 dark:bg-slate-700 dark:text-slate-300'}`}>
+                API hoy: {uso.hoy}/{uso.limite}
+              </span>
+            )}
             <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-full"><CheckCircle2 className="w-3.5 h-3.5" /> Conectado</span>
             <button onClick={() => { setShowForm(true); setErr('') }} className="text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 px-2 py-1">Reconfigurar</button>
             <button onClick={desconectar} className="flex items-center gap-1 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1 rounded-lg"><Trash2 className="w-3.5 h-3.5" /> Desconectar</button>
