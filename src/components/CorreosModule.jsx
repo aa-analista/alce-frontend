@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
 import {
   Mail, Send, Loader2, Link2, Sparkles, Inbox, RefreshCw, Unlink, AlertTriangle,
-  Calendar, Star, Clock, User, ChevronLeft, ChevronRight
+  Calendar, Star, Clock, User, ChevronLeft, ChevronRight,
+  MessageCircle, Plus, Trash2, Power, Phone
 } from 'lucide-react'
 
 const SCOPE = 'https://www.googleapis.com/auth/gmail.modify'
@@ -35,10 +36,128 @@ function renderRich(text) {
   })
 }
 
-const CorreosModule = () => {
-  const { token } = useAuth()
-  const { connect, disconnect, connecting } = useGoogleOAuth()
+/**
+ * Panel "Correo por WhatsApp" (admin): conectar Outlook (login delegado) y
+ * administrar la lista blanca número↔buzón. Cada número lee SOLO su buzón.
+ * Consume /api/correos/outlook/login y /api/correos/whatsapp/map.
+ */
+function WhatsAppPanel({ token }) {
+  const [mapeos, setMapeos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('moises@extranjeriamexico.mx')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
 
+  const H = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+  const soloDigitos = (s) => String(s).replace(/[^0-9]/g, '')
+
+  const cargar = async () => {
+    setLoading(true)
+    try {
+      const r = await fetch('/api/correos/whatsapp/map', { headers: H })
+      const d = await r.json()
+      setMapeos(Array.isArray(d.mapeos) ? d.mapeos : [])
+    } catch { setErr('No se pudo cargar la lista.') }
+    finally { setLoading(false) }
+  }
+  useEffect(() => { cargar() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const guardar = async (p, e, activo = true) => {
+    setBusy(true); setErr(''); setMsg('')
+    try {
+      const r = await fetch('/api/correos/whatsapp/map', { method: 'POST', headers: H, body: JSON.stringify({ phone: soloDigitos(p), email: e || null, activo }) })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'No se pudo guardar')
+      setMsg('Guardado ✓'); setPhone('')
+      await cargar()
+    } catch (e2) { setErr(e2.message) }
+    finally { setBusy(false) }
+  }
+  const toggle = (row) => guardar(row.phone, row.email, !row.activo)
+  const borrar = async (p) => {
+    setBusy(true); setErr('')
+    try { await fetch(`/api/correos/whatsapp/map/${p}`, { method: 'DELETE', headers: H }); await cargar() }
+    catch { setErr('No se pudo borrar') } finally { setBusy(false) }
+  }
+  const conectarOutlook = async () => {
+    setErr('')
+    try {
+      const r = await fetch('/api/correos/outlook/login', { headers: H })
+      const d = await r.json()
+      if (d.url) window.location.href = d.url
+      else setErr(d.error || 'No se pudo iniciar el login de Outlook')
+    } catch { setErr('No se pudo iniciar el login de Outlook') }
+  }
+
+  const card = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl'
+  return (
+    <div className="max-w-3xl mx-auto space-y-4">
+      <div className={`${card} p-4`}>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[var(--brand-primary)]/10 rounded-lg"><MessageCircle className="w-5 h-5 text-[var(--brand-primary)]" /></div>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Correo por WhatsApp</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">El mismo WhatsApp atiende a muchas personas; aquí decides qué <b>números internos</b> pueden consultar correo y de <b>qué buzón</b>. Solo esos números reciben respuesta.</p>
+          </div>
+        </div>
+        <button onClick={conectarOutlook} className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[var(--brand-primary)] hover:opacity-90 transition-all">
+          <Link2 className="w-4 h-4" /> Conectar mi Outlook (iniciar sesión)
+        </button>
+      </div>
+
+      <div className={`${card} p-4`}>
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Agregar número autorizado</h4>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Número WhatsApp (ej. 5219991735903)" className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm dark:text-white" />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Buzón (correo)" className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm dark:text-white" />
+          <button disabled={busy || !phone.trim()} onClick={() => guardar(phone, email)} className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[var(--brand-primary)] hover:opacity-90 disabled:opacity-50"><Plus className="w-4 h-4" /> Agregar</button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <span className="text-xs text-slate-400">Rápido:</span>
+          <button onClick={() => guardar('5219991735903', email)} className="text-xs px-2 py-1 rounded border border-slate-200 dark:border-slate-700 hover:border-[var(--brand-primary)]">+52 1 999 173 5903 (Efraín)</button>
+          <button onClick={() => guardar('5215520955011', email)} className="text-xs px-2 py-1 rounded border border-slate-200 dark:border-slate-700 hover:border-[var(--brand-primary)]">+52 1 55 2095 5011 (Moi)</button>
+        </div>
+        {msg && <p className="text-xs text-green-600 dark:text-green-400 mt-2">{msg}</p>}
+        {err && <p className="text-xs text-red-500 mt-2">{err}</p>}
+      </div>
+
+      <div className={`${card} overflow-hidden`}>
+        <div className="px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-900 dark:text-white">Números autorizados</div>
+        {loading ? (
+          <div className="p-6 text-center"><Loader2 className="w-5 h-5 animate-spin text-[var(--brand-primary)] mx-auto" /></div>
+        ) : mapeos.length === 0 ? (
+          <div className="p-6 text-center text-sm text-slate-400">Aún no hay números. Agrega uno arriba.</div>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+            {mapeos.map((m) => (
+              <div key={m.phone} className="flex items-center gap-3 px-4 py-3">
+                <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-slate-900 dark:text-white">+{m.phone}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 truncate">→ {m.email || m.owner_email || '(buzón por usuario)'}</div>
+                </div>
+                <button onClick={() => toggle(m)} disabled={busy} title={m.activo ? 'Activo (clic para pausar)' : 'Pausado (clic para activar)'} className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${m.activo ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}>
+                  <Power className="w-3 h-3" /> {m.activo ? 'Activo' : 'Pausado'}
+                </button>
+                <button onClick={() => borrar(m.phone)} disabled={busy} title="Quitar" className="text-slate-400 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <p className="text-[11px] text-slate-400 text-center">Cada número lee <b>solo</b> el buzón asociado. Un número que no esté aquí no recibe respuesta.</p>
+    </div>
+  )
+}
+
+const CorreosModule = () => {
+  const { token, user } = useAuth()
+  const { connect, disconnect, connecting } = useGoogleOAuth()
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
+
+  const [vista, setVista] = useState('chat')
   const [estado, setEstado] = useState('loading')
   const [vinculado, setVinculado] = useState(false)
   const [briefing, setBriefing] = useState(null)
@@ -176,6 +295,16 @@ const CorreosModule = () => {
   }
   const hoy = (() => { try { const n = new Date(); return { y: n.getFullYear(), m: n.getMonth(), d: n.getDate() } } catch { return null } })()
 
+  const tabBtn = (activo) => `flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${activo ? 'bg-[var(--brand-primary)] text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-[var(--brand-primary)]/10'}`
+  const tabsEl = isAdmin ? (
+    <div className="flex items-center gap-1 mb-3">
+      <button onClick={() => setVista('chat')} className={tabBtn(vista === 'chat')}><Mail className="w-3.5 h-3.5" /> Chat</button>
+      <button onClick={() => setVista('wa')} className={tabBtn(vista === 'wa')}><MessageCircle className="w-3.5 h-3.5" /> WhatsApp</button>
+    </div>
+  ) : null
+
+  if (vista === 'wa') return (<div className="max-w-3xl mx-auto py-2">{tabsEl}<WhatsAppPanel token={token} /></div>)
+
   if (estado === 'loading') {
     return <div className="flex items-center justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-[var(--brand-primary)]" /></div>
   }
@@ -183,6 +312,7 @@ const CorreosModule = () => {
   if (estado === 'disconnected') {
     return (
       <div className="max-w-xl mx-auto mt-10">
+        {tabsEl}
         <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 text-center">
           <div className="w-16 h-16 bg-[var(--brand-primary)]/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><Mail className="w-8 h-8 text-[var(--brand-primary)]" /></div>
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Asistente de Correos</h2>
@@ -202,6 +332,7 @@ const CorreosModule = () => {
 
   return (
     <div className="max-w-3xl mx-auto h-[calc(100vh-120px)] flex flex-col">
+      {tabsEl}
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-3">
