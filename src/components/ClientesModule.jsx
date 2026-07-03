@@ -16,6 +16,7 @@ const MATURITY_THEME = {
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAuth } from '../context/AuthContext'
+import AnaliticasTab from './AnaliticasTab'
 
 function cn(...inputs) {
   return twMerge(clsx(inputs))
@@ -131,10 +132,18 @@ const ClientesModule = () => {
             Clientes actuales
           </button>
         )}
+        <button
+          onClick={() => setTab('analytics')}
+          className={cn(TAB_CLASS, activeTab === 'analytics' ? TAB_ACTIVE : TAB_IDLE)}
+        >
+          <Gauge className="w-4 h-4" />
+          Analíticas
+        </button>
       </div>
 
       {activeTab === 'potential' && <PotentialClientsTab />}
       {activeTab === 'current' && isSuperAdmin && <CurrentClientsTab />}
+      {activeTab === 'analytics' && <AnaliticasTab />}
     </div>
   )
 }
