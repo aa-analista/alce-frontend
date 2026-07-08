@@ -91,6 +91,7 @@ function WhatsAppPanel({ token }) {
     } catch { setErr('No se pudo iniciar el login de Outlook') }
   }
 
+  const buzones = [...new Set(mapeos.map((m) => m.email).filter(Boolean))]
   const card = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl'
   return (
     <div className="max-w-3xl mx-auto space-y-4">
@@ -102,9 +103,14 @@ function WhatsAppPanel({ token }) {
             <p className="text-xs text-slate-500 dark:text-slate-400">El mismo WhatsApp atiende a muchas personas; aquí decides qué <b>números internos</b> pueden consultar correo y de <b>qué buzón</b>. Solo esos números reciben respuesta.</p>
           </div>
         </div>
-        <button onClick={conectarOutlook} className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[var(--brand-primary)] hover:opacity-90 transition-all">
-          <Link2 className="w-4 h-4" /> Conectar mi Outlook (iniciar sesión)
-        </button>
+        {buzones.length > 0 ? (
+          <div className="mt-3 flex items-start gap-2 text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
+            <Inbox className="w-4 h-4 shrink-0 mt-0.5" /><span>Buzón conectado: <b>{buzones.join(', ')}</b> — no necesitas iniciar sesión. Puedes chatearlo en la pestaña <b>Chat</b> o probarlo por WhatsApp.</span>
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Aún no hay buzón conectado. Agrega un número abajo (por ahora usa el modo app-only).</p>
+        )}
+        <button onClick={conectarOutlook} className="mt-2 text-xs text-slate-400 hover:text-[var(--brand-primary)] underline">¿Conectar otro buzón iniciando sesión? (requiere aprobación del administrador)</button>
       </div>
 
       <div className={`${card} p-4`}>
