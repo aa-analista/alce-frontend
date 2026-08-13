@@ -4,7 +4,7 @@ import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
 import {
   Mail, Send, Loader2, Link2, Sparkles, Inbox, RefreshCw, Unlink, AlertTriangle,
   Calendar, Star, Clock, User, ChevronLeft, ChevronRight,
-  MessageCircle, Plus, Trash2, Power, Phone
+  MessageCircle, Plus, Trash2, Power, Phone, X
 } from 'lucide-react'
 
 const SCOPE = 'https://www.googleapis.com/auth/gmail.modify'
@@ -167,6 +167,8 @@ const CorreosModule = () => {
   const [estado, setEstado] = useState('loading')
   const [vinculado, setVinculado] = useState(false)
   const [briefing, setBriefing] = useState(null)
+  // Redactar y enviar un correo desde la cuenta conectada (mesa EXM #34).
+  const [showRedactar, setShowRedactar] = useState(false)
   const [mensajes, setMensajes] = useState([])
   const [input, setInput] = useState('')
   const [pensando, setPensando] = useState(false)
@@ -349,6 +351,7 @@ const CorreosModule = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setShowRedactar(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--brand-primary)] hover:opacity-90 rounded-lg transition-all shadow-sm"><Mail className="w-3.5 h-3.5" /> Redactar</button>
           {mensajes.length > 0 && (
             <button onClick={nuevaConversacion} disabled={pensando} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all disabled:opacity-50"><RefreshCw className="w-3.5 h-3.5" /> Nueva</button>
           )}
@@ -356,6 +359,8 @@ const CorreosModule = () => {
           <button onClick={handleDisconnect} disabled={connecting === 'google-gmail'} title="Desconectar Gmail" className="flex items-center px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"><Unlink className="w-3.5 h-3.5" /></button>
         </div>
       </div>
+
+      {showRedactar && <RedactarModal token={token} onClose={() => setShowRedactar(false)} />}
 
       {/* Briefing */}
       {briefing && (
@@ -455,3 +460,67 @@ const CorreosModule = () => {
 }
 
 export default CorreosModule
+
+/**
+ * Modal "Redactar" — envío de UN correo desde la cuenta conectada del usuario
+ * (POST /correos/enviar). El envío siempre es acción explícita del humano: el
+ * asistente puede sugerir el texto en el chat, pero este botón lo aprieta la
+ * persona. Sin auto-envíos.
+ */
+function RedactarModal({ token, onClose }) {
+  const [para, setPara] = useState('')
+  const [asunto, setAsunto] = useState('')
+  const [cuerpo, setCuerpo] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [aviso, setAviso] = useState(null) // { ok, texto }
+
+  const enviar = async () => {
+    if (!para.trim() || !asunto.trim() || !cuerpo.trim()) { setAviso({ ok: false, texto: 'Llena destinatario, asunto y mensaje.' }); return }
+    setEnviando(true); setAviso(null)
+    try {
+      const r = await fetch('/api/correos/enviar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ para, asunto, cuerpo }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (r.ok) {
+        setAviso({ ok: true, texto: d.buzon && d.buzon !== 'propio' ? `Enviado desde ${d.buzon}` : 'Correo enviado' })
+        setPara(''); setAsunto(''); setCuerpo('')
+      } else {
+        setAviso({ ok: false, texto: d.error || 'No se pudo enviar.' })
+      }
+    } catch {
+      setAviso({ ok: false, texto: 'Error de red. Intenta de nuevo.' })
+    } finally { setEnviando(false) }
+  }
+
+  const inputCls = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/30'
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-700" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Redactar correo</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X className="w-5 h-5" /></button>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Se envía desde la cuenta de correo conectada. Tip: pídele el borrador al asistente en el chat y pégalo aquí.</p>
+        <div className="space-y-3">
+          <input value={para} onChange={(e) => setPara(e.target.value)} placeholder="Para (hasta 3 correos separados por coma)" className={inputCls} autoFocus />
+          <input value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Asunto" maxLength={200} className={inputCls} />
+          <textarea value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} rows={8} maxLength={10000} placeholder="Escribe tu mensaje…" className={`${inputCls} resize-y`} />
+          {aviso && (
+            <p className={`text-xs ${aviso.ok ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>{aviso.ok ? '✓ ' : ''}{aviso.texto}</p>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 mt-5">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700">Cerrar</button>
+          <button onClick={enviar} disabled={enviando} className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-[var(--brand-primary)] rounded-lg hover:opacity-90 disabled:opacity-50">
+            {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+            {enviando ? 'Enviando…' : 'Enviar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
