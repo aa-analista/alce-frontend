@@ -4,7 +4,7 @@ import { useGoogleOAuth } from '../hooks/useGoogleOAuth'
 import {
   Mail, Send, Loader2, Link2, Sparkles, Inbox, RefreshCw, Unlink, AlertTriangle,
   Calendar, Star, Clock, User, ChevronLeft, ChevronRight,
-  MessageCircle, Plus, Trash2, Power, Phone, X
+  MessageCircle, Plus, Trash2, Power, Phone, X, Archive
 } from 'lucide-react'
 
 const SCOPE = 'https://www.googleapis.com/auth/gmail.modify'
@@ -169,6 +169,8 @@ const CorreosModule = () => {
   const [briefing, setBriefing] = useState(null)
   // Redactar y enviar un correo desde la cuenta conectada (mesa EXM #34).
   const [showRedactar, setShowRedactar] = useState(false)
+  // Bandeja con acciones (archivar / eliminar) — mesa EXM, sep-2026.
+  const [showBandeja, setShowBandeja] = useState(false)
   const [mensajes, setMensajes] = useState([])
   const [input, setInput] = useState('')
   const [pensando, setPensando] = useState(false)
@@ -352,6 +354,7 @@ const CorreosModule = () => {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowRedactar(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--brand-primary)] hover:opacity-90 rounded-lg transition-all shadow-sm"><Mail className="w-3.5 h-3.5" /> Redactar</button>
+          <button onClick={() => setShowBandeja((v) => !v)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--brand-primary)] border border-[var(--brand-primary)]/40 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all"><Inbox className="w-3.5 h-3.5" /> Bandeja</button>
           {mensajes.length > 0 && (
             <button onClick={nuevaConversacion} disabled={pensando} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all disabled:opacity-50"><RefreshCw className="w-3.5 h-3.5" /> Nueva</button>
           )}
@@ -361,6 +364,7 @@ const CorreosModule = () => {
       </div>
 
       {showRedactar && <RedactarModal token={token} onClose={() => setShowRedactar(false)} />}
+      {showBandeja && <BandejaPanel token={token} />}
 
       {/* Briefing */}
       {briefing && (
@@ -521,6 +525,90 @@ function RedactarModal({ token, onClose }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+
+/**
+ * Bandeja con acciones — lista los últimos correos del buzón conectado y
+ * permite ARCHIVAR o ELIMINAR (a la papelera de Outlook, recuperable) cada uno.
+ * Las acciones son siempre del humano: archivar con un clic, eliminar con
+ * confirmación. La IA nunca ejecuta estas acciones por su cuenta.
+ */
+function BandejaPanel({ token }) {
+  const [filtro, setFiltro] = useState('recientes')
+  const [lista, setLista] = useState(null)
+  const [error, setError] = useState('')
+  const [ocupado, setOcupado] = useState('')
+
+  const cargar = async (f = filtro) => {
+    setError('')
+    try {
+      const res = await fetch(`/api/correos/mensajes?filtro=${encodeURIComponent(f)}&max=15`, { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'No se pudo cargar la bandeja')
+      setLista(data.mensajes || [])
+    } catch (e) { setError(e.message); setLista([]) }
+  }
+  useEffect(() => { cargar(filtro) }, [filtro]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const accion = async (msg, tipo) => {
+    if (tipo === 'eliminar' && !window.confirm(`¿Eliminar "${(msg.subject || '').slice(0, 60)}"?\n\nSe mueve a Elementos Eliminados de Outlook (recuperable).`)) return
+    setOcupado(msg.id)
+    try {
+      const res = await fetch('/api/correos/accion', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: msg.id, accion: tipo }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'No se pudo completar la acción')
+      setLista((prev) => (prev || []).filter((x) => x.id !== msg.id))
+    } catch (e) { setError(e.message) }
+    finally { setOcupado('') }
+  }
+
+  return (
+    <div className="mb-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-1.5"><Inbox className="w-4 h-4" /> Bandeja de entrada</h3>
+        <div className="flex items-center gap-1.5">
+          {[['recientes', 'Recientes'], ['sin-leer', 'Sin leer']].map(([v, t]) => (
+            <button key={v} onClick={() => setFiltro(v)}
+              className={`px-2.5 py-1 rounded-full text-[11px] border transition-all ${filtro === v ? 'bg-[var(--brand-primary)] text-white border-transparent' : 'text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>{t}</button>
+          ))}
+          <button onClick={() => cargar()} className="px-2.5 py-1 rounded-full text-[11px] border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">↻</button>
+        </div>
+      </div>
+      {error && <p className="text-xs text-red-600 dark:text-red-400 mb-2">{error}</p>}
+      {lista === null ? (
+        <p className="text-xs text-slate-400 py-4 text-center">Cargando…</p>
+      ) : lista.length === 0 ? (
+        <p className="text-xs text-slate-400 py-4 text-center">Sin correos {filtro === 'sin-leer' ? 'sin leer' : ''} por aquí.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100 dark:divide-slate-700">
+          {lista.map((m) => (
+            <li key={m.id} className="py-2.5 flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs truncate ${m.unread ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+                  {m.unread && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] mr-1.5 align-middle" aria-label="sin leer" />}
+                  {m.subject}
+                </p>
+                <p className="text-[11px] text-slate-400 truncate">{m.from} · {m.date ? new Date(m.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                {m.snippet && <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{m.snippet}</p>}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button onClick={() => accion(m, 'archivar')} disabled={ocupado === m.id} title="Archivar"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-[var(--brand-primary)] hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40"><Archive className="w-4 h-4" /></button>
+                <button onClick={() => accion(m, 'eliminar')} disabled={ocupado === m.id} title="Eliminar (a la papelera)"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">Eliminar mueve el correo a Elementos Eliminados de Outlook (recuperable). Nada se borra definitivamente.</p>
     </div>
   )
 }
